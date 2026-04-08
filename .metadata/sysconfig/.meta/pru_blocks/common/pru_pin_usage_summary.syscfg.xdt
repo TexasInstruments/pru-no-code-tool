@@ -1,0 +1,113 @@
+%if(system.modules["/pru_blocks/common/pru_blocks_static_module"])
+%{
+%const pruRegisterAllocationSummary = system.getScript("/pru_blocks/common/register_allocation/pru_register_allocator.js").getPruRegisterAllocationSummary();
+%const pruInstructionInstances = pruRegisterAllocationSummary.pruInstructionInstances;
+%
+%// Helper function to extract pins from an instance
+%function getPinInfo(inst) {
+%    const pins = [];
+%    // Null-safety: check if inst and inst.$module exist
+%    if (!inst || !inst.$module || !inst.$module.$name) {
+%        return pins;  // Return empty array for invalid instances
+%    }
+%    const modulePath = inst.$module.$name;
+%
+%    // PRU GPO block
+%    if (modulePath.includes("pru_gpo_block")) {
+%        const match = inst.constant1?.match(/R30,\s*(\d+)/);
+%        if (match) pins.push({ pin: match[1], func: "GPIO", dir: "GPO" });
+%    }
+%    // PRU GPI block
+%    else if (modulePath.includes("pru_gpi_block")) {
+%        const match = inst.constant1?.match(/1\s*<<\s*(\d+)/);
+%        if (match) pins.push({ pin: match[1], func: "GPIO", dir: "GPI" });
+%    }
+%    // SPI Write block
+%    else if (modulePath.includes("pru_spi_write")) {
+%        const isCtrl = inst["Device Mode"] === "controller";
+%        pins.push({ pin: inst["SCLK Signal"], func: "SCLK", dir: isCtrl ? "GPO" : "GPI" });
+%        pins.push({ pin: inst["SDO Signal"], func: "SDO", dir: "GPO" });
+%        pins.push({ pin: inst["CS Signal"], func: "CS", dir: isCtrl ? "GPO" : "GPI" });
+%    }
+%    // SPI Read block
+%    else if (modulePath.includes("pru_spi_read")) {
+%        const isCtrl = inst["Device Mode"] === "controller";
+%        pins.push({ pin: inst["SCLK Signal"], func: "SCLK", dir: isCtrl ? "GPO" : "GPI" });
+%        pins.push({ pin: inst["SDI Signal"], func: "SDI", dir: "GPI" });
+%        pins.push({ pin: inst["CS Signal"], func: "CS", dir: isCtrl ? "GPO" : "GPI" });
+%    }
+%    // SPI Transfer block
+%    else if (modulePath.includes("pru_spi_transfer")) {
+%        const isCtrl = inst["Device Mode"] === "controller";
+%        pins.push({ pin: inst["SCLK Signal"], func: "SCLK", dir: isCtrl ? "GPO" : "GPI" });
+%        pins.push({ pin: inst["SDI Signal"], func: "SDI", dir: "GPI" });
+%        pins.push({ pin: inst["SDO Signal"], func: "SDO", dir: "GPO" });
+%        pins.push({ pin: inst["CS Signal"], func: "CS", dir: isCtrl ? "GPO" : "GPI" });
+%    }
+%    // UART TX block - uses ENDAT peripheral with fixed pins per channel
+%    else if (modulePath.includes("uart_tx")) {
+%        const ch = inst.channel;
+%        // Channel 0: GPO0 (clock), GPO1 (data out), GPO2 (out enable)
+%        // Channel 1: GPO3, GPO4, GPO5
+%        // Channel 2: GPO6, GPO7, GPO8
+%        const basePin = ch * 3;
+%        pins.push({ pin: basePin, func: "PERIF" + ch + "_CLK", dir: "GPO" });
+%        pins.push({ pin: basePin + 1, func: "PERIF" + ch + "_DOUT", dir: "GPO" });
+%        pins.push({ pin: basePin + 2, func: "PERIF" + ch + "_OE", dir: "GPO" });
+%    }
+%    // UART RX block - uses ENDAT peripheral with fixed pins per channel
+%    else if (modulePath.includes("uart_rx")) {
+%        const ch = inst.channel;
+%        // Channel 0: GPI9 (perif_data_in)
+%        // Channel 1: GPI10
+%        // Channel 2: GPI11
+%        const rxPin = 9 + ch;
+%        pins.push({ pin: rxPin, func: "PERIF" + ch + "_DIN", dir: "GPI" });
+%    }
+%    return pins;
+%}
+%
+%// Build a map: pin -> list of {block, func, dir}
+%const pinToBlocks = {};
+%for(let i = 0; i < pruInstructionInstances.length; i++) {
+%    const inst = pruInstructionInstances[i];
+%    // Skip null/undefined instances (defensive programming)
+%    if (!inst) continue;
+%    const pins = getPinInfo(inst);
+%    for (const pinInfo of pins) {
+%        const pinKey = pinInfo.dir + pinInfo.pin;
+%        if (!pinToBlocks[pinKey]) {
+%            pinToBlocks[pinKey] = [];
+%        }
+%        pinToBlocks[pinKey].push({
+%            block: inst,
+%            func: pinInfo.func,
+%            dir: pinInfo.dir,
+%            pin: pinInfo.pin
+%        });
+%    }
+%}
+%
+%// Sort pins by direction (GPO first) then by pin number
+%const sortedPins = Object.keys(pinToBlocks).sort((a, b) => {
+%    const aDir = a.startsWith("GPO") ? 0 : 1;
+%    const bDir = b.startsWith("GPO") ? 0 : 1;
+%    if (aDir !== bDir) return aDir - bDir;
+%    const aNum = parseInt(a.match(/\d+/)[0]);
+%    const bNum = parseInt(b.match(/\d+/)[0]);
+%    return aNum - bNum;
+%});
+%
+**PRU PIN USAGE SUMMARY**
+
+PIN | USED BY
+-- | --
+%for(const pinKey of sortedPins) {
+%    const usages = pinToBlocks[pinKey];
+%    const blockStr = usages.map(u => {
+%        const ref = (typeof system.getReference === 'function') ? system.getReference(u.block) : null;
+%        return ref ? "[" + u.block.$name + "](" + ref + ") (" + u.func + ")" : u.block.$name + " (" + u.func + ")";
+%    }).join(", ");
+`pinKey` | `blockStr`
+%}
+%}

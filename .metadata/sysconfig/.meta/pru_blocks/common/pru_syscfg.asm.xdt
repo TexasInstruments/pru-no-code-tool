@@ -1,0 +1,138 @@
+%const pruRegisterAllocationSummary = system.getScript("/pru_blocks/common/register_allocation/pru_register_allocator.js").getPruRegisterAllocationSummary();
+%const registerAllocator = system.getScript("/pru_blocks/common/register_allocation/pru_register_allocator.js");
+%const systemModules = system.modules;
+; Copyright (C) 2024 Texas Instruments Incorporated - http://www.ti.com/
+;
+; Redistribution and use in source and binary forms, with or without
+; modification, are permitted provided that the following conditions
+; are met:
+;
+; Redistributions of source code must retain the above copyright
+; notice, this list of conditions and the following disclaimer.
+;
+; Redistributions in binary form must reproduce the above copyright
+; notice, this list of conditions and the following disclaimer in the
+; documentation and/or other materials provided with the
+; distribution.
+;
+; Neither the name of Texas Instruments Incorporated nor the names of
+; its contributors may be used to endorse or promote products derived
+; from this software without specific prior written permission.
+;
+; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+; "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+; LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+; A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+; OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+; SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+; LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+; DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+; THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+; (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+;************************************************************************************
+;   File:     pru_syscfg.asm
+;
+;   Brief:    sysconfig generated pru firmware
+;************************************************************************************
+
+    ;sysconfig_generated_start label should be invoked from main.asm to run sysconfig generated code
+    .global     sysconfig_generated_start
+    ;sysconfig_generated_end label should be defined in main.asm to transfer back control to main.asm
+    .ref        sysconfig_generated_end
+
+%let groupMetadata = system.getScript("/pru_blocks/common/register_allocation/pru_register_allocator.js").getGroupMetadata();
+%if(groupMetadata && groupMetadata.length > 0){
+    ;Group block start labels - can be called from main.asm
+%for (let groupInfo of groupMetadata) {
+    .global     `groupInfo.groupName`_start
+%}
+%}
+
+;************************************* includes *************************************
+    .include    "pru_syscfg.inc"
+
+    .retain     ; Required for building .out with assembly file
+    .retainrefs ; Required for building .out with assembly file
+
+%let initSectDirectives = system.modules["/pru_blocks/common/pru_blocks_static_module"]?.getInitSectDirectives();
+%if(initSectDirectives){
+`initSectDirectives`
+%}
+
+;************************************************************************************
+;   Uninitialized memory reservations (.usect)
+;************************************************************************************
+%let usectLinkerDirectives = system.modules["/pru_blocks/common/pru_blocks_static_module"]?.getUsectLinkerDirectives();
+%if(usectLinkerDirectives && usectLinkerDirectives.length > 0){
+%for (let directive of usectLinkerDirectives) {
+`directive`
+%}
+%}
+
+    .retain     ; Required for building .out with assembly file
+    .retainrefs ; Required for building .out with assembly file
+    .sect       ".text"
+;**************************************************************************************
+;                       syconfig_generated
+;**************************************************************************************
+%if(pruRegisterAllocationSummary && (Object.keys(systemModules).length > 0)){
+%// Generate and insert register allocation summary comments
+`registerAllocator.getRegisterAllocationComments()`
+%}
+%if(pruRegisterAllocationSummary && (Object.keys(systemModules).length > 0)){
+%//PRU registers are allocated at validation stage, not required to call allocatePruRegisters
+%let pruInstructions = pruRegisterAllocationSummary.pruInstructions;
+%let labels = pruRegisterAllocationSummary.labels;
+%let pruInstructionInstances = pruRegisterAllocationSummary.pruInstructionInstances;
+%
+%// Find the index where group sections start
+%let groupStartIndex = pruInstructions.length; // Default to end if no groups
+%if(groupMetadata && groupMetadata.length > 0){
+%    let groupStartLabels = new Set(groupMetadata.map(g => `${g.groupName}_start`));
+%    for(let i = 0; i < labels.length; i++) {
+%        if(typeof(labels[i]) == "string" && groupStartLabels.has(labels[i])) {
+%            groupStartIndex = i;
+%            break;
+%        }
+%    }
+%}
+;**************************************************************************************
+;                    PRU assembly code outside group block
+;**************************************************************************************
+sysconfig_generated_start:
+%// First loop: Output ungrouped blocks (sysconfig_generated section)
+%for(let iterator = 0; iterator < groupStartIndex; iterator++)
+%{
+%if(typeof(labels[iterator]) == "string" && labels[iterator] !== "")
+%{
+`labels[iterator]`:
+%}
+%    if((!pruInstructions[iterator].includes("-1")) && (pruInstructions[iterator] != "0") && (!pruInstructions[iterator].includes("undefined")))
+%    {
+    ;PRU Instruction of `pruInstructionInstances[iterator].$name`
+    `pruInstructions[iterator]`
+%    }
+%}
+    ;Incase program is reached here, halt so that code related to group blocks is not executed
+    halt
+
+
+;**************************************************************************************
+;                 PRU assembly code of Group blocks
+;**************************************************************************************
+%// Second loop: Output grouped blocks (separate sections)
+%for(let iterator = groupStartIndex; iterator < pruInstructions.length; iterator++)
+%{
+%if(typeof(labels[iterator]) == "string" && labels[iterator] !== "")
+%{
+`labels[iterator]`:
+%}
+%    if((!pruInstructions[iterator].includes("-1")) && (pruInstructions[iterator] != "0") && (!pruInstructions[iterator].includes("undefined")))
+%    {
+    ;PRU Instruction of `pruInstructionInstances[iterator].$name`
+    `pruInstructions[iterator]`
+%    }
+%}
+%}

@@ -1,0 +1,31 @@
+%if(system.modules["/pru_blocks/common/pru_blocks_static_module"])
+%{
+%const pruRegisterAllocationSummary = system.getScript("/pru_blocks/common/register_allocation/pru_register_allocator.js").getPruRegisterAllocationSummary();
+%const registerAllocator = system.getScript("/pru_blocks/common/register_allocation/pru_register_allocator.js");
+
+**PRU CYCLES SUMMARY FOR FLOW CONTROL OR INFINITE LOOP BLOCK CONNECTED PATH**
+
+PRU_BLOCK | PRU_CYCLES | CONNECTED NODES IN FLOW CONTROL OR INFINITE LOOP BLOCK CONNECTED PATH
+-- | -- | --
+%let pruInstructionInstances = pruRegisterAllocationSummary.pruInstructionInstances;
+%let peakCycles = pruRegisterAllocationSummary.peakCycles;
+%let connectedNodesInPeakCyclePath = pruRegisterAllocationSummary.connectedNodesInPeakCyclePath;
+%for(let iterator = 0; iterator < pruInstructionInstances.length;  iterator++)
+%{
+%if((!(pruInstructionInstances[iterator]?.output1)) && (!(pruInstructionInstances[iterator]?.T)) && (!(pruInstructionInstances[iterator]?.F)) && (!(pruInstructionInstances[iterator]?.next)) && (peakCycles[iterator] != 0)){
+[`pruInstructionInstances[iterator].$name`](`system.getReference(pruInstructionInstances[iterator])`) | `peakCycles[iterator]` | `JSON.stringify([...connectedNodesInPeakCyclePath[iterator]])`
+%}
+%}
+
+---
+
+**COMPLETE REGISTER ALLOCATION TABLE**
+
+PRU_BLOCK | ALLOCATED REGISTERS
+-- | --
+%for(let iterator = 0; iterator < pruInstructionInstances.length;  iterator++)
+%{
+%let allocatedRegs = registerAllocator.getBlockRegisterAllocation(pruInstructionInstances[iterator].$name);
+[`pruInstructionInstances[iterator].$name`](`system.getReference(pruInstructionInstances[iterator])`) | `allocatedRegs`
+%}
+%}

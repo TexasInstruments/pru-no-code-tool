@@ -1,0 +1,17 @@
+[
+    {
+        "metadataVersion": "3.01.00",
+        "id": "com.ti.PRU_NO_CODE_TOOL",
+        "name": "PRU-NO-CODE-TOOL",
+        "rootCategory": [ "PRU-NO-CODE-TOOL"],
+        "version": "01.00.01",
+        "type": "software",
+        "license": "../../LICENSE",
+        "devices": ["AM243x", "AM64x"],
+        "description": "Welcome to PRU no code tool. This repository contains examples, training, and tools to develop PRU applications.",
+        "dependencies": [
+            { "packageId": "sysconfig", "version": "1.27.0", "require": "mandatory" },
+            { "packageId": "ti_cgt_tiarmclang", "version": "4.0.0", "require": "mandatory" }
+        ]
+    }
+]
