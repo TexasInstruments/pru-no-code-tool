@@ -59,46 +59,14 @@ PRU`pruNum`        .set 1
 SLICE`icssgNum`      .set 1
     .endif
 
-;************************************* constants ************************************
-; PRU clock cycle period constant (nanoseconds per cycle)
-; Must be defined BEFORE includes because time_macros.inc uses this constant
-% let pruClkFreq = 200; // Default 200 MHz
-% if (system.modules["/pru_blocks/common/pru_blocks_static_module"]) {
-%     let staticModule = system.modules["/pru_blocks/common/pru_blocks_static_module"];
-%     if (staticModule.$static && staticModule.$static.pruClkFreq) {
-%         pruClkFreq = staticModule.$static.pruClkFreq;
-%     }
-% }
-% let cyclesPeriod = Math.round(1000 / pruClkFreq); // ns per cycle
-PRU_CLK_CYC_PRD_CONST   .set    `cyclesPeriod`     ; PRU clock cycle period in nanoseconds (`pruClkFreq` MHz = `cyclesPeriod` ns/cycle)
+% // ;************************************* constants ************************************
+% // TODO : review again to add constants
 
-;************************************* includes *************************************
-% // Collect all required includes using Set for automatic deduplication
-% const requiredIncludes = new Set();
-%
-% // Always include base configuration
-% requiredIncludes.add("icss_constant_defines.inc");
-% requiredIncludes.add("ti_pru_io_config.inc");
-%
-% // Scan all instantiated modules and collect their required includes
 % const systemModules = system.modules;
-% for (const moduleName in systemModules) {
-%     const module = systemModules[moduleName];
-%     if (!module) {
-%         continue;
-%     }
-%     if (module.$instances && module.$instances.length > 0 &&
-%         system.modules[moduleName].requiredIncludes) {
-%         for (const includeFile of system.modules[moduleName].requiredIncludes) {
-%             requiredIncludes.add(includeFile);
-%         }
-%     }
-% }
-%
-% // Generate include statements
-% for (const includeFile of requiredIncludes) {
-    .include "`includeFile`"
-% }
+
+% // ;************************************* includes *************************************
+% // TODO : review again if external include files apart from sysconfig generated macros are required
+
 
 ;************************************* register definitions *************************
             .asg	R28,	   TEMP_REG1

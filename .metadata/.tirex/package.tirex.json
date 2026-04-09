@@ -2,8 +2,8 @@
     {
         "metadataVersion": "3.01.00",
         "id": "com.ti.PRU_NO_CODE_TOOL",
-        "name": "PRU-NO-CODE-TOOL",
-        "rootCategory": [ "PRU-NO-CODE-TOOL"],
+        "name": "PRU_NO_CODE_TOOL",
+        "rootCategory": [ "PRU_NO_CODE_TOOL"],
         "version": "01.00.01",
         "type": "software",
         "license": "../../LICENSE",

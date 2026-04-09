@@ -1145,8 +1145,7 @@ exports = {
     getAIContext: getAIContext,
     uiView: "graph",
     requiredIncludes: [
-        "icss_cfg_regs.inc",
-        "icss_regs.inc"
+        /*TODO :  review on how to add include files for the modules*/
     ],
     templates: {
         "/pru_blocks/common/pru_syscfg.asm.xdt": null
