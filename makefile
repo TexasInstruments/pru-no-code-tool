@@ -1,6 +1,6 @@
 include imports.mak
 
-SUBDIRS := source academy examples
+SUBDIRS := examples
 
 # "make" or "make all" builds projects that match $(DEVICE) set in imports.mak
 # this also builds all libraries in the source directory

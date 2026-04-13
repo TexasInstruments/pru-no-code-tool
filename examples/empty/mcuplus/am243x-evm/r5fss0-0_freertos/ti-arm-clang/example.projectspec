@@ -66,7 +66,7 @@
             --gen_xml_func_hash
         "
 
-        postBuildStep="$(MAKE) -C ${CCS_PROJECT_DIR} -f makefile_ccs_bootimage_gen OUTNAME=${BuildArtifactFileBaseName} PROFILE=${ConfigName} MCU_PLUS_SDK_PATH=${MCU_PLUS_SDK_PATH} PRU_NO_CODE_TOOL_PATH=${PRU_NO_CODE_TOOL} CG_TOOL_ROOT=${CG_TOOL_ROOT} CCS_INSTALL_DIR=${CCS_INSTALL_DIR} CCS_IDE_MODE=${CCS_IDE_MODE} DEVICE=am243x"
+        postBuildStep="$(MAKE) -C ${CCS_PROJECT_DIR} -f makefile_ccs_bootimage_gen OUTNAME=${BuildArtifactFileBaseName} PROFILE=${ConfigName} MCU_PLUS_SDK_PATH=${MCU_PLUS_SDK_PATH} PRU_NO_CODE_TOOL_PATH=${PRU_NO_CODE_TOOL_PATH} CG_TOOL_ROOT=${CG_TOOL_ROOT} CCS_INSTALL_DIR=${CCS_INSTALL_DIR} CCS_IDE_MODE=${CCS_IDE_MODE} DEVICE=am243x"
 
         enableSysConfigTool="true"
         sysConfigBuildOptions="
@@ -105,7 +105,7 @@
             "
         ></configuration>
         <pathVariable name="MCU_PLUS_SDK_PATH" path="${COM_TI_MCU_PLUS_SDK_AM243X_INSTALL_DIR}" scope="project" />
-        <pathVariable name="PRU_NO_CODE_TOOL_PATH" path="${COM_PRU_NO_CODE_TOOL_INSTALL_DIR}" scope="project" />
+        <pathVariable name="PRU_NO_CODE_TOOL_PATH" path="${COM_TI_PRU_NO_CODE_TOOL_INSTALL_DIR}" scope="project" />
         <file path="../main.c" openOnCreation="false" excludeFromBuild="false" action="copy">
         </file>
         <file path="../../../empty_example.c" openOnCreation="false" excludeFromBuild="false" action="copy">

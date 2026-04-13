@@ -72,7 +72,7 @@
             linkerBuildOptions="
             "
         ></configuration>
-        <pathVariable name="PRU_NO_CODE_TOOL_PATH" path="${COM_PRU_NO_CODE_TOOL_INSTALL_DIR}" scope="project" />
+        <pathVariable name="PRU_NO_CODE_TOOL_PATH" path="${COM_TI_PRU_NO_CODE_TOOL_INSTALL_DIR}" scope="project" />
         <file path="../../../main.asm" openOnCreation="false" excludeFromBuild="false" action="copy">
         </file>
         <file path="../example.syscfg" openOnCreation="false" excludeFromBuild="false" action="copy">

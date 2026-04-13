@@ -1,6 +1,6 @@
 # UPDATE: set the device you are using.
 # valid devices include:
-# am243x, am64x
+# am243x, am261x, am263px, am263x, am62x, am64x
 DEVICE ?= am64x
 
 # UPDATE: what kind of project are you building?
@@ -52,7 +52,7 @@ CGT_TI_ARM_CLANG_PATH=$(CCS_PATH)/tools/compiler/ti-cgt-armllvm_4.0.0.LTS
 ifeq ($(wildcard $(CGT_TI_ARM_CLANG_PATH)),)
     CGT_TI_ARM_CLANG_PATH=$(TOOLS_PATH)/ti-cgt-armllvm_4.0.1.LTS
 endif
-SYSCFG_PATH ?= $(TOOLS_PATH)/sysconfig_1.21.2
+SYSCFG_PATH ?= $(TOOLS_PATH)/sysconfig_1.26.2
 
 # Other variables
 # you probably will not need to edit these values
