@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This example.projectspec file is for PRU projects written in assembly -->
+<projectSpec>
+    <applicability>
+        <when>
+            <context
+                deviceFamily="PRU"
+                deviceId="AM64x_GP_EVM"
+            />
+        </when>
+    </applicability>
+
+    <project
+        title="Empty"
+        name = "empty_am64x-evm_icss_g0_pru1_fw_ti-pru-cgt"
+        products="sysconfig;com.ti.PRU_NO_CODE_TOOL"
+        configurations="
+                Debug,
+                Release,
+        "
+        connection="TIXDS110_Connection.xml"
+        toolChain="TI"
+        cgtVersion="2.3.3"
+        device="AM64x_GP_EVM"
+        deviceCore="ICSS_G0_PRU_1"
+        ignoreDefaultDeviceSettings="true"
+        ignoreDefaultCCSSettings="true"
+        endianness="little"
+        outputFormat="ELF"
+        outputType="executable"
+
+        compilerBuildOptions="
+            -I${CG_TOOL_ROOT}/include
+            -DPRU1
+            -DSLICE1
+            -v4
+            -DSOC_AM64X
+            -O2
+        "
+        linkerBuildOptions="
+            -m=empty.${ConfigName}.map
+            --disable_auto_rts
+            --entry_point=main
+            --diag_suppress=10063-D
+            --warn_sections
+            --reread_libs
+            --diag_warning=225
+            --ram_model
+        "
+
+        enableSysConfigTool="true"
+        sysConfigBuildOptions="
+            --device AM64x --context icss_g0_pru1 --part Default --package ALV
+        "
+
+        postBuildStep="
+            $(CG_TOOL_ROOT)/bin/hexpru --diag_wrap=off --array --array:name_prefix=PRU1Firmware -o ../pru1_load_bin.h ${BuildArtifactFileBaseName}.out;
+        "
+
+        description="A Empty FW project">
+
+        <configuration name="Debug"
+            compilerBuildOptions="
+                -D_DEBUG_=1
+            "
+            linkerBuildOptions="
+            "
+        ></configuration>
+        <configuration name="Release"
+            compilerBuildOptions="
+            "
+            linkerBuildOptions="
+            "
+        ></configuration>
+        <pathVariable name="PRU_NO_CODE_TOOL_PATH" path="${COM_TI_PRU_NO_CODE_TOOL_INSTALL_DIR}" scope="project" />
+        <file path="../../../main.asm" openOnCreation="false" excludeFromBuild="false" action="copy">
+        </file>
+        <file path="../example.syscfg" openOnCreation="false" excludeFromBuild="false" action="copy">
+        </file>
+        <file path="./linker.cmd" openOnCreation="false" excludeFromBuild="false" action="copy">
+        </file>
+    </project>
+</projectSpec>

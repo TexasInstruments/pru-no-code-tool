@@ -1,0 +1,18 @@
+[
+    {
+        "rootMacroName": "COM_TI_PRU_NO_CODE_TOOL_INSTALL_DIR",
+        "compilerIncludePath": [ ],
+        "compilerSymbols": [ ],
+        "linkerSearchPath": [ ],
+        "properties": {
+            "rtsc.repositories": [
+                "source",
+                "."
+            ]
+        },
+        "helpTocs": [
+        ],
+        "docs": [
+        ]
+    }
+]

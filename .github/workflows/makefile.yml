@@ -1,0 +1,246 @@
+name: Makefile CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ "**" ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build (${{ matrix.device }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - device: am243x
+            mcu_plus_sdk: mcu_plus_sdk_am243x_11_02_00_24
+            sdk_installer: mcu_plus_sdk_am243x_11_02_00_24-linux-x64-installer.run
+            sdk_url: https://dr-download.ti.com/software-development/software-development-kit-sdk/MD-ouHbHEm1PK/11.02.00.24/mcu_plus_sdk_am243x_11_02_00_24-linux-x64-installer.run
+          - device: am261x
+            mcu_plus_sdk: mcu_plus_sdk_am261x_10_02_00_15
+            sdk_installer: mcu_plus_sdk_am261x_10_02_00_15-linux-x64-installer.run
+            sdk_url: https://dr-download.ti.com/software-development/software-development-kit-sdk/MD-h64OlWnQrg/10.02.00.15/mcu_plus_sdk_am261x_10_02_00_15-linux-x64-installer.run
+          - device: am263px
+            mcu_plus_sdk: mcu_plus_sdk_am263px_10_02_00_15
+            sdk_installer: mcu_plus_sdk_am263px_10_02_00_15-linux-x64-installer.run
+            sdk_url: https://dr-download.ti.com/software-development/software-development-kit-sdk/MD-JVtW1V4WfA/10.02.00.15/mcu_plus_sdk_am263px_10_02_00_15-linux-x64-installer.run
+          - device: am263x
+            mcu_plus_sdk: mcu_plus_sdk_am263x_10_02_00_13
+            sdk_installer: mcu_plus_sdk_am263x_10_02_00_13-linux-x64-installer.run
+            sdk_url: https://dr-download.ti.com/software-development/software-development-kit-sdk/MD-r5FY9rRaGv/10.02.00.13/mcu_plus_sdk_am263x_10_02_00_13-linux-x64-installer.run
+          - device: am64x
+            mcu_plus_sdk: mcu_plus_sdk_am64x_11_02_00_24
+            sdk_installer: mcu_plus_sdk_am64x_11_02_00_24-linux-x64-installer.run
+            sdk_url: https://dr-download.ti.com/software-development/software-development-kit-sdk/MD-SfkcjYAjGS/11.02.00.24/mcu_plus_sdk_am64x_11_02_00_24-linux-x64-installer.run
+          - device: am62x
+            mcu_plus_sdk: ""
+            sdk_installer: ""
+            sdk_url: ""
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show tool versions
+        run: |
+          python3 --version || true
+          make --version
+
+      - name: Install OS dependencies
+        run: |
+          sudo tee -a /etc/apt/sources.list >/dev/null <<'EOF'
+          deb http://security.ubuntu.com/ubuntu focal-security main universe
+          EOF
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libx11-6 libxext6 libxrender1 libxtst6 libxi6 libxt6 libxinerama1 \
+            libgtk2.0-0 libncurses5 libnss3 python3-pip \
+            unzip xz-utils wget ca-certificates
+          pip3 install pyserial xmodem tqdm pyelftools construct
+
+      - name: Restore common toolchain cache
+        # Caches only the compiler/tool directories, not the device SDKs.
+        # CCS is intentionally omitted — it is not needed for make builds.
+        # On a cache miss each job installs the tools independently; the
+        # lightweight SysConfig/PRU CGT/ARM Clang installers are safe to
+        # run in parallel and the first job to finish saves the cache for
+        # subsequent workflow runs.
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/ti/ti-cgt-pru_2.3.3
+            ~/ti/ti-cgt-armllvm_4.0.3.LTS
+            ~/ti/sysconfig_1.26.2
+          key: toolchain-make-${{ runner.os }}-v3-sysconfig1_26_2-pru2_3_3-armclang4_0_3
+
+      - name: Install SYSCONFIG, TIARMCLANG and PRU CGT if missing
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          set -e
+          mkdir -p "$HOME/ti/downloads"
+
+          # Install SYSCONFIG 1.26.2
+          if [ ! -d "$HOME/ti/sysconfig_1.26.2" ]; then
+            cd "$HOME/ti/downloads"
+            wget -q --retry-connrefused --waitretry=1 --tries=5 --timeout=30 \
+              https://dr-download.ti.com/software-development/ide-configuration-compiler-or-debugger/MD-nsUM6f7Vvb/1.26.2.4477/sysconfig-1.26.2_4477-setup.run
+            chmod +x sysconfig-1.26.2_4477-setup.run
+            ./sysconfig-1.26.2_4477-setup.run --mode unattended --prefix "$HOME/ti/sysconfig_1.26.2"
+            chmod -R +x "$HOME/ti/sysconfig_1.26.2"
+          fi
+          # Install ARM CLANG CGT 4.0.3
+          if [ ! -d "$HOME/ti/ti-cgt-armllvm_4.0.3.LTS" ]; then
+            cd "$HOME/ti/downloads"
+            wget -q --retry-connrefused --waitretry=1 --tries=5 --timeout=30 \
+              https://dr-download.ti.com/software-development/ide-configuration-compiler-or-debugger/MD-ayxs93eZNN/4.0.3.LTS/ti_cgt_armllvm_4.0.3.LTS_linux-x64_installer.bin
+            chmod +x ti_cgt_armllvm_4.0.3.LTS_linux-x64_installer.bin
+            ./ti_cgt_armllvm_4.0.3.LTS_linux-x64_installer.bin --mode unattended --prefix "$HOME/ti/"
+          fi
+          # Install PRU CGT 2.3.3
+          if [ ! -d "$HOME/ti/ti-cgt-pru_2.3.3" ]; then
+            cd "$HOME/ti/downloads"
+            wget -q --retry-connrefused --waitretry=1 --tries=5 --timeout=30 \
+              https://dr-download.ti.com/software-development/ide-configuration-compiler-or-debugger/MD-FaNNGkDH7s/2.3.3/ti_cgt_pru_2.3.3_linux_installer_x86.bin
+            chmod +x ti_cgt_pru_2.3.3_linux_installer_x86.bin
+            ./ti_cgt_pru_2.3.3_linux_installer_x86.bin --mode unattended --prefix "$HOME/ti"
+          fi
+          "$HOME/ti/ti-cgt-armllvm_4.0.3.LTS/bin/tiarmclang" --version
+          "$HOME/ti/ti-cgt-pru_2.3.3/bin/clpru" --version
+
+      - name: Install device MCU+ SDK
+        if: matrix.mcu_plus_sdk != ''
+        run: |
+          set -e
+          mkdir -p "$HOME/ti/downloads"
+          cd "$HOME/ti/downloads"
+          wget -q --retry-connrefused --waitretry=1 --tries=5 --timeout=30 \
+            "${{ matrix.sdk_url }}"
+          chmod +x "${{ matrix.sdk_installer }}"
+          "./${{ matrix.sdk_installer }}" --mode unattended --prefix "$HOME/ti/"
+
+      - name: Generate imports.mak for CI
+        run: |
+          cat > imports.mak <<'EOF'
+          # Auto-generated by CI
+          PROFILE?=release
+          DEVICE_TYPE?=GP
+          BUILD_MCUPLUS?=y
+          BUILD_LINUX?=n
+
+          # Toolchains (standalone; CCS not installed in make CI)
+          CGT_TI_PRU_PATH := $(HOME)/ti/ti-cgt-pru_2.3.3
+          CGT_TI_ARM_CLANG_PATH := $(HOME)/ti/ti-cgt-armllvm_4.0.3.LTS
+          SYSCFG_PATH ?= $(HOME)/ti/sysconfig_1.26.2
+          # Other variables
+          # you probably will not need to edit these values
+          OPEN_PRU_PATH ?= $(abspath .)
+          # Exported for sub-makes that rely on environment
+          export CGT_TI_PRU_PATH
+          export CGT_TI_ARM_CLANG_PATH
+          export SYSCFG_PATH
+          export MKDIR=mkdir -p
+          export RMDIR=rm -rf
+          export RM=rm -f
+          export COPY=cp
+          export MOVE=mv
+          export CAT=cat
+          export SED=sed
+          export TOUCH=touch
+          export PATHSEP=/
+          export CHMOD=chmod
+          SYSCFG_CLI_PATH ?= $(SYSCFG_PATH)
+          SYSCFG_NODE = $(SYSCFG_PATH)/nodejs/node
+          SYSCFG_NWJS = $(SYSCFG_PATH)/nw/nw
+          SYSCFG_PRU_NO_TOOL_PRODUCT=$(PRU_NO_CODE_TOOL_PATH)/.metadata/product.json
+          SYSCFG_MCU_PLUS_SDK_PRODUCT=$(MCU_PLUS_SDK_PATH)/.metadata/product.json
+          EOF
+          echo "Generated imports.mak:" && sed -n '1,120p' imports.mak
+
+      - name: Build
+        run: |
+          SDK_ARG=""
+          if [ -n "${{ matrix.mcu_plus_sdk }}" ]; then
+            SDK_ARG="MCU_PLUS_SDK_PATH=$HOME/ti/${{ matrix.mcu_plus_sdk }}"
+          fi
+          make -j$(nproc) DEVICE=${{ matrix.device }} ${SDK_ARG}
+
+      - name: Verify all makefiles were built
+        run: |
+          DEVICE="${{ matrix.device }}"
+          MISSING=0
+
+          # For each core-level makefile on the filesystem for this device,
+          # check that the build produced a .out file. PRU makefiles write to
+          # generated/ and R5F makefiles write to the makefile directory itself,
+          # so search up to two levels deep. A missing .out means the makefile
+          # was never reached from the top-level make (e.g., not wired into its
+          # project makefile).
+          while IFS= read -r mak; do
+              dir="$(dirname "$mak")"
+              if ! find "${dir}" -maxdepth 2 -name "*.out" 2>/dev/null | grep -q .; then
+                  echo "ERROR: makefile never built: ${mak}"
+                  MISSING=$((MISSING + 1))
+              fi
+          done < <(find examples academy -name "makefile" \
+              \( -path "*/ti-pru-cgt/*" -o -path "*/ti-arm-clang/*" \) \
+              | grep "/${DEVICE}-" | sort)
+
+          if [ "${MISSING}" -gt 0 ]; then
+              echo ""
+              echo "${MISSING} makefile(s) for ${DEVICE} were never invoked -- verify"
+              echo "each is reachable from the top-level make."
+              exit 1
+          fi
+          echo "All makefiles built for ${DEVICE}."
+
+      - name: Upload build artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-${{ matrix.device }}
+          path: |
+            **/build/**
+            **/out/**
+            **/*.out
+            **/*.bin
+          if-no-files-found: ignore
+
+  #formatting:
+    #name: Static formatting checks
+    #runs-on: ubuntu-latest
+    #steps:
+      #- name: Checkout repository
+      #  uses: actions/checkout@v4
+
+      #- name: Enforce newline and EOL policy
+      #  run: |
+          # Fail if any file contains no CRLF or tabs or lines > 129 chars
+          #   ! git ls-files -z | while IFS= read -r -d '' f; do
+          #   if file -b --mime-type "$f" | grep -q '^text/'; then
+          #   if ! grep -q $'\r' -- "$f"; then
+          #     printf '%s\n' "$f"
+          #   fi
+          #   fi
+          #   done
+          #! git grep -Il \t' | xargs -r -I{} bash -c 'echo "Tab character found in {}"; exit 1'
+          #! git grep -InE '.{130,}' -- ':!*.png' ':!*.jpg' ':!*.gif' ':!*.bin' ':!*.out' && true
+
+      #- name: Verify no stray TODO, prefer FIXME
+      #  run: |
+      #    if git grep -In "TODO" -- ':!**/third_party/**' ':!**/*.md' ; then
+      #      echo "Found TODO markers. Use FIXME as per repository rules.";
+      #      exit 1;
+      #    fi
+      #  shell: bash
