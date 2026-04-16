@@ -53,12 +53,62 @@ function validate(inst, report) {
 }
 
 /**
+ * Returns guarded .set/.asg definitions for ICSS_CFG register symbols.
+ * Emitted once at the top of the generated macro so the assembler has the
+ * symbols available even when icss_cfg_regs.inc / icss_regs.inc are not
+ * explicitly included by the user.
+ */
+function getIcssCfgDefinitions() {
+    return `\
+; ========== ICSS CFG register definitions (auto-generated, guarded) ==========
+    .if !$isdefed("ICSS_CFG")
+    .asg    c4,     ICSS_CFG
+    .endif
+    .if !$isdefed("ICSS_CFG_GPCFG0")
+ICSS_CFG_GPCFG0                 .set    0x0008
+    .endif
+    .if !$isdefed("ICSS_CFG_GPCFG1")
+ICSS_CFG_GPCFG1                 .set    0x000C
+    .endif
+    .if !$isdefed("ICSS_CFG_PRU0_ENDAT_RXCFG")
+ICSS_CFG_PRU0_ENDAT_RXCFG       .set    0x00E0
+    .endif
+    .if !$isdefed("ICSS_CFG_PRU1_ENDAT_RXCFG")
+ICSS_CFG_PRU1_ENDAT_RXCFG       .set    0x0100
+    .endif
+    .if !$isdefed("ICSS_CFG_PRU0_ENDAT_CH0_CFG0")
+ICSS_CFG_PRU0_ENDAT_CH0_CFG0    .set    0x00E8
+    .endif
+    .if !$isdefed("ICSS_CFG_PRU0_ENDAT_CH1_CFG0")
+ICSS_CFG_PRU0_ENDAT_CH1_CFG0    .set    0x00F0
+    .endif
+    .if !$isdefed("ICSS_CFG_PRU0_ENDAT_CH2_CFG0")
+ICSS_CFG_PRU0_ENDAT_CH2_CFG0    .set    0x00F8
+    .endif
+    .if !$isdefed("ICSS_CFG_PRU1_ENDAT_CH0_CFG0")
+ICSS_CFG_PRU1_ENDAT_CH0_CFG0    .set    0x0108
+    .endif
+    .if !$isdefed("ICSS_CFG_PRU1_ENDAT_CH1_CFG0")
+ICSS_CFG_PRU1_ENDAT_CH1_CFG0    .set    0x0110
+    .endif
+    .if !$isdefed("ICSS_CFG_PRU1_ENDAT_CH2_CFG0")
+ICSS_CFG_PRU1_ENDAT_CH2_CFG0    .set    0x0118
+    .endif
+; ============================================================================
+`;
+}
+
+/**
  * Returns the body of the UART RX configuration macro
  * @param {string} pruInstructionMacro - The macro instruction string
  * @param {string} opCode - The operation code (macro name)
  * @returns {string} The full macro body as a string with parameters replaced
  */
 function getMacro(pruInstructionMacro, opCode) {
+    // When generating the macro definition (not an inline call), prepend the
+    // guarded ICSS_CFG register definitions so they are available to the assembler.
+    const prefix = (pruInstructionMacro === "") ? getIcssCfgDefinitions() : "";
+
     let macroBody = "";
 
     // Check if this is extended mode (>32 data bits, needs two output registers)
@@ -159,13 +209,14 @@ function getMacro(pruInstructionMacro, opCode) {
 
     if (isLSB || isMSB) {
         macroBody += `
-    ; ========== Global Reinit ==========
-	; Perform global TX/RX reinit (required before first use)
-	set     r31, r31, 19                       ; Trigger reinit
+    ; ========== Global Reinit THEN de-assert rx_en (TRM Table 6-424 sequence) ==========
+	; TRM note: "assert tx_global_reinit then de-assert rx_en"
+	set     r31, r31, 19                       ; 1. Trigger reinit first
     ; ========== Delay after Reinit ==========
     .loop   20
     nop
     .endloop
+	ldi     r30.b3, 0x00                       ; 2. De-assert rx_en after reinit has settled
 
 	; ========== Configure GPCFG${pruNum} for PRU${pruNum} Peripheral Mode ==========
 	; Set mux mode to peripheral mode for PRU${pruNum}
@@ -472,13 +523,19 @@ no_stop_carry?:
 
         // Note: Data is now available in dataByteRegLo (and dataByteRegHi for extended mode)
         // The connected block will use these registers for further processing
+
+        macroBody += `
+	; ========== Disable RX (TRM step 7) ==========
+	; Clear rx_en to disable channel - resets all counters and flags
+	ldi     r30.b3, 0x00
+`;
     }
 
     if (pruInstructionMacro == "") {
         macroBody += "\n" + " .endm";
     }
 
-    return macroBody;
+    return prefix + macroBody;
 }
 
 function getAIContext() {
@@ -589,8 +646,157 @@ function getAIContext() {
 }
 
 function getLongDescription() {
-    /* TODO: add longDescription */
-    return "";
+    return `
+## UART RX (Hardware-Accelerated via ENDAT)
+
+### Purpose
+Configures the PRU-ICSS ENDAT peripheral hardware for UART reception at high speed (up to 12 Mbaud) and receives one complete UART frame. This block performs hardware initialization, frame reception, bit extraction, and outputs the processed data byte via a dynamically allocated output register.
+
+### How It Works
+1. **Peripheral Mode**: Sets GPCFG to enable peripheral interface mode for the selected PRU
+2. **RX Clock Configuration**: Configures clock divider and oversample rate
+   - RX frequency = Core_Clock / (divider + 1)
+   - Example: 192 MHz / (1+1) = 96 MHz with 8x oversample = 12 MHz baud rate
+3. **Start Bit Detection**: Configures start bit polarity (rising/falling edge)
+4. **Frame Configuration**: Sets frame size and bit ordering (LSB/MSB first)
+5. **Channel Selection**: Configures one of three available channels (CH0, CH1, or CH2)
+6. **Global Reinit**: Resets the ENDAT peripheral hardware state before each reception
+   - **Important**: Reinit clears all pending/buffered data in the ENDAT peripheral
+   - This ensures clean state for each frame but means previously buffered frames are lost
+   - Reinit must complete before RX enable (20-cycle wait loop included)
+7. **RX Enable**: Enables reception on the selected channel
+8. **Frame Reception**: Polls for valid data, reads oversampled bits, extracts middle sample
+9. **Bit Accumulation**: Assembles bits according to LSB/MSB first setting
+10. **Data Extraction**: Removes start/stop bits, extracts data byte to output register
+
+### Output Port
+- **output1**: Received data byte (1 byte) - dynamically allocated register
+  - Connect this port to downstream blocks that need to process the received data
+
+### Configuration Parameters
+
+**Channel Selection** (0, 1, or 2)
+- Selects which ENDAT channel to use for UART RX
+- Each channel can operate independently
+- Default: 2 (matches most common configurations)
+
+**Clock Source** (192 MHz or 200 MHz)
+- RX clock source selection
+- 192 MHz: ICSSGn_UART_CLK (default) - tested up to 32 MHz baud rate
+- 200 MHz: ICSSGn_CORE_CLK - tested up to 20 MHz baud rate
+- Configured via PRU0_ED_RX_CLK_SEL bit in ICSSG_PRU0_ED_RX_CFG_REG
+- Default: 192 MHz
+
+**Baud Rate (MHz)**
+- Desired UART baud rate in MHz
+- Selected clock source must be divisible by (baudRate × oversample)
+- Clock divider is automatically calculated: (clockSource / (baudRate × oversample)) - 1
+- Example with 192 MHz: 12 MHz baud with 8x oversample → clockDivider = (192 / (12 × 8)) - 1 = 1
+- Example with 200 MHz: 10 MHz baud with 8x oversample → clockDivider = (200 / (10 × 8)) - 1 = (200/80) - 1 = 1.5 (invalid)
+- Default: 12 MHz
+
+**Oversample Size** (1x, 2x, 4x, 8x)
+- Number of samples per bit for robust reception
+- Higher oversample = better noise immunity
+- 8x oversample means 8 samples per bit, block checks middle sample (bit 4)
+- 4x oversample checks bit 2, 2x/1x check bit 0
+- RX baud rate = RX_clock / oversample
+- Default: 8x
+
+**Start Bit Polarity** (Falling=0, Rising=1)
+- Defines the edge that indicates start of frame
+- Standard UART uses falling edge (idle high → start low)
+- Default: Rising (1)
+
+**Frame Size** (3-32 bits)
+- Total number of bits to receive per frame
+- Standard UART: 10 bits (1 start + 8 data + 1 stop)
+- Maximum supported: 32 bits (30 data bits + start + stop)
+- Default: 10
+
+**Bit Swap (LSB First)** (Enabled/Disabled)
+- Enable: LSB transmitted first (standard UART)
+- Disable: MSB transmitted first
+- Default: Enabled
+
+### Calculation Example
+- UART Clock: 192 MHz
+- Baud Rate: 12 MHz
+- Oversample: 8x
+- Clock Divider: (192 / (12 × 8)) - 1 = 1
+- RX Clock: 192 / (1+1) = 96 MHz
+- Verification: 96 MHz / 8 = 12 MHz ✓
+
+### Generated Assembly
+\`\`\`assembly
+; Configure GPCFG1 for peripheral mode
+ldi32   TEMP_REG1, 0x04000000
+ldi     TEMP_REG2.w0, ICSS_CFG_GPCFG1
+sbco    &TEMP_REG1, ICSS_CFG, TEMP_REG2.w0, 4
+
+; Configure RXCFG (clock divider, oversample, start bit polarity)
+ldi     TEMP_REG1.w0, 0x000F        ; Oversample + polarity
+ldi     TEMP_REG1.w2, 0x0001        ; Clock divider
+ldi     TEMP_REG2.w0, ICSS_CFG_PRU1_ENDAT_RXCFG
+sbco    &TEMP_REG1, ICSS_CFG, TEMP_REG2.w0, 4
+
+; Configure CHx_CFG0 (frame size, bit swap)
+ldi     TEMP_REG1.w0, 0x000A        ; Frame size = 10
+ldi     TEMP_REG1.w2, 0x8000        ; Bit swap enabled
+ldi     TEMP_REG2.w0, ICSS_CFG_PRU1_ENDAT_CH2_CFG0
+sbco    &TEMP_REG1, ICSS_CFG, TEMP_REG2.w0, 4
+
+; Global reinit
+set     r31, r31, 19
+; Wait...
+
+; Enable RX on channel 2
+set     r30, r30, 26
+\`\`\`
+
+### Performance
+- **Configuration Cycles**: ~25-30 cycles (GPCFG1, RXCFG, CHx_CFG0, reinit wait, RX enable)
+- **Reception Cycles**: Variable, depends on frame size and baud rate
+  - Standard 10-bit frame: ~10 iterations of bit polling loop
+  - Each bit: Wait for valid flag + read + clear + accumulate (~5-10 cycles per bit)
+- **Total**: ~50-100 cycles typical for 10-bit frame
+- **Max Baud Rate**: Up to 12 Mbaud with proper clock configuration
+
+### Usage Notes
+- This block performs **both configuration and reception** of one UART frame
+- Execution continues to next block after frame is received and stored
+- **Reinit Side Effects**:
+  - Global reinit (R31 bit 19) resets TX and RX state machines
+  - Any data currently being received or buffered will be lost
+  - Reinit is required before first use and recommended between frames for clean state
+  - 20-cycle wait ensures reinit completes before RX enable
+- Data is output to the dynamically allocated output register (connect output port to downstream blocks)
+- Valid flag must be cleared (set R31 bit) after each bit read to prevent overflow
+- Hardware automatically deserializes incoming UART frames with oversampling
+
+### Terminology
+- **UART**: Universal Asynchronous Receiver/Transmitter - serial communication protocol
+- **ENDAT**: PRU-ICSS peripheral hardware used for high-speed serial reception
+- **Baud Rate**: Bits per second transmission rate
+- **Oversample**: Multiple samples per bit for noise immunity and bit detection
+- **Start Bit**: Single bit that marks beginning of frame (typically falling edge)
+- **Stop Bit**: Single bit that marks end of frame (typically high)
+- **Frame**: Complete data transmission including start, data, and stop bits
+- **LSB First**: Least Significant Bit transmitted first (standard UART)
+- **MSB First**: Most Significant Bit transmitted first (non-standard)
+- **Bit Swap**: Hardware feature to reverse bit order (LSB↔MSB)
+- **Valid Flag**: R31 status bit indicating channel has valid data ready
+- **Global Reinit**: Hardware reset of ENDAT TX and RX state machines
+- **Channel**: One of three independent ENDAT reception paths (CH0, CH1, CH2)
+- **GPCFG**: Global Peripheral Configuration register
+- **RXCFG**: Receive Configuration register (clock, oversample, polarity)
+- **CHx_CFG0**: Channel Configuration register (frame size, bit swap)
+- **Output Register**: Dynamically allocated register where received byte is stored
+- **R30**: PRU output register (used for RX enable control)
+- **R31**: PRU input register (used for valid flags and data bits)
+
+---
+`;
 }
 
 exports = {
@@ -601,6 +807,7 @@ exports = {
     uiView: "graph",
     requiredIncludes: [
         /*TODO :  review on how to add include files for the modules*/
+        // for a workaround defined the registers in the UART block itself 
     ],
     templates: {
         "/pru_blocks/common/pru_syscfg.asm.xdt": null

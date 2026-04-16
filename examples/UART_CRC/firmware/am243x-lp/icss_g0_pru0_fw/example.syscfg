@@ -1,0 +1,93 @@
+/**
+ * These arguments were used when this file was generated. They will be automatically applied on subsequent loads
+ * via the GUI or CLI. Run CLI with '--help' for additional information on how to override these arguments.
+ * @cliArgs --device "AM243x_ALX_beta" --part "ALX" --package "ALX" --context "icss_g0_pru0" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @v2CliArgs --device "AM2434" --package "FCCSP (ALX)" --variant "AM2434-E" --context "icss_g0_pru0" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @versions {"tool":"1.27.0+4565"}
+ */
+
+/**
+ * Import the modules used in this configuration.
+ */
+const crc_block              = scripting.addModule("/pru_blocks/application_specific/crc_block", {}, false);
+const crc_block1             = crc_block.addInstance();
+const load_constant_block    = scripting.addModule("/pru_blocks/data_handling/load_constant_block", {}, false);
+const load_constant_block1   = load_constant_block.addInstance();
+const load_constant_block2   = load_constant_block.addInstance();
+const flow_control_block     = scripting.addModule("/pru_blocks/program_control/flow_control_block", {}, false);
+const flow_control_block1    = flow_control_block.addInstance();
+const uart_tx                = scripting.addModule("/pru_blocks/pru_io_blocks/uart_tx", {}, false);
+const uart_tx1               = uart_tx.addInstance();
+const memory_access_block    = scripting.addModule("/pru_blocks/utils/memory_access_block", {}, false);
+const memory_access_block1   = memory_access_block.addInstance();
+const memory_access_block2   = memory_access_block.addInstance();
+const memory_access_block3   = memory_access_block.addInstance();
+const memory_access_block4   = memory_access_block.addInstance();
+const memory_variable_block  = scripting.addModule("/pru_blocks/utils/memory_variable_block", {}, false);
+const memory_variable_block1 = memory_variable_block.addInstance();
+
+/**
+ * Write custom configuration values to the imported modules.
+ */
+crc_block1.$name         = "CRC_0";
+crc_block1.crcPolynomial = 0x7;
+
+load_constant_block1.$name     = "Load_Constant_0";
+load_constant_block1.constant1 = 170;
+
+load_constant_block2.$name = "Load_Constant_1";
+
+flow_control_block1.$name = "Flow_Control_0";
+
+uart_tx1.$name    = "PRU_UART_TX_0";
+uart_tx1.dataBits = 16;
+
+memory_access_block1.$name         = "Memory_Access_0";
+memory_access_block1.operationMode = "write";
+memory_access_block1.symbolSelect  = "buffer";
+memory_access_block1.dataSize      = 1;
+
+memory_access_block2.$name        = "Memory_Access_1";
+memory_access_block2.symbolSelect = "buffer";
+memory_access_block2.dataSize     = 1;
+
+memory_access_block3.$name         = "Memory_Access_2";
+memory_access_block3.operationMode = "write";
+memory_access_block3.symbolSelect  = "buffer";
+memory_access_block3.offsetValue   = 0x1;
+memory_access_block3.dataSize      = 1;
+
+memory_access_block4.$name        = "Memory_Access_3";
+memory_access_block4.symbolSelect = "buffer";
+memory_access_block4.dataSize     = 2;
+
+memory_variable_block1.$name       = "Memory_Variable_0";
+memory_variable_block1.sizeInBytes = 2;
+
+/**
+ * Connections between modules.
+ */
+scripting.connect(crc_block1, "input1", load_constant_block2, "output1");
+scripting.connect(crc_block1, "input2", memory_access_block2, "output1");
+scripting.connect(crc_block1, "prev", load_constant_block2, "next");
+scripting.connect(crc_block1, "next", memory_access_block3, "prev");
+scripting.connect(crc_block1, "output1", memory_access_block3, "input1");
+scripting.connect(load_constant_block1, "output1", memory_access_block1, "input1");
+scripting.connect(flow_control_block1, "prev", uart_tx1, "next");
+scripting.connect(uart_tx1, "input1", memory_access_block4, "output1");
+scripting.connect(memory_access_block1, "next", memory_access_block2, "prev");
+scripting.connect(memory_access_block3, "next", memory_access_block4, "prev");
+
+/**
+ * (x,y) coordinates for modules that are displayed in a graph.
+ */
+crc_block1.$position             = [550,140];
+load_constant_block1.$position   = [20,160];
+load_constant_block2.$position   = [370,90];
+flow_control_block1.$position    = [1250,130];
+uart_tx1.$position               = [1075,130];
+memory_access_block1.$position   = [195,160];
+memory_access_block2.$position   = [370,160];
+memory_access_block3.$position   = [725,140];
+memory_access_block4.$position   = [900,140];
+memory_variable_block1.$position = [20,10];

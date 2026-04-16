@@ -52,6 +52,52 @@ function validate(inst, report) {
 }
 
 /**
+ * Returns guarded .set/.asg definitions for ICSS_CFG register symbols.
+ * Emitted once at the top of the generated macro (before .macro line) so the
+ * assembler has the symbols available even when icss_cfg_regs.inc / icss_regs.inc
+ * are not explicitly included by the user.
+ */
+function getIcssCfgDefinitions() {
+    return `\
+; ========== ICSS CFG register definitions (auto-generated, guarded) ==========
+    .if !$isdefed("ICSS_CFG")
+    .asg    c4,     ICSS_CFG
+    .endif
+    .if !$isdefed("ICSS_CFG_GPCFG0")
+ICSS_CFG_GPCFG0                 .set    0x0008
+    .endif
+    .if !$isdefed("ICSS_CFG_GPCFG1")
+ICSS_CFG_GPCFG1                 .set    0x000C
+    .endif
+    .if !$isdefed("ICSS_CFG_PRU0_ENDAT_TXCFG")
+ICSS_CFG_PRU0_ENDAT_TXCFG       .set    0x00E4
+    .endif
+    .if !$isdefed("ICSS_CFG_PRU1_ENDAT_TXCFG")
+ICSS_CFG_PRU1_ENDAT_TXCFG       .set    0x0104
+    .endif
+    .if !$isdefed("ICSS_CFG_PRU0_ENDAT_CH0_CFG0")
+ICSS_CFG_PRU0_ENDAT_CH0_CFG0    .set    0x00E8
+    .endif
+    .if !$isdefed("ICSS_CFG_PRU0_ENDAT_CH1_CFG0")
+ICSS_CFG_PRU0_ENDAT_CH1_CFG0    .set    0x00F0
+    .endif
+    .if !$isdefed("ICSS_CFG_PRU0_ENDAT_CH2_CFG0")
+ICSS_CFG_PRU0_ENDAT_CH2_CFG0    .set    0x00F8
+    .endif
+    .if !$isdefed("ICSS_CFG_PRU1_ENDAT_CH0_CFG0")
+ICSS_CFG_PRU1_ENDAT_CH0_CFG0    .set    0x0108
+    .endif
+    .if !$isdefed("ICSS_CFG_PRU1_ENDAT_CH1_CFG0")
+ICSS_CFG_PRU1_ENDAT_CH1_CFG0    .set    0x0110
+    .endif
+    .if !$isdefed("ICSS_CFG_PRU1_ENDAT_CH2_CFG0")
+ICSS_CFG_PRU1_ENDAT_CH2_CFG0    .set    0x0118
+    .endif
+; ============================================================================
+`;
+}
+
+/**
  * Returns the body of the UART TX configuration macro for single-shot mode (1-29 bits)
  * @param {string} pruInstructionMacro - The macro instruction string
  * @param {string} opCode - The operation code (macro name)
@@ -585,12 +631,16 @@ wait_tx_done?:
  * Dispatches to single-shot, continuous, or specific bit-size mode based on macro name
  */
 function getMacro(pruInstructionMacro, opCode) {
+    // When generating the macro definition (not an inline call), prepend the
+    // guarded ICSS_CFG register definitions so they are available to the assembler.
+    const prefix = (pruInstructionMacro === "") ? getIcssCfgDefinitions() : "";
+
     // Check for specific bit-size macros (30, 31, 32 bits)
     const bitSizeMatch = opCode.match(/_(\d+)bit_/);
     if (bitSizeMatch) {
         const bitSize = parseInt(bitSizeMatch[1]);
         if (bitSize >= 30 && bitSize <= 32) {
-            return getMacroSpecificBits(pruInstructionMacro, opCode, bitSize);
+            return prefix + getMacroSpecificBits(pruInstructionMacro, opCode, bitSize);
         }
     }
 
@@ -599,9 +649,9 @@ function getMacro(pruInstructionMacro, opCode) {
     const numFifoBytes = numBytesMatch ? parseInt(numBytesMatch[1]) : 2;
 
     if (numFifoBytes <= 4) {
-        return getMacroSingleShot(pruInstructionMacro, opCode);
+        return prefix + getMacroSingleShot(pruInstructionMacro, opCode);
     } else {
-        return getMacroContinuous(pruInstructionMacro, opCode);
+        return prefix + getMacroContinuous(pruInstructionMacro, opCode);
     }
 }
 
@@ -1134,8 +1184,150 @@ function getAIContext() {
 }
 
 function getLongDescription() {
-    /* TODO: add longDescription */
-    return "";
+    return `
+## UART TX (Hardware-Accelerated via ENDAT)
+
+### Purpose
+Configures the PRU-ICSS ENDAT peripheral hardware for UART transmission at configurable baud rates. Supports two modes:
+- **Single-shot mode** (1-29 data bits): Frame size ≤ 31 bits, uses standard FIFO pre-load
+- **Continuous mode** (30-62 data bits): Frame size > 31 bits, uses continuous FIFO loading with polling
+
+### How It Works
+1. **Peripheral Reset Sequence**: Ensures clean peripheral state before transmission
+   - Clears all RX enables (R30 bits 24, 25, 26) to prevent interference
+   - Triggers Global Reinit (R31 bit 19) to clear FIFO and state machines
+   - **Polls for busy flag to clear** before proceeding (CH0=bit5, CH1=bit13, CH2=bit21)
+   - This is critical for consistent behavior when reloading firmware without full system reset, as the ENDAT peripheral state persists across PRU core resets
+2. **Peripheral Mode**: Sets GPCFG to enable peripheral interface mode for selected PRU
+3. **TX Clock Configuration**: Configures TX clock divider
+   - TX frequency = Core_Clock / (divider + 1)
+   - Example: 192 MHz / (15+1) = 12 MHz baud rate
+4. **Frame Configuration**:
+   - Single-shot: Sets frame size to (dataBits + 2)
+   - Continuous: Sets frame size to 0 (continuous transmission)
+5. **Clock Mode**: Sets mode 3 (stop clock high after TX completes)
+6. **Channel Selection**: Selects TX channel via R30[17:16]
+7. **Disable RX**: Disables RX on the selected channel to prevent interference
+8. **Frame Construction**: Constructs frame from input data with start and stop bits
+9. **Global Reinit**: Triggers another reinit after configuration
+   - Ensures clean state before FIFO loading
+   - Followed by delay (20 NOP cycles) to allow reinit to complete
+10. **FIFO Loading**:
+    - Single-shot: Pre-loads 1-4 bytes
+    - Continuous: Pre-loads 4 bytes, then polls FIFO status to load remaining 1-4 bytes
+11. **Transmission Start**: Triggers transmission by setting R31 bit 18
+12. **Wait for Completion**:
+    - Continuous: Waits for FIFO empty, then waits for busy flag to clear
+    - Single-shot: Waits for busy flag to clear
+
+### Configuration Parameters
+
+**Input Ports**
+- **input1**: Lower 32 bits of data to transmit
+- **input2**: Upper 32 bits of data (used when dataBits > 32)
+
+**PRU Selection** (PRU0 or PRU1)
+- Automatically detected from system context (read-only)
+- Determines peripheral base addresses
+- The PRU number is extracted from the project configuration
+
+**Channel Selection** (0, 1, or 2)
+- Selects which ENDAT channel to use for UART TX
+- Default: 0
+
+**Clock Source** (192 MHz or 200 MHz)
+- TX clock source selection
+- 192 MHz: ICSSGn_UART_CLK (default) - tested up to 32 MHz baud rate
+- 200 MHz: ICSSGn_CORE_CLK - tested up to 20 MHz baud rate
+- Configured via PRU0_ED_TX_CLK_SEL bit in ICSSG_PRU0_ED_TX_CFG_REG
+- Default: 192 MHz
+
+**Baud Rate (MHz)**
+- Desired UART baud rate in MHz
+- Selected clock source must be divisible by baudRate
+- Clock divider is automatically calculated: (clockSource / baudRate) - 1
+- Example with 192 MHz: 12 MHz baud → clockDivider = (192 / 12) - 1 = 15
+- Example with 200 MHz: 10 MHz baud → clockDivider = (200 / 10) - 1 = 19
+- Default: 12 MHz
+
+**Start Bit Polarity** (0 or 1)
+- Polarity of start bit
+- 0 = Low/Space, 1 = High/Mark
+- Default: 1
+
+**Stop Bit Polarity** (0 or 1)
+- Polarity of stop bit (independent of start bit)
+- 0 = Low/Space, 1 = High/Mark
+- Default: 0
+
+**Start/Stop Bit Combinations**
+| Start | Stop | Macro Suffix |
+|-------|------|--------------|
+| 0     | 1    | _start0 (default) |
+| 1     | 0    | _start1 (default) |
+| 0     | 0    | _start0_stop0 |
+| 1     | 1    | _start1_stop1 |
+
+**Role of Start and Stop Bits**
+- **Start Bit**: Signals the beginning of a frame. The receiver uses this transition to synchronize and begin sampling. The polarity determines the edge direction (0=falling from high idle, 1=rising from low idle).
+- **Stop Bit**: Marks the end of the frame and returns the line to a known state before the next frame. Allows the receiver to validate frame integrity (framing error if stop bit doesn't match expected polarity).
+
+**Bit Swap (LSB First)**
+- Enable LSB-first transmission
+- Default: true (LSB first)
+
+**Data Bits** (1-62)
+- **IMPORTANT**: This is ONLY the number of DATA bits to transmit, NOT including start/stop bits
+- The block automatically adds the start bit and stop bit to construct the complete frame
+- Frame size = data bits + 2 (1 start bit + 1 stop bit) - calculated automatically
+- Example: To transmit 8 data bits, set dataBits = 8 (block creates 10-bit frame: start + 8 data + stop)
+- Example: To transmit 52 data bits, set dataBits = 52 (block creates 54-bit frame: start + 52 data + stop)
+- 1-29: Single-shot mode
+- 30-62: Continuous mode
+- Default: 8
+
+### Frame Size and Mode Selection
+
+| Data Bits | Frame Size | Mode        | Total Bytes | Initial Load | Continuous Load |
+|-----------|------------|-------------|-------------|--------------|-----------------|
+| 1-6       | 3-8        | Single-shot | 1           | 1            | 0               |
+| 7-14      | 9-16       | Single-shot | 2           | 2            | 0               |
+| 15-22     | 17-24      | Single-shot | 3           | 3            | 0               |
+| 23-29     | 25-31      | Single-shot | 4           | 4            | 0               |
+| 30-37     | 32-39      | Continuous  | 5           | 4            | 1               |
+| 38-45     | 40-47      | Continuous  | 6           | 4            | 2               |
+| 46-53     | 48-55      | Continuous  | 7           | 4            | 3               |
+| 54-62     | 56-64      | Continuous  | 8           | 4            | 4               |
+
+### Continuous Mode Details
+
+In continuous mode (dataBits > 29):
+- Frame size register is set to 0 (continuous transmission)
+- First 4 bytes are pre-loaded to FIFO
+- Transmission is started
+- Remaining bytes are loaded by polling tx_fifo_sts (R31[4:2] for CH0)
+- When FIFO level ≤ 2, next byte is loaded
+- After all bytes loaded, wait for FIFO empty then TX complete
+
+### Supported Data Sizes and Internal Modes
+
+| Data Bits | Frame Size | Internal Mode | Macro Type |
+|-----------|------------|---------------|------------|
+| 1-29      | 3-31       | Single-shot   | Byte-count based |
+| 30        | 32         | Continuous    | Bit-specific (30bit) |
+| 31        | 33         | Continuous    | Bit-specific (31bit) |
+| 32        | 34         | Continuous    | Bit-specific (32bit) |
+| 33-62     | 35-64      | Continuous    | Byte-count based |
+
+**Note:** The block automatically handles frame construction, adding start and stop bits, and manages FIFO loading based on the data size.
+
+### Register Usage
+- **TEMP_REG1 (R28)**: First 32 bits of constructed frame
+- **TEMP_REG2 (R29)**: Second 32 bits of constructed frame (continuous mode)
+- **R0**: Used for FIFO status polling in continuous mode
+
+---
+`;
 }
 
 exports = {
@@ -1146,6 +1338,7 @@ exports = {
     uiView: "graph",
     requiredIncludes: [
         /*TODO :  review on how to add include files for the modules*/
+        // for a workaround defined the registers in the UART block itself 
     ],
     templates: {
         "/pru_blocks/common/pru_syscfg.asm.xdt": null
