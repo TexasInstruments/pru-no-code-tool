@@ -48,13 +48,10 @@ jobs:
     steps:
       - name: Install OS dependencies
         run: |
-          sudo tee -a /etc/apt/sources.list >/dev/null <<'EOF'
-          deb http://security.ubuntu.com/ubuntu focal-security main universe
-          EOF
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             libx11-6 libxext6 libxrender1 libxtst6 libxi6 libxt6 libxinerama1 \
-            libgtk2.0-0 libncurses5 libnss3 python3-pip \
+            libgtk2.0-0 libncurses6 libnss3 python3-pip \
             unzip xz-utils wget ca-certificates xvfb
           pip3 install pyserial xmodem tqdm pyelftools construct
 

@@ -2,6 +2,8 @@ include ../imports.mak
 
 SUBDIRS := \
     empty \
+	SPI_loopback \
+	UART_CRC \
 
 # "make" or "make all" builds projects that match $(DEVICE) set in imports.mak
 all: ARGUMENTS = all

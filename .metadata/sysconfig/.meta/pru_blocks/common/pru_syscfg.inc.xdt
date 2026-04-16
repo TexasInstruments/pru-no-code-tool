@@ -66,6 +66,7 @@ SLICE`icssgNum`      .set 1
 
 % // ;************************************* includes *************************************
 % // TODO : review again if external include files apart from sysconfig generated macros are required
+% // only required for UART blocks -> for now using the workaround 
 
 
 ;************************************* register definitions *************************
