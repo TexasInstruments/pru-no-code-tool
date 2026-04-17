@@ -49,6 +49,12 @@ The file contains critical workflow rules that prevent common AI mistakes such a
 - MCU+ SDK for your target device
 - Code Composer Studio (CCS) or compatible IDE
 
+### Installing dependencies 
+
+- Install MCU+SDK , follow the steps mentioned in [here](./docs/getting_started_mcuplus.md)
+- For AM64x install the dependencies by following the steps [here](https://software-dl.ti.com/mcu-plus-sdk/esd/AM64X/latest/exports/docs/api_guide_am64x/SDK_DOWNLOAD_PAGE.html)
+- For AM243x install the dependencies by following the steps [here](https://software-dl.ti.com/mcu-plus-sdk/esd/AM243X/latest/exports/docs/api_guide_am243x/SDK_DOWNLOAD_PAGE.html)
+
 ### Basic Workflow
 
 1. Open SysConfig from your firmware project and add PRU No-Code module
