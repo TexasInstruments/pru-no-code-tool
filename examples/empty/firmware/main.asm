@@ -25,7 +25,7 @@
 
     .global     main
     .ref        sysconfig_generated_start
-    .sect       ".text"
+    .sect       ".text:main"
 
 ;********
 ;* MAIN *

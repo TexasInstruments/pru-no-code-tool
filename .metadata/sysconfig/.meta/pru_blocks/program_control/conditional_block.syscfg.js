@@ -287,7 +287,6 @@ exports = {
 			default: 1,
 			readOnly: true
 		},
-		//TODO :  add configuration to skip false if true is executed
 	],
 	ports: (inst) => { 
 		let ports = [];

@@ -1179,7 +1179,7 @@ exports = {
 				// MODE0 (CPHA=0, CPOL=0): SHIFTING_EDGE = SET SCLK (HIGH pulse starts)
 				// Overhead: SET SCLK = 1 cycle
 				if (mode === "MODE0") {
-					value = high - 2;
+					value = high - 1;
 				}
 				// MODE1 (CPHA=1, CPOL=0): SHIFTING_EDGE = SET SCLK (HIGH pulse starts)
 				// Overhead: SET SCLK + data setup (3) = 4 cycles

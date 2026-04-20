@@ -36,7 +36,7 @@ MEMORY
 
 /* Specify the sections allocation into memory */
 SECTIONS {
-
+	.text:main  >  0,        PAGE 0
 	.text		>  RTU_IMEM, PAGE 0
 	.stack		>  RTU0_DMEM_0, PAGE 1
 	.bss		>  RTU0_DMEM_0, PAGE 1

@@ -36,7 +36,7 @@ MEMORY
 
 /* Specify the sections allocation into memory */
 SECTIONS {
-
+	.text:main  >  0,        PAGE 0
 	.text		>  TX_PRU_IMEM, PAGE 0
 	.stack		>  TX_PRU0_DMEM_0, PAGE 1
 	.bss		>  TX_PRU0_DMEM_0, PAGE 1

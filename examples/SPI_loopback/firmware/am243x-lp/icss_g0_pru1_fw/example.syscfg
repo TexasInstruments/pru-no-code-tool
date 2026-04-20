@@ -1,0 +1,40 @@
+/**
+ * These arguments were used when this file was generated. They will be automatically applied on subsequent loads
+ * via the GUI or CLI. Run CLI with '--help' for additional information on how to override these arguments.
+ * @cliArgs --device "AM243x_ALX_beta" --part "ALX" --package "ALX" --context "icss_g0_pru1" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @v2CliArgs --device "AM2434" --package "FCCSP (ALX)" --variant "AM2434-E" --context "icss_g0_pru1" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @versions {"tool":"1.27.0+4565"}
+ */
+
+/**
+ * Import the modules used in this configuration.
+ */
+const flow_control_block  = scripting.addModule("/pru_blocks/program_control/flow_control_block", {}, false);
+const flow_control_block1 = flow_control_block.addInstance();
+const pru_spi_read        = scripting.addModule("/pru_blocks/pru_io_blocks/pru_spi_read", {}, false);
+const pru_spi_read1       = pru_spi_read.addInstance();
+
+/**
+ * Write custom configuration values to the imported modules.
+ */
+flow_control_block1.$name  = "Flow_Control_0";
+flow_control_block1.opCode = "HALT";
+
+pru_spi_read1.$name                                    = "PRU_SPI_Read_0";
+pru_spi_read1.packetSize                               = 32;
+pru_spi_read1["sclk high pulse width (in PRU cycles)"] = 12;
+pru_spi_read1["sclk low pulse width (in PRU cycles)"]  = 10;
+pru_spi_read1["Device Mode"]                           = "peripheral";
+pru_spi_read1["CS Signal"]                             = "6";
+pru_spi_read1["SCLK Signal"]                           = "11";
+
+/**
+ * Connections between modules.
+ */
+scripting.connect(flow_control_block1, "prev", pru_spi_read1, "next");
+
+/**
+ * (x,y) coordinates for modules that are displayed in a graph.
+ */
+flow_control_block1.$position = [0,0];
+pru_spi_read1.$position       = [-150,-5];
