@@ -1,3 +1,23 @@
+/**
+ * Helper function to extract PRU number from system context
+ * @returns {number} PRU number (0 or 1), defaults to 0 if cannot determine
+ */
+function getPruNumberFromContext() {
+    const common = system.getScript("/common");
+    const coreName = common.getSelfSysCfgCoreName();
+
+    // coreName format: "icss_g0_pru0" or "icss_g0_pru1"
+	let result = 0;
+    if (coreName && coreName.includes("pru")) {
+        const match = coreName.match(/pru(\d+)$/);
+        if (match && match[1]) {
+            result=parseInt(match[1]);
+        }
+    }
+	if(result==0)return "PRU0";
+    return "PRU1";
+}
+const PRU_USED = getPruNumberFromContext();
 function validate(inst, report) {
 	for(let iterator = 1; iterator <= inst["numOfInputPorts"]; iterator++)
 	{
@@ -212,7 +232,7 @@ R31 Bit 10 - Timestamp Mode:
 
 exports = {
 	displayName: "PRU GPI",
-	defaultInstanceName: "PRU_GPI_",
+	defaultInstanceName: `${PRU_USED}_GPI_INSTANCE_`,
 	longDescription: getLongDescription(),
 	getAIContext: getAIContext,
 	uiView: "graph",
@@ -237,7 +257,7 @@ exports = {
 			default: "R31, 1 << 0",
             options: Array.from({ length: 20 }, (_, i) => ({
                 name: `R31, 1 << ${i}`,
-                displayName: `PRU_GPI_${i}`,
+                displayName: `${PRU_USED}_GPI_${i}`,
             }))
 		},
 		{

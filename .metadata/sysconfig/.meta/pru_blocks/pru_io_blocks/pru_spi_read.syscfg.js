@@ -1,3 +1,23 @@
+/**
+ * Helper function to extract PRU number from system context
+ * @returns {number} PRU number (0 or 1), defaults to 0 if cannot determine
+ */
+function getPruNumberFromContext() {
+    const common = system.getScript("/common");
+    const coreName = common.getSelfSysCfgCoreName();
+
+    // coreName format: "icss_g0_pru0" or "icss_g0_pru1"
+	let result = 0;
+    if (coreName && coreName.includes("pru")) {
+        const match = coreName.match(/pru(\d+)$/);
+        if (match && match[1]) {
+            result=parseInt(match[1]);
+        }
+    }
+	if(result==0)return "PRU0";
+    return "PRU1";
+}
+const PRU_USED = getPruNumberFromContext();  
 function validate(inst, report) {
 	// Port connection warnings
 	for(let iterator = 1; iterator <= inst["numOfInputPorts"]; iterator++)
@@ -13,6 +33,26 @@ function validate(inst, report) {
 	const sclkPin = inst["SCLK Signal"];
 	const sdiPin = inst["SDI Signal"];
 
+	let flag = 0; 
+	for (let i = 0 ; i < 20 ; ++i){
+		if(sclkPin === `${i}`){
+			flag = 1;
+			break;
+		}
+	}  
+	if(!flag){
+		report.logError(`Illegal SCLK pin value, please select from the dropdown options`, inst, "SCLK Signal");
+	}
+	flag = 0; 
+	for (let i = 0 ; i < 20 ; ++i){
+		if(csPin === `${i}`){
+			flag = 1;
+			break;
+		}
+	}  
+	if(!flag){
+		report.logError(`Illegal CS pin value, please select from the dropdown options`, inst, "CS Signal");
+	}
 	if (csPin === sclkPin) {
 		report.logError("CS Signal and SCLK Signal cannot use the same pin", inst, "CS Signal");
 	}
@@ -946,7 +986,7 @@ function getLongDescription() {
 
 exports = {
 	displayName: "PRU SPI Read",
-	defaultInstanceName: "PRU_SPI_Read_",
+	defaultInstanceName: `${PRU_USED}_SPI_Read_`,
 	longDescription: getLongDescription(),
     getAIContext: getAIContext,
 	uiView: "graph",
@@ -1059,12 +1099,12 @@ exports = {
 				if (inst["Device Mode"] === "controller") {
 					return Array.from({ length: 20 }, (_, i) => ({
 						name : `${i}`,
-						displayName: `PRU_GPO_${i}`
+						displayName: `${PRU_USED}_GPO_${i}`
 					}));
 				} else {
 					return Array.from({ length: 20 }, (_, i) => ({
 						name : `${i}`,
-						displayName: `PRU_GPI_${i}`
+						displayName: `${PRU_USED}_GPI_${i}`
 					}));
 				}
 			}
@@ -1074,7 +1114,7 @@ exports = {
 			default: "1",
             options: Array.from({ length: 20 }, (_, i) => ({
                 name : `${i}`,
-                displayName: `PRU_GPI_${i}`
+                displayName: `${PRU_USED}_GPI_${i}`
             }))
 		},
 		{
@@ -1085,12 +1125,12 @@ exports = {
 				if (inst["Device Mode"] === "controller") {
 					return Array.from({ length: 20 }, (_, i) => ({
 						name : `${i}`,
-						displayName: `PRU_GPO_${i}`
+						displayName: `${PRU_USED}_GPO_${i}`
 					}));
 				} else {
 					return Array.from({ length: 20 }, (_, i) => ({
 						name : `${i}`,
-						displayName: `PRU_GPI_${i}`
+						displayName: `${PRU_USED}_GPI_${i}`
 					}));
 				}
 			}
@@ -1111,7 +1151,7 @@ exports = {
         },
 		{
 			name: "Data Setup Time",
-			displayName: "Data Setup Time (PRU cycles)",
+			displayName: "Data Setup Time",
 			description: "Time delay after clock edge before sampling data (setup time for data stability)",
 			default: 0,
 			range: [0, 100],

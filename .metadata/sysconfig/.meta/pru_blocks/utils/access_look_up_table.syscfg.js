@@ -1,7 +1,17 @@
 // function getLookUptable(instance) {
 //     return instance["tableData"];
 // }
-
+function getLookupTables(){
+    let options = [];
+    const lutModule = system.modules["/pru_blocks/utils/look_up_table"];
+    if (lutModule && lutModule.$instances) {
+        options = lutModule.$instances.map(lutInst => ({
+            name: lutInst.$name,
+            displayName: lutInst.$name
+        }));
+    }
+    return options;
+}
 function getDataSize(instance) {
     if (instance["dataType"] == "byte") {
         return ".byte";
@@ -18,6 +28,18 @@ everything*/
 function validate(inst, report) {
     if (!inst["lutReference"] || inst["lutReference"] === "") {
         report.logError("Please select a lookup table to access", inst);
+    }
+    let flag = 0;
+    let option = getLookupTables();
+
+    for (let i=0;i<option.length;++i){ 
+        if(inst["lutReference"] === option[i].name){
+            flag = 1;
+            break;
+        }
+    }
+    if(!flag){
+        report.logError("Invalid lookup table selected, please select from the dropdown", inst);
     }
     if (inst["input1"].length == 0) {
         report.logWarning("LUT input is not connected", inst);

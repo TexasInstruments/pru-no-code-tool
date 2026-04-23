@@ -46,11 +46,25 @@ function validate(inst, report) {
 			report.logError("Data input must be connected for write operation", inst, "operationMode");
 		}
 	}
-
+	
 	// Validate symbol selection
 	if (!inst["symbolSelect"] || inst["symbolSelect"] === "") {
 		report.logError("Please select a memory symbol to access", inst, "symbolSelect");
 	}
+
+	let memory_variable = getMemoryReserveSymbols();
+	let flag = 0;
+
+	for (let i = 0 ; i < memory_variable.length ; ++i){
+		if(inst["symbolSelect"] === memory_variable[i].name){
+			flag = 1;
+			break;
+		}
+	}
+
+	if(!flag){
+        report.logError("Invalid memory variable selected, please select from the dropdown", inst);
+    }
 
 	// Validate data size
 	if (inst["dataSize"] < 1 || inst["dataSize"] > 4) {

@@ -7,7 +7,25 @@ const simulationData = {cycleCount : [], r30Bits : [], r31Bits : []};
 // ============================================================================
 // R31 Simulation Input Functions
 // ============================================================================
+/**
+ * Helper function to extract PRU number from system context
+ * @returns {number} PRU number (0 or 1), defaults to 0 if cannot determine
+ */
+function getPruNumberFromContext() {
+    const common = system.getScript("/common");
+    const coreName = common.getSelfSysCfgCoreName();
 
+    // coreName format: "icss_g0_pru0" or "icss_g0_pru1"
+	let result = 0;
+    if (coreName && coreName.includes("pru")) {
+        const match = coreName.match(/pru(\d+)$/);
+        if (match && match[1]) {
+            result=parseInt(match[1]);
+        }
+    }
+	if(result==0)return "PRU0";
+    return "PRU1";
+}
 /**
  * Helper function to validate timestamp input for a specific GPI pin
  */
@@ -378,7 +396,7 @@ function generateR31SimulationInputConfigs() {
         // Add a separator/header before each pin's configuration
         configs.push({
             name: `gpi${pinNum}_separator`,
-            displayName: `━━━━━━━━━━ PRU_GPI_${pinNum} Input Configuration ━━━━━━━━━━`,
+            displayName: `━━━━━━━━━━ ${getPruNumberFromContext()}_GPI_${pinNum} Input Configuration ━━━━━━━━━━`,
             longDescription: `Configure simulation input data for GPI${pinNum} (R31 register bit ${pinNum})`,
             default: "",
             hidden: true,
@@ -402,7 +420,7 @@ function generateR31SimulationInputConfigs() {
         // Timestamp mode fields
         configs.push({
             name: `gpi${pinNum}_inputCycles`,
-            displayName: `GPI${pinNum} Input Cycles (Timestamps)`,
+            displayName: `GPI${pinNum} Input Cycles`,
             description: "PRU cycle numbers when bit value changes (minimum 1). Example: [100, 105, 110]",
             default: "[1]",
             hidden: true
@@ -802,8 +820,112 @@ function collectR31History() {
 }
 
 
+/**
+ * Detects cycles in the control flow and data flow graph (prev/next/T/F and input/output ports).
+ * Uses DFS with three-color marking: 0=unvisited, 1=in-stack, 2=done.
+ * @returns {string|null} Error message if a cycle is found, null otherwise
+ */
+function detectControlFlowCycle() {
+    const systemModules = system.modules;
+    const color = {};  // instanceName -> 0 (unvisited) | 1 (in stack) | 2 (done)
+    const parent = {}; // instanceName -> instanceName (for path reconstruction)
+    // const debugPaths = []; // Track all edges traversed for debugging
+
+    // Collect all instances that participate in control flow or data flow
+    const allInstances = {};
+    for (const moduleName in systemModules) {
+        const module = systemModules[moduleName];
+        if (!module) continue;
+        for (const instance of module.$instances) {
+            if (!instance.$name) continue;
+            // Include instances with control flow ports (next/prev/T/F) or data flow ports (input/output)
+            if (instance.next !== undefined || instance.prev !== undefined ||
+                instance.input1 !== undefined || instance.input2 !== undefined ||
+                instance.output1 !== undefined) {
+                allInstances[instance.$name] = instance;
+                color[instance.$name] = 0;
+            }
+        }
+    }
+
+    // Iterative DFS using explicit stack to avoid call stack overflow
+    // Each stack entry is {instance, expanded} where expanded=false means
+    // we are entering the node, expanded=true means we are leaving it
+    for (const startName in allInstances) {
+        if (color[startName] !== 0) continue;
+
+        const stack = [{ instance: allInstances[startName], expanded: false }];
+
+        while (stack.length > 0) {
+            const top = stack[stack.length - 1];
+            const name = top.instance.$name;
+
+            if (!top.expanded) {
+                // First visit — mark as in-stack
+                top.expanded = true;
+                color[name] = 1;
+
+                // Collect all outgoing edges: control flow (next, T, F) and data flow (output consumers)
+                const outgoing = [];
+                const nextInst = top.instance.next?.[0]?.inst;
+                if (nextInst) {
+                    outgoing.push(nextInst);
+                }
+                const trueInst = top.instance.T?.[0]?.inst;
+                if (trueInst) {
+                    outgoing.push(trueInst);
+                }
+                const falseInst = top.instance.F?.[0]?.inst;
+                if (falseInst) {
+                    outgoing.push(falseInst);
+                }
+                const output1Inst = top.instance.output1?.[0]?.inst;
+                if (output1Inst) {
+                    const size = top.instance.output1.length
+                    for (var i = 0; i < size; ++i) {
+                        const output1Inst_all = top.instance.output1?.[i]?.inst;
+                        outgoing.push(output1Inst_all);
+                    }
+                }
+                for (const neighbor of outgoing) {
+                    if (!neighbor.$name) continue;
+                    const neighborName = neighbor.$name;
+                    if (color[neighborName] === 1) {
+                        // Back edge — cycle found, reconstruct path
+                        let path = [neighborName];
+                        let cur = name;
+                        while (cur && cur !== neighborName) {
+                            path.unshift(cur);
+                            cur = parent[cur];
+                        }
+                        path.unshift(neighborName);
+                        return `Cycle detected in block connections: ${path.join(" → ")}. Remove the looping connection to fix this.`;
+                    }
+                    if (color[neighborName] === 0) {
+                        parent[neighborName] = name;
+                        stack.push({ instance: neighbor, expanded: false });
+                    }
+                }
+            } else {
+                // Second visit — leaving the node, mark as done
+                color[name] = 2;
+                stack.pop();
+            }
+        }
+    }
+
+    return null;
+}
+
 function validate(inst, report)
 {
+	// Check for cycles in the control flow graph before anything else
+	const cycleError = detectControlFlowCycle();
+	if (cycleError) {
+		report.logError(cycleError, inst);
+		return;
+	}
+
 	// Validate R31 simulation input configuration
 	validateR31SimulationInput(inst, report);
 
@@ -1044,7 +1166,7 @@ exports  = {
         config: [
             {
                 name: "pruClkFreq",
-                displayName: "Select the PRU Clock Frequency on which the PRU is operating",
+                displayName: "PRU Clock Frequency",
                 description: "PRU core clock frequency (must match PRUICSS Core Clk setting in R5F/A53 SysConfig)",
                 longDescription: `
 ### PRU Clock Frequency Configuration
@@ -1079,23 +1201,23 @@ If the frequencies don't match, timing-sensitive operations (SPI, ADC) may not w
             },
             {
                 name: "pruCyclesToSimulate",
-                displayName: "Number Of PRU Cycles To Simulate ",
+                displayName: "Pru Cycles Simulated",
                 description: "Total number of PRU clock cycles to execute during simulation",
                 default: 2000,
             },
             {
                 name: "signalsToDisplay",
-                displayName : "Select R30 (Output) Signals To Display In Simulation Window",
+                displayName : "Select Output Signals To Display",
                 description: "Choose which GPO output pins to display in the simulation waveform viewer",
                 default: ["0", "1", "2"],
                 options: Array.from({ length: 20 }, (_, i) => ({
                     name : `${i}`,
-                    displayName: `PRU_GPO_${i}`
+                    displayName: `${getPruNumberFromContext()}_GPO_${i}`
                 }))
             },
             {
                 name: "signalsToDisplayR31",
-                displayName : "Select R31 (Input) Signals To Configure And Display In Simulation",
+                displayName : "Select Input Signals To Display",
                 description: "Select GPI pins to simulate input data. Configuration options appear below for each selected pin.",
                 longDescription: `
 ### Input Signal Simulation
@@ -1114,7 +1236,7 @@ This allows you to test PRU blocks that read from input pins (like SPI Read's SD
                 minSelections: 0,
                 options: Array.from({ length: 20 }, (_, i) => ({
                     name : `${i}`,
-                    displayName: `PRU_GPI_${i}`
+                    displayName: `${getPruNumberFromContext()}_GPI_${i}`
                 })),
                 onChange: onSignalsToDisplayR31Change
             },

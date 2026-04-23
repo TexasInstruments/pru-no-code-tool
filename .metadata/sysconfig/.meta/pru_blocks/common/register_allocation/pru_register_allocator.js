@@ -373,6 +373,90 @@ function processGroupBlock(instance){
     return maxCycles + 1;
 }
 /**
+ * Step 1: Collect all blocks on a branch by following next and output1
+ * ports forward from the branch head.
+ * @param {Object} instance - Branch head (block connected to T or F port)
+ * @returns {Set<string>} Set of instance names on this branch's chain
+ */
+function collectBranchChain(instance) {
+    const chain = new Set();
+    const queue = [instance];
+
+    while (queue.length > 0) {
+        const inst = queue.shift();
+        if (!inst || !inst.$name) continue;
+        const name = inst.$name;
+        if (chain.has(name)) continue;
+        chain.add(name);
+
+        // Forward: control flow
+        const nextInst = inst.next?.[0]?.inst;
+        if (nextInst) queue.push(nextInst);
+
+        // Forward: data flow to consumers
+        if (inst.output1) {
+            for (const conn of inst.output1) {
+                if (conn?.inst) queue.push(conn.inst);
+            }
+        }
+    }
+
+    return chain;
+}
+
+/**
+ * Step 2: Collect all transitive input-port predecessors of a set of blocks.
+ * Only walks backward via input ports — never crosses into branch blocks.
+ * @param {Set<string>} chainNames - Set of block names on the branch chain
+ * @returns {Set<string>} Set of input dependency instance names
+ */
+function collectInputDependencies(chainNames) {
+    const deps = new Set();
+    const queue = [];
+
+    // Seed the queue with direct inputs of every block in the chain
+    for (const name of chainNames) {
+        const { moduleName, instanceNum } = moduleInstanceRegisterMap[name] || {};
+        if (moduleName === undefined) continue;
+        const inst = system.modules[moduleName]?.$instances[instanceNum];
+        if (!inst) continue;
+        for (let i = 1; i <= (inst.numOfInputPorts || 0); i++) {
+            const inputInst = inst["input" + i]?.[0]?.inst;
+            if (inputInst && !chainNames.has(inputInst.$name)) {
+                queue.push(inputInst);
+            }
+        }
+    }
+
+    while (queue.length > 0) {
+        const inst = queue.shift();
+        if (!inst || !inst.$name) continue;
+        const name = inst.$name;
+        if (deps.has(name)) continue;
+        deps.add(name);
+
+        // Keep walking backward via input ports
+        for (let i = 1; i <= (inst.numOfInputPorts || 0); i++) {
+            const inputInst = inst["input" + i]?.[0]?.inst;
+            if (inputInst) queue.push(inputInst);
+        }
+    }
+
+    return deps;
+}
+
+/**
+ * Collects all input dependencies of a branch (data blocks that feed into
+ * the branch but are not part of the branch chain itself).
+ * @param {Object} instance - Branch head (block connected to T or F port)
+ * @returns {Set<string>} Set of input dependency instance names
+ */
+function collectInputPredecessors(instance) {
+    const chain = collectBranchChain(instance);
+    return collectInputDependencies(chain);
+}
+
+/**
  * Gets PRU Instructions from blocks connected in the system
  * @param {Object} instance - The current block instance
  * @param {Object} parentInstance - The parent block instance
@@ -417,11 +501,36 @@ function pushInstruction(instance, parentInstance) {
         }
     }
 
+    // If this is a conditional block, hoist shared input predecessors of both
+    // branches BEFORE processing the if/else's own input ports.
+    // This ensures hoisted blocks get their registers first, so the input
+    // registers are not deallocated and reused by hoisted blocks.
+    // This issue comes cause we are not going with the noraml register allocation
+    // process and are allocating the registers for the blocks connected to the T/F ports 
+    // of the if/else block first 
+    if (instance.T && instance.F) {
+        const trueHead  = instance.T?.[0]?.inst;
+        const falseHead = instance.F?.[0]?.inst;
+        if (trueHead && falseHead) {
+            const truePreds  = collectInputPredecessors(trueHead);
+            const falsePreds = collectInputPredecessors(falseHead);
+            for (const sharedName of truePreds) {
+                if (falsePreds.has(sharedName)) {
+                    const { moduleName, instanceNum } = moduleInstanceRegisterMap[sharedName];
+                    const sharedInst = systemModules[moduleName]?.$instances[instanceNum];
+                    if (sharedInst) {
+                        pushInstruction(sharedInst, null);
+                    }
+                }
+            }
+        }
+    }
+
     // Process input ports
     const inputPort = "input";
     let maxBytesUsed = 1;
     let inputValues = "";
-    
+
     // Process each input port
     for (let iterator1 = 1; iterator1 <= instance.numOfInputPorts; iterator1++) {
         const inputInstance = instance[inputPort + iterator1]?.[0]?.inst;

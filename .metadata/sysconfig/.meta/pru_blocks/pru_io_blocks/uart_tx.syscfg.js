@@ -18,7 +18,7 @@ function getPruNumberFromContext() {
     // Default to PRU0 if unable to determine
     return 0;
 }
-
+const PRU_USED = getPruNumberFromContext(); 
 function validate(inst, report) {
     // Get clock frequency based on clock source selection
     // 0 = 192 MHz (ICSSGn_UART_CLK), 1 = 200 MHz (ICSSGn_CORE_CLK)
@@ -155,13 +155,23 @@ function getMacroSingleShot(pruInstructionMacro, opCode) {
 
     macroBody += `
 \t; ========== ENDAT Peripheral Reset Sequence ==========
-\t; Global Reinit to clear FIFO and state machines
-\tset     r31, r31, 19
+\t; Disable RX before reinit, then de-assert rx_en after (TRM-mandated sequence)
+\tldi     r30.b3, 0x00                       ; 1. Disable rx_en for all channels
+\tset     r31, r31, 19                       ; 2. Global Reinit to clear FIFO and state machines
 
-\t; ========== Delay after Reinit ==========
-\t.loop   20
-\tnop
-\t.endloop
+\t; ========== Wait for Reinit Complete ==========
+\t; Poll busy bit for selected channel (1=active, 0=done)
+\t.if ${channel} == 0
+wait_reinit?:
+\tqbbs    wait_reinit?, r31, 5
+\t.elseif ${channel} == 1
+wait_reinit?:
+\tqbbs    wait_reinit?, r31, 13
+\t.else
+wait_reinit?:
+\tqbbs    wait_reinit?, r31, 21
+\t.endif
+\tldi     r30.b3, 0x00                       ; 3. De-assert rx_en after reinit confirmed complete
 
 \t; ========== Configure GPCFG${pruNum} for PRU${pruNum} Peripheral Mode ==========
 \tldi32   TEMP_REG1, 0x04000000
@@ -197,11 +207,11 @@ function getMacroSingleShot(pruInstructionMacro, opCode) {
 
 \t; ========== Select Channel ==========
 \t.if ${channel} == 0
-\tldi     r30.w2, 0x0000
+\tldi     r30.w2, 0x0018                    ; clk_mode=3 (bits[20:19]=0b11, stop high on TX), ch=0
 \t.elseif ${channel} == 1
-\tldi     r30.w2, 0x0001
+\tldi     r30.w2, 0x0019                    ; clk_mode=3, ch=1
 \t.else
-\tldi     r30.w2, 0x0002
+\tldi     r30.w2, 0x001A                    ; clk_mode=3, ch=2
 \t.endif
 
 \t; ========== Construct Frame ==========
@@ -355,13 +365,23 @@ function getMacroContinuous(pruInstructionMacro, opCode) {
 
     macroBody += `
 \t; ========== ENDAT Peripheral Reset Sequence ==========
-\t; Global Reinit to clear FIFO and state machines
-\tset     r31, r31, 19
+\t; Disable RX before reinit, then de-assert rx_en after (TRM-mandated sequence)
+\tldi     r30.b3, 0x00                       ; 1. Disable rx_en for all channels
+\tset     r31, r31, 19                       ; 2. Global Reinit to clear FIFO and state machines
 
-\t; ========== Delay after Reinit ==========
-\t.loop   20
-\tnop
-\t.endloop
+\t; ========== Wait for Reinit Complete ==========
+\t; Poll busy bit for selected channel (1=active, 0=done)
+\t.if ${channel} == 0
+wait_reinit?:
+\tqbbs    wait_reinit?, r31, 5
+\t.elseif ${channel} == 1
+wait_reinit?:
+\tqbbs    wait_reinit?, r31, 13
+\t.else
+wait_reinit?:
+\tqbbs    wait_reinit?, r31, 21
+\t.endif
+\tldi     r30.b3, 0x00                       ; 3. De-assert rx_en after reinit confirmed complete
 
 \t; ========== Configure GPCFG${pruNum} for PRU${pruNum} Peripheral Mode ==========
 \tldi32   TEMP_REG1, 0x04000000
@@ -398,11 +418,11 @@ function getMacroContinuous(pruInstructionMacro, opCode) {
 \t; ========== Select Channel ==========
 \t; Use ldi to r30.w2 to avoid read-modify-write on r30.b0 (FIFO port)
 \t.if ${channel} == 0
-\tldi     r30.w2, 0x0000
+\tldi     r30.w2, 0x0018                    ; clk_mode=3 (bits[20:19]=0b11, stop high on TX), ch=0
 \t.elseif ${channel} == 1
-\tldi     r30.w2, 0x0001
+\tldi     r30.w2, 0x0019                    ; clk_mode=3, ch=1
 \t.else
-\tldi     r30.w2, 0x0002
+\tldi     r30.w2, 0x001A                    ; clk_mode=3, ch=2
 \t.endif
 
 `;
@@ -708,13 +728,23 @@ function getMacroSpecificBits(pruInstructionMacro, opCode, bitSize) {
     // Common configuration section
     macroBody += `
 \t; ========== ENDAT Peripheral Reset Sequence ==========
-\t; Global Reinit to clear FIFO and state machines
-\tset     r31, r31, 19
+\t; Disable RX before reinit, then de-assert rx_en after (TRM-mandated sequence)
+\tldi     r30.b3, 0x00                       ; 1. Disable rx_en for all channels
+\tset     r31, r31, 19                       ; 2. Global Reinit to clear FIFO and state machines
 
-\t; ========== Delay after Reinit ==========
-\t.loop   20
-\tnop
-\t.endloop
+\t; ========== Wait for Reinit Complete ==========
+\t; Poll busy bit for selected channel (1=active, 0=done)
+\t.if ${channel} == 0
+wait_reinit?:
+\tqbbs    wait_reinit?, r31, 5
+\t.elseif ${channel} == 1
+wait_reinit?:
+\tqbbs    wait_reinit?, r31, 13
+\t.else
+wait_reinit?:
+\tqbbs    wait_reinit?, r31, 21
+\t.endif
+\tldi     r30.b3, 0x00                       ; 3. De-assert rx_en after reinit confirmed complete
 
 \t; ========== Configure GPCFG${pruNum} for PRU${pruNum} Peripheral Mode ==========
 \tldi32   TEMP_REG1, 0x04000000
@@ -751,11 +781,11 @@ function getMacroSpecificBits(pruInstructionMacro, opCode, bitSize) {
 \t; ========== Select Channel ==========
 \t; Use ldi to r30.w2 to avoid read-modify-write on r30.b0 (FIFO port)
 \t.if ${channel} == 0
-\tldi     r30.w2, 0x0000
+\tldi     r30.w2, 0x0018                    ; clk_mode=3 (bits[20:19]=0b11, stop high on TX), ch=0
 \t.elseif ${channel} == 1
-\tldi     r30.w2, 0x0001
+\tldi     r30.w2, 0x0019                    ; clk_mode=3, ch=1
 \t.else
-\tldi     r30.w2, 0x0002
+\tldi     r30.w2, 0x001A                    ; clk_mode=3, ch=2
 \t.endif
 
 `;
@@ -1332,7 +1362,7 @@ In continuous mode (dataBits > 29):
 
 exports = {
     displayName: "PRU UART TX",
-    defaultInstanceName: "PRU_UART_TX_",
+    defaultInstanceName: `PRU${PRU_USED}_UART_TX_`,
     longDescription: getLongDescription(),
     getAIContext: getAIContext,
     uiView: "graph",

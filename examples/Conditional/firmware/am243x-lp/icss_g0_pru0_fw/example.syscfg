@@ -1,0 +1,104 @@
+/**
+ * These arguments were used when this file was generated. They will be automatically applied on subsequent loads
+ * via the GUI or CLI. Run CLI with '--help' for additional information on how to override these arguments.
+ * @cliArgs --device "AM243x_ALX_beta" --part "ALX" --package "ALX" --context "icss_g0_pru0" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @v2CliArgs --device "AM2434" --package "FCCSP (ALX)" --variant "AM2434-E" --context "icss_g0_pru0" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @versions {"tool":"1.27.0+4565"}
+ */
+
+/**
+ * Import the modules used in this configuration.
+ */
+const bitwise_block        = scripting.addModule("/pru_blocks/data_handling/bitwise_block", {}, false);
+const bitwise_block1       = bitwise_block.addInstance();
+const bitwise_block2       = bitwise_block.addInstance();
+const load_constant_block  = scripting.addModule("/pru_blocks/data_handling/load_constant_block", {}, false);
+const load_constant_block1 = load_constant_block.addInstance();
+const load_constant_block2 = load_constant_block.addInstance();
+const load_constant_block3 = load_constant_block.addInstance();
+const load_constant_block4 = load_constant_block.addInstance();
+const load_constant_block5 = load_constant_block.addInstance();
+const load_constant_block6 = load_constant_block.addInstance();
+const conditional_block    = scripting.addModule("/pru_blocks/program_control/conditional_block", {}, false);
+const conditional_block1   = conditional_block.addInstance();
+const flow_control_block   = scripting.addModule("/pru_blocks/program_control/flow_control_block", {}, false);
+const flow_control_block1  = flow_control_block.addInstance();
+const flow_control_block2  = flow_control_block.addInstance();
+const pru_gpo_block        = scripting.addModule("/pru_blocks/pru_io_blocks/pru_gpo_block", {}, false);
+const pru_gpo_block1       = pru_gpo_block.addInstance();
+const pru_gpo_block2       = pru_gpo_block.addInstance();
+
+/**
+ * Write custom configuration values to the imported modules.
+ */
+bitwise_block1.opCode = "OR";
+bitwise_block1.$name  = "bit_set";
+
+bitwise_block2.$name = "bit_clear";
+
+load_constant_block1.$name     = "data_2";
+load_constant_block1.constant1 = 2;
+
+load_constant_block2.$name     = "data_1";
+load_constant_block2.constant1 = 3;
+
+load_constant_block3.$name     = "bit_set_original_data";
+load_constant_block3.constant1 = 127;
+
+load_constant_block4.$name     = "Load_Constant_4";
+load_constant_block4.constant1 = 128;
+
+load_constant_block5.$name     = "Load_Constant_5";
+load_constant_block5.constant1 = 127;
+
+load_constant_block6.constant1 = 255;
+load_constant_block6.$name     = "bit_clear_original_data";
+
+conditional_block1.$name            = "If_Else_0";
+conditional_block1.conditionToCheck = "lessThanInput2";
+
+flow_control_block1.$name = "Flow_Control_0";
+
+flow_control_block2.$name = "Flow_Control_1";
+
+pru_gpo_block1.$name  = "PRU_GPO_0";
+pru_gpo_block1.opCode = "CLR";
+
+pru_gpo_block2.$name = "PRU_GPO_1";
+
+/**
+ * Connections between modules.
+ */
+scripting.connect(bitwise_block1, "input1", load_constant_block3, "output1");
+scripting.connect(bitwise_block1, "input2", load_constant_block4, "output1");
+scripting.connect(bitwise_block1, "prev", load_constant_block4, "next");
+scripting.connect(bitwise_block1, "next", pru_gpo_block1, "prev");
+scripting.connect(bitwise_block2, "input1", load_constant_block6, "output1");
+scripting.connect(bitwise_block2, "input2", load_constant_block5, "output1");
+scripting.connect(bitwise_block2, "prev", load_constant_block5, "next");
+scripting.connect(bitwise_block2, "next", pru_gpo_block2, "prev");
+scripting.connect(load_constant_block1, "output1", conditional_block1, "input2");
+scripting.connect(load_constant_block2, "output1", conditional_block1, "input1");
+scripting.connect(load_constant_block3, "prev", conditional_block1, "T");
+scripting.connect(load_constant_block3, "next", load_constant_block4, "prev");
+scripting.connect(load_constant_block5, "prev", load_constant_block6, "next");
+scripting.connect(load_constant_block6, "prev", conditional_block1, "F");
+scripting.connect(flow_control_block1, "prev", pru_gpo_block1, "next");
+scripting.connect(flow_control_block2, "prev", pru_gpo_block2, "next");
+
+/**
+ * (x,y) coordinates for modules that are displayed in a graph.
+ */
+bitwise_block1.$position       = [290,-120];
+bitwise_block2.$position       = [295,160];
+load_constant_block1.$position = [-70,75];
+load_constant_block2.$position = [-70,-20];
+load_constant_block3.$position = [120,-150];
+load_constant_block4.$position = [160,-85];
+load_constant_block5.$position = [180,175];
+load_constant_block6.$position = [175,85];
+conditional_block1.$position   = [50,20];
+flow_control_block1.$position  = [515,-110];
+flow_control_block2.$position  = [510,160];
+pru_gpo_block1.$position       = [400,-95];
+pru_gpo_block2.$position       = [405,175];

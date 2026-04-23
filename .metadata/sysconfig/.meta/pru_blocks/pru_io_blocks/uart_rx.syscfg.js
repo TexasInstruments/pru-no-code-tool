@@ -15,7 +15,7 @@ function getPruNumberFromContext() {
     }
     return 0;
 }
-
+const PRU_USED = getPruNumberFromContext();
 function validate(inst, report) {
     // Get oversample multiplier from encoding (0=1x, 1=2x, 3=4x, 7=8x)
     let oversampleMultiplier;
@@ -801,7 +801,7 @@ set     r30, r30, 26
 
 exports = {
     displayName: "PRU UART RX",
-    defaultInstanceName: "PRU_UART_RX_",
+    defaultInstanceName: `PRU${PRU_USED}_UART_RX_`,
     longDescription: getLongDescription(),
     getAIContext: getAIContext,
     uiView: "graph",
