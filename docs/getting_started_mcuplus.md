@@ -10,11 +10,6 @@
 [Install the tools](#install-the-tools)  
 [Set up imports.mak](#set-up-importsmak)  
 
-The MCU+ SDK is only a dependency when:
-1) Building pru-no-code-tool projects that include code for an MCU+ core
-2) Building pru-no-code-tool projects, where the PRU firmware includes code in the
-   MCU+ SDK (such as macros)
-
 ## Install the MCU+ SDK
 
 Users can either install the prebuilt MCU+ SDK :
@@ -45,7 +40,7 @@ in order to build on your computer.
 
 ### Copy the default file
 
-Copy `open-pru/imports.mak.default` into a new file, `open-pru/imports.mak`.
+Copy `pru-no-code-tool/imports.mak.default` into a new file, `pru-no-code-tool/imports.mak`.
 
 For ease of use, the new imports.mak file is already excluded from git tracking.
 

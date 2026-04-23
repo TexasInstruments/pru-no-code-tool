@@ -4,6 +4,9 @@ SUBDIRS := \
     empty \
 	SPI_loopback \
 	UART_CRC \
+	Conditional \
+	Gray_encoder_4_bit \
+	Incremental_SPI \
 
 # "make" or "make all" builds projects that match $(DEVICE) set in imports.mak
 all: ARGUMENTS = all

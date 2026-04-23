@@ -58,7 +58,7 @@ in order to build on your computer.
 
 ### Copy the default file
 
-Copy `open-pru/imports.mak.default` into a new file, `open-pru/imports.mak`.
+Copy `pru-no-code-tool/imports.mak.default` into a new file, `pru-no-code-tool/imports.mak`.
 
 For ease of use, the new imports.mak file is already excluded from git tracking.
 

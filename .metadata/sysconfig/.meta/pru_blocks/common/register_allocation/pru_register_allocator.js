@@ -400,15 +400,21 @@ function pushInstruction(instance, parentInstance) {
     if (moduleInstanceRegisterMap[instanceName]?.conditionCalculated === 1) {
         return moduleInstanceRegisterMap[instanceName].label;
     }
-
     // Process prev port if it exists and is connected
     let label;
     if (instance?.["prev"] && instance?.["prev"][0]?.["inst"]) {
         const prevPortInstanceName = instance["prev"][0]?.["inst"]?.$name;
         // Process the previous block
         label = pushInstruction(instance["prev"][0]["inst"], instance);
-        moduleInstanceRegisterMap[instanceName].connectedNodesInPeakCyclePath = 
+        moduleInstanceRegisterMap[instanceName].connectedNodesInPeakCyclePath =
         new Set([...moduleInstanceRegisterMap[prevPortInstanceName].connectedNodesInPeakCyclePath]);
+        // If prev returned a conditional branch label, emit it as a standalone
+        // label line now — before any input processing — so that all inputs
+        // for this branch are emitted AFTER the label, not before it.
+        if (typeof label === "string" && label !== "") {
+            addToPruRegisterAllocationSummary(label, "0", instance, instanceName, 0);
+            label = 0;
+        }
     }
 
     // Process input ports
@@ -571,9 +577,13 @@ function pushInstruction(instance, parentInstance) {
                 moduleInstanceRegisterMap[instanceName].label = `${instance.$name}_TRUE`;
             }
             inputValues  = inputValues.trim().slice(0, -1); // Remove trailing comma
+            // Swap operands: PRU QB* semantics are QBGT LABEL, REG1, OP → branches if OP > REG1
+            // So to branch if input1 > input2, we need: QBGT LABEL, input2, input1
+            const inputParts = inputValues.split(",").map(s => s.trim());
+            const swappedInputValues = `${inputParts[1]} , ${inputParts[0]}`;
             const outputLabel = moduleInstanceRegisterMap[instanceName].label;
             // create instruction
-            instruction = `${opCode} ${outputLabel}, ${inputValues}`;
+            instruction = `${opCode} ${outputLabel}, ${swappedInputValues}`;
         } 
         // Process GPO blocks where out register is specified and fixed
         else if(instance.outputReg)

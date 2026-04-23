@@ -159,6 +159,49 @@ function getAIContext() {
 	6. **Independent Execution**: Groups only execute when explicitly called from main.asm.
 	
 	7. **Return Register**: The register allocator automatically allocates a register for the return address.
+
+		---
+
+		## Critical Pitfalls (AI Must Read)
+
+		### Pitfall 1: \`groupName\` is SEPARATE from \`$name\` — both must be set
+		The group block has two distinct name fields:
+		- \`$name\`: SysConfig instance identifier (e.g., "Group_0") — used internally by SysConfig
+		- \`groupName\`: generates the assembly label (e.g., "my_group" → \`my_group_start\`) — used in main.asm
+
+		Leaving \`groupName\` empty causes a **build error**: "Group name cannot be empty".
+		Always set both in the .syscfg file:
+		\\\`\\\`\\\`javascript
+		group_block1.$name     = "Group_0";
+		group_block1.groupName = "my_group";  // REQUIRED - do not omit
+		\\\`\\\`\\\`
+
+		### Pitfall 2: \`$groupContents\` CANNOT be set via \`changeConfiguration\` MCP tool
+		The \`changeConfiguration\` tool does not support \`$groupContents\`. It must be set by directly
+		editing the .syscfg file:
+		\\\`\\\`\\\`javascript
+		group_block1.$groupContents = [load_constant_block1, access_look_up_table1];
+		\\\`\\\`\\\`
+		After calling \`changeConfiguration\` and \`save\`, always re-read the .syscfg file to verify
+		\`$groupContents\` was written correctly and add it manually if missing.
+
+		### Pitfall 3: main.asm MUST \`.include "pru_syscfg.inc"\` to use CALL
+		\`CALL\` is a macro defined in \`pru_syscfg.inc\` (expands to \`JAL RET_ADDR0, func\`).
+		It is NOT a native PRU instruction. Without the include, the assembler errors with:
+		"[E0003] Invalid instruction: CALL".
+		Add this at the top of main.asm before any group calls:
+		\\\`\\\`\\\`asm
+		    .include    "pru_syscfg.inc"
+		    .ref        my_group_start
+		\\\`\\\`\\\`
+
+		### Pitfall 4: Register allocation SHIFTS when blocks move into a Group
+		The group return address uses \`R0.w0\` (low 16 bits = \`R0.b0\` + \`R0.b1\`).
+		To avoid collision, the allocator shifts data registers up (e.g., \`R0.b0\`/\`R0.b1\` → \`R0.b2\`/\`R0.b3\`).
+		**After any structural change** (adding/removing a group, moving blocks in/out):
+		1. Rebuild the project
+		2. Re-read the Register Allocation Summary in the generated \`pru_syscfg.asm\`
+		3. Update all \`SBBO\` / \`LBBO\` register references in main.asm accordingly
 	`;
 }
 

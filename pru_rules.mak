@@ -49,6 +49,7 @@ TARGET_HEX := $(GEN_DIR)/$(OUTPUT_NAME).h
 # Standard include paths for all PRU firmware
 INCLUDE := \
 	--include_path=$(CGT_TI_PRU_PATH)/include \
+	--include_path=syscfg \
 
 # Search for assembly & C source files
 vpath %.asm $(FILES_PATH)
