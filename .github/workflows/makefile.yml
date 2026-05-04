@@ -214,6 +214,63 @@ jobs:
             **/*.bin
           if-no-files-found: ignore
 
+  syscfg-tests:
+    name: SysConfig Sanity Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Restore SysConfig cache
+        id: cache-syscfg
+        uses: actions/cache@v4
+        with:
+          path: ~/ti/sysconfig_1.27.0
+          key: toolchain-syscfg-tests-${{ runner.os }}-v1-sysconfig1_27_0
+
+      - name: Install SysConfig if missing
+        if: steps.cache-syscfg.outputs.cache-hit != 'true'
+        run: |
+          set -e
+          mkdir -p "$HOME/ti/downloads"
+          cd "$HOME/ti/downloads"
+          wget -q --retry-connrefused --waitretry=1 --tries=5 --timeout=30 \
+            https://dr-download.ti.com/software-development/ide-configuration-compiler-or-debugger/MD-nsUM6f7Vvb/1.27.0.4565/sysconfig-1.27.0_4565-setup.run
+          chmod +x sysconfig-1.27.0_4565-setup.run
+          ./sysconfig-1.27.0_4565-setup.run --mode unattended --prefix "$HOME/ti/sysconfig_1.27.0"
+          chmod -R +x "$HOME/ti/sysconfig_1.27.0"
+
+      - name: Generate imports.mak for CI
+        run: |
+          cat > imports.mak <<'EOF'
+          SYSCFG_PATH ?= $(HOME)/ti/sysconfig_1.27.0
+          OPEN_PRU_PATH ?= $(abspath .)
+          SYSCFG_CLI_PATH ?= $(SYSCFG_PATH)
+          SYSCFG_NODE = $(SYSCFG_PATH)/nodejs/node
+          SYSCFG_PRU_NO_TOOL_PRODUCT=$(OPEN_PRU_PATH)/.metadata/product.json
+          export MKDIR=mkdir -p
+          export RMDIR=rm -rf
+          export RM=rm -f
+          EOF
+
+      - name: Run SysConfig sanity tests
+        run: |
+          make syscfg-tests 2>&1 | tee syscfg-tests.log
+          FAILURES=$(grep -ci "failed" syscfg-tests.log || true)
+          CLEAN=$(grep -c "Total 0 error(s)" syscfg-tests.log || true)
+          if [ "${FAILURES}" -gt 0 ] || [ "${CLEAN}" -eq 0 ]; then
+            exit 1
+          fi
+
+      - name: Upload test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: syscfg-tests-log
+          path: syscfg-tests.log
+          if-no-files-found: ignore
+
   #formatting:
     #name: Static formatting checks
     #runs-on: ubuntu-latest

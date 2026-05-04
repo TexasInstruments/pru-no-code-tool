@@ -163,7 +163,7 @@ exports = {
             options: [
 				{
 					name: "JMP",
-					displayName: "Sysconfig Generated End",
+					displayName: "SysConfig Generated End",
 				},
 				{
 					name: "HALT",

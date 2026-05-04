@@ -9,12 +9,12 @@ function validate(inst, report) {
 	//verifying if true port is connected true/false port(conditional input) are not
 	if((inst["T"].length == 0))
 	{
-		report.logWarning("true port is not connected to true/false port(conditional input)",inst);
+		report.logWarning("t_next port is not connected",inst);
 	}
 	//verifying if false port is connected true/false port(conditional input) are not
 	if((inst["F"].length == 0))
 	{
-		report.logWarning("true port is not connected to true/false port(conditional input)",inst);
+		report.logWarning("f_next port is not connected",inst);
 	}
 }
 
