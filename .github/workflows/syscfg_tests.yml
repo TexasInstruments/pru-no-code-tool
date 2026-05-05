@@ -1,0 +1,94 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (C) 2026 Texas Instruments Incorporated - http://www.ti.com/
+#
+# SysConfig Sanity Tests CI — runs SysConfig sanity tests for each supported device.
+# Triggered on changes to metadata or syscfg files.
+
+name: SysConfig Sanity Tests
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - '.metadata/**'
+      - '**/example.syscfg'
+  pull_request:
+    branches: [ "**" ]
+    paths:
+      - '.metadata/**'
+      - '**/example.syscfg'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  syscfg-tests:
+    name: SysConfig Sanity Tests (${{ matrix.device }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - device: am243x
+            make_target: syscfg-tests-am243x
+          - device: am64x
+            make_target: syscfg-tests-am64x
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Restore SysConfig cache
+        id: cache-syscfg
+        uses: actions/cache@v4
+        with:
+          path: ~/ti/sysconfig_1.27.0
+          key: toolchain-syscfg-tests-${{ runner.os }}-v1-sysconfig1_27_0
+
+      - name: Install SysConfig if missing
+        if: steps.cache-syscfg.outputs.cache-hit != 'true'
+        run: |
+          set -e
+          mkdir -p "$HOME/ti/downloads"
+          cd "$HOME/ti/downloads"
+          wget -q --retry-connrefused --waitretry=1 --tries=5 --timeout=30 \
+            https://dr-download.ti.com/software-development/ide-configuration-compiler-or-debugger/MD-nsUM6f7Vvb/1.27.0.4565/sysconfig-1.27.0_4565-setup.run
+          chmod +x sysconfig-1.27.0_4565-setup.run
+          ./sysconfig-1.27.0_4565-setup.run --mode unattended --prefix "$HOME/ti/sysconfig_1.27.0"
+          chmod -R +x "$HOME/ti/sysconfig_1.27.0"
+
+      - name: Generate imports.mak for CI
+        run: |
+          cat > imports.mak <<'EOF'
+          SYSCFG_PATH ?= $(HOME)/ti/sysconfig_1.27.0
+          OPEN_PRU_PATH ?= $(abspath .)
+          SYSCFG_CLI_PATH ?= $(SYSCFG_PATH)
+          SYSCFG_NODE = $(SYSCFG_PATH)/nodejs/node
+          SYSCFG_PRU_NO_TOOL_PRODUCT=$(OPEN_PRU_PATH)/.metadata/product.json
+          export MKDIR=mkdir -p
+          export RMDIR=rm -rf
+          export RM=rm -f
+          EOF
+
+      - name: Run SysConfig sanity tests (${{ matrix.device }})
+        run: |
+          make ${{ matrix.make_target }} 2>&1 | tee syscfg-tests-${{ matrix.device }}.log
+          FAILURES=$(grep -ci "failed" syscfg-tests-${{ matrix.device }}.log || true)
+          CLEAN=$(grep -c "Total 0 error(s)" syscfg-tests-${{ matrix.device }}.log || true)
+          if [ "${FAILURES}" -gt 0 ] || [ "${CLEAN}" -eq 0 ]; then
+            exit 1
+          fi
+
+      - name: Upload test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: syscfg-tests-log-${{ matrix.device }}
+          path: syscfg-tests-${{ matrix.device }}.log
+          if-no-files-found: ignore

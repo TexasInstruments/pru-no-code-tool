@@ -49,74 +49,74 @@ function getNumOfBytes(value)
 function getAIContext() {
     return getLongDescription() + `
 
-	## How to Configure (For AI/Scripting)
+## How to Configure (For AI/Scripting)
 
-	This section describes how to programmatically configure the PRU GPI block in a .syscfg file.
-	
-	### Adding a PRU GPI Instance
-	
-	\\\`\\\`\\\`javascript
-	const pru_gpi_block = scripting.addModule("/pru_blocks/pru_io_blocks/pru_gpi_block", {}, false);
-	const gpi1 = pru_gpi_block.addInstance();
-	\\\`\\\`\\\`
-	
-	### Configuration Parameters
-	
-	| Parameter | Type | Valid Values | Default | Description |
-	|-----------|------|--------------|---------|-------------|
-	| constant1 | String | "R31, 1 << 0" to "R31, 1 << 19" | "R31, 1 << 0" | PRU GPI pin selection (bit mask) |
-	
-	### Valid Values for constant1
-	
-	| Value | Display Name | Description |
-	|-------|--------------|-------------|
-	| "R31, 1 << 0" | PRU_GPI_0 | Read input pin 0 |
-	| "R31, 1 << 1" | PRU_GPI_1 | Read input pin 1 |
-	| "R31, 1 << 2" | PRU_GPI_2 | Read input pin 2 |
-	| ... | ... | ... |
-	| "R31, 1 << 19" | PRU_GPI_19 | Read input pin 19 |
-	
-	### Example Configurations
-	
-	**Read from PRU_GPI_0:**
-	\\\`\\\`\\\`javascript
-	gpi1.$name = "PRU_GPI_0";
-	gpi1.constant1 = "R31, 1 << 0";
-	\\\`\\\`\\\`
-	
-	**Read from PRU_GPI_5 (button input):**
-	\\\`\\\`\\\`javascript
-	gpi1.$name = "Button_Input";
-	gpi1.constant1 = "R31, 1 << 5";
-	\\\`\\\`\\\`
-	
-	**Read from PRU_GPI_14 (UART RX line):**
-	\\\`\\\`\\\`javascript
-	gpi1.$name = "UART_RX_Monitor";
-	gpi1.constant1 = "R31, 1 << 14";
-	\\\`\\\`\\\`
-	
-	### Connecting to Other Blocks
-	
-	\\\`\\\`\\\`javascript
-	// Connect GPI output to downstream processing block
-	scripting.connect(gpi1, "output1", process_block, "input1");
-	
-	// Connect control flow
-	scripting.connect(prev_block, "next", gpi1, "prev");
-	scripting.connect(gpi1, "next", next_block, "prev");
-	\\\`\\\`\\\`
-	
-	### Important Notes
-	
-	1. **Output**: The GPI block outputs the masked bit value from R31 (either 0 or non-zero based on pin state).
-	
-	2. **Pin Mux**: Physical pin must be configured as PRU GPI in pin mux settings.
-	
-	3. **Read-Only**: R31 is a read-only register that reflects current pin states.
-	
-	4. **Single Cycle**: Reading takes only 1 PRU cycle.
-	`;
+This section describes how to programmatically configure the PRU GPI block in a .syscfg file.
+
+### Adding a PRU GPI Instance
+
+\\\`\\\`\\\`javascript
+const pru_gpi_block = scripting.addModule("/pru_blocks/pru_io_blocks/pru_gpi_block", {}, false);
+const gpi1 = pru_gpi_block.addInstance();
+\\\`\\\`\\\`
+
+### Configuration Parameters
+
+| Parameter | Type | Valid Values | Default | Description |
+|-----------|------|--------------|---------|-------------|
+| constant1 | String | "R31, 1 << 0" to "R31, 1 << 19" | "R31, 1 << 0" | PRU GPI pin selection (bit mask) |
+
+### Valid Values for constant1
+
+| Value | Display Name | Description |
+|-------|--------------|-------------|
+| "R31, 1 << 0" | PRU_GPI_0 | Read input pin 0 |
+| "R31, 1 << 1" | PRU_GPI_1 | Read input pin 1 |
+| "R31, 1 << 2" | PRU_GPI_2 | Read input pin 2 |
+| ... | ... | ... |
+| "R31, 1 << 19" | PRU_GPI_19 | Read input pin 19 |
+
+### Example Configurations
+
+**Read from PRU_GPI_0:**
+\\\`\\\`\\\`javascript
+gpi1.$name = "PRU_GPI_0";
+gpi1.constant1 = "R31, 1 << 0";
+\\\`\\\`\\\`
+
+**Read from PRU_GPI_5 (button input):**
+\\\`\\\`\\\`javascript
+gpi1.$name = "Button_Input";
+gpi1.constant1 = "R31, 1 << 5";
+\\\`\\\`\\\`
+
+**Read from PRU_GPI_14 (UART RX line):**
+\\\`\\\`\\\`javascript
+gpi1.$name = "UART_RX_Monitor";
+gpi1.constant1 = "R31, 1 << 14";
+\\\`\\\`\\\`
+
+### Connecting to Other Blocks
+
+\\\`\\\`\\\`javascript
+// Connect GPI output to downstream processing block
+scripting.connect(gpi1, "output1", process_block, "input1");
+
+// Connect control flow
+scripting.connect(prev_block, "next", gpi1, "prev");
+scripting.connect(gpi1, "next", next_block, "prev");
+\\\`\\\`\\\`
+
+### Important Notes
+
+1. **Output**: The GPI block outputs the masked bit value from R31 (either 0 or non-zero based on pin state).
+
+2. **Pin Mux**: Physical pin must be configured as PRU GPI in pin mux settings.
+
+3. **Read-Only**: R31 is a read-only register that reflects current pin states.
+
+4. **Single Cycle**: Reading takes only 1 PRU cycle.
+`;
 }
 
 function getLongDescription(){

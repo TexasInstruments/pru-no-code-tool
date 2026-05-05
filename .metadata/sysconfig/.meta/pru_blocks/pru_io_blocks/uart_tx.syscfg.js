@@ -1072,145 +1072,145 @@ wait_tx_done?:
 function getAIContext() {
     return getLongDescription() + `
 
-    ## How to Configure (For AI/Scripting)
-    
-    This section describes how to programmatically configure the UART TX block in a .syscfg file.
-    
-    ### Adding a UART TX Instance
-    
-    \`\`\`javascript
-    const uart_tx = scripting.addModule("/pru_blocks/pru_io_blocks/uart_tx", {}, false);
-    const uart_tx1 = uart_tx.addInstance();
-    \`\`\`
-    
-    ### Configuration Parameters
-    
-    | Parameter | Type | Valid Values | Default | Description |
-    |-----------|------|--------------|---------|-------------|
-    | pruSelect | Integer | 0, 1 | Auto-detected | PRU Selection (0=PRU0, 1=PRU1) - auto-detected from system context (read-only) |
-    | channel | Integer | 0, 1, 2 | 0 | ENDAT channel for UART TX |
-    | clockSource | Integer | 0, 1 | 0 | Clock source (0=192MHz UART_CLK, 1=200MHz CORE_CLK) |
-    | baudRate | Integer | MHz value | 12 | Baud rate in MHz. Clock source must be divisible by baudRate |
-    | startBitPolarity | Integer | 0, 1 | 1 | Start bit polarity (0=Low, 1=High) |
-    | stopBitPolarity | Integer | 0, 1 | 0 | Stop bit polarity (0=Low, 1=High) |
-    | bitSwap | Boolean | true, false | true | Enable LSB-first transmission (true) or MSB-first (false) |
-    | dataBits | Integer | 1-62 | 8 | Number of data bits to transmit (NOT including start/stop) |
-    
-    ### Valid Baud Rates
-    **With 192 MHz clock source (default):**
-    192 / baudRate must be an integer. Valid baud rates include:
-    - 192 MHz (clockDivider = 0)
-    - 96 MHz (clockDivider = 1)
-    - 64 MHz (clockDivider = 2)
-    - 48 MHz (clockDivider = 3)
-    - 32 MHz (clockDivider = 5)
-    - 24 MHz (clockDivider = 7)
-    - 16 MHz (clockDivider = 11)
-    - 12 MHz (clockDivider = 15)
-    - 8 MHz (clockDivider = 23)
-    - 6 MHz (clockDivider = 31)
-    - 4 MHz (clockDivider = 47)
-    - 3 MHz (clockDivider = 63)
-    - 2 MHz (clockDivider = 95)
-    - 1 MHz (clockDivider = 191)
-    
-    **With 200 MHz clock source:**
-    200 / baudRate must be an integer. Valid baud rates include:
-    - 200 MHz (clockDivider = 0)
-    - 100 MHz (clockDivider = 1)
-    - 50 MHz (clockDivider = 3)
-    - 40 MHz (clockDivider = 4)
-    - 25 MHz (clockDivider = 7)
-    - 20 MHz (clockDivider = 9)
-    - 10 MHz (clockDivider = 19)
-    - 8 MHz (clockDivider = 24)
-    - 5 MHz (clockDivider = 39)
-    - 4 MHz (clockDivider = 49)
-    - 2 MHz (clockDivider = 99)
-    - 1 MHz (clockDivider = 199)
-    
-    ### Example Configurations
-    
-    **Standard 8-bit UART at 12 MHz (192 MHz clock):**
-    \`\`\`javascript
-    uart_tx1.$name = "UART_TX_0";
-    uart_tx1.pruSelect = 0;
-    uart_tx1.channel = 0;
-    uart_tx1.clockSource = 0;          // 192 MHz (UART_CLK)
-    uart_tx1.baudRate = 12;            // 12 MHz baud rate
-    uart_tx1.dataBits = 8;
-    uart_tx1.bitSwap = true;           // LSB first (standard UART)
-    uart_tx1.startBitPolarity = 0;     // Standard UART start bit (low)
-    uart_tx1.stopBitPolarity = 1;      // Standard UART stop bit (high)
-    \`\`\`
-    
-    **8-bit UART at 10 MHz using 200 MHz clock:**
-    \`\`\`javascript
-    uart_tx1.$name = "UART_TX_200MHz";
-    uart_tx1.pruSelect = 0;
-    uart_tx1.channel = 0;
-    uart_tx1.clockSource = 1;          // 200 MHz (CORE_CLK)
-    uart_tx1.baudRate = 10;            // 10 MHz baud rate (200/10 = 20, divider = 19)
-    uart_tx1.dataBits = 8;
-    uart_tx1.bitSwap = true;
-    uart_tx1.startBitPolarity = 0;
-    uart_tx1.stopBitPolarity = 1;
-    \`\`\`
-    
-    **Extended 32-bit transmission on PRU1, Channel 2:**
-    \`\`\`javascript
-    uart_tx1.$name = "UART_TX_Extended";
-    uart_tx1.pruSelect = 1;
-    uart_tx1.channel = 2;
-    uart_tx1.clockSource = 0;          // 192 MHz (UART_CLK)
-    uart_tx1.baudRate = 24;            // 24 MHz baud rate
-    uart_tx1.dataBits = 32;            // 32 data bits (uses continuous mode)
-    uart_tx1.bitSwap = false;          // MSB first
-    uart_tx1.startBitPolarity = 1;
-    uart_tx1.stopBitPolarity = 0;
-    \`\`\`
-    
-    ### Connecting to Other Blocks
-    
-    \`\`\`javascript
-    // Connect data source to UART TX input
-    scripting.connect(load_constant1, "output1", uart_tx1, "input1");
-    
-    // For dataBits > 32, also connect upper 32 bits
-    scripting.connect(load_constant2, "output1", uart_tx1, "input2");
-    
-    // Connect control flow
-    scripting.connect(prev_block, "next", uart_tx1, "prev");
-    \`\`\`
-    
-    ### Important Notes for Extended Mode (dataBits > 32)
-    
-    When transmitting more than 32 data bits, you need **two Load Constant blocks** connected to the UART TX:
-    - **input1**: Lower 32 bits of data (from first Load Constant block)
-    - **input2**: Upper bits of data (from second Load Constant block)
-    
-    **Example for 40-bit transmission:**
-    \`\`\`javascript
-    // Add two Load Constant blocks for 40-bit data
-    const load_constant_block = scripting.addModule("/pru_blocks/data_handling/load_constant_block", {}, false);
-    const load_constant1 = load_constant_block.addInstance();
-    const load_constant2 = load_constant_block.addInstance();
-    
-    load_constant1.$name = "Load_Constant_Lower";
-    load_constant1.constant1 = 0xAABBCCDD;    // Lower 32 bits
-    
-    load_constant2.$name = "Load_Constant_Upper";
-    load_constant2.constant1 = 0xFF;          // Upper 8 bits (bits 32-39)
-    
-    // UART TX configured for 40 data bits
-    uart_tx1.$name = "UART_TX_40bit";
-    uart_tx1.dataBits = 40;
-    
-    // Connect both inputs
-    scripting.connect(load_constant1, "output1", uart_tx1, "input1");
-    scripting.connect(load_constant2, "output1", uart_tx1, "input2");
-    \`\`\`
-    `;
+## How to Configure (For AI/Scripting)
+
+This section describes how to programmatically configure the UART TX block in a .syscfg file.
+
+### Adding a UART TX Instance
+
+\`\`\`javascript
+const uart_tx = scripting.addModule("/pru_blocks/pru_io_blocks/uart_tx", {}, false);
+const uart_tx1 = uart_tx.addInstance();
+\`\`\`
+
+### Configuration Parameters
+
+| Parameter | Type | Valid Values | Default | Description |
+|-----------|------|--------------|---------|-------------|
+| pruSelect | Integer | 0, 1 | Auto-detected | PRU Selection (0=PRU0, 1=PRU1) - auto-detected from system context (read-only) |
+| channel | Integer | 0, 1, 2 | 0 | ENDAT channel for UART TX |
+| clockSource | Integer | 0, 1 | 0 | Clock source (0=192MHz UART_CLK, 1=200MHz CORE_CLK) |
+| baudRate | Integer | MHz value | 12 | Baud rate in MHz. Clock source must be divisible by baudRate |
+| startBitPolarity | Integer | 0, 1 | 1 | Start bit polarity (0=Low, 1=High) |
+| stopBitPolarity | Integer | 0, 1 | 0 | Stop bit polarity (0=Low, 1=High) |
+| bitSwap | Boolean | true, false | true | Enable LSB-first transmission (true) or MSB-first (false) |
+| dataBits | Integer | 1-62 | 8 | Number of data bits to transmit (NOT including start/stop) |
+
+### Valid Baud Rates
+**With 192 MHz clock source (default):**
+192 / baudRate must be an integer. Valid baud rates include:
+- 192 MHz (clockDivider = 0)
+- 96 MHz (clockDivider = 1)
+- 64 MHz (clockDivider = 2)
+- 48 MHz (clockDivider = 3)
+- 32 MHz (clockDivider = 5)
+- 24 MHz (clockDivider = 7)
+- 16 MHz (clockDivider = 11)
+- 12 MHz (clockDivider = 15)
+- 8 MHz (clockDivider = 23)
+- 6 MHz (clockDivider = 31)
+- 4 MHz (clockDivider = 47)
+- 3 MHz (clockDivider = 63)
+- 2 MHz (clockDivider = 95)
+- 1 MHz (clockDivider = 191)
+
+**With 200 MHz clock source:**
+200 / baudRate must be an integer. Valid baud rates include:
+- 200 MHz (clockDivider = 0)
+- 100 MHz (clockDivider = 1)
+- 50 MHz (clockDivider = 3)
+- 40 MHz (clockDivider = 4)
+- 25 MHz (clockDivider = 7)
+- 20 MHz (clockDivider = 9)
+- 10 MHz (clockDivider = 19)
+- 8 MHz (clockDivider = 24)
+- 5 MHz (clockDivider = 39)
+- 4 MHz (clockDivider = 49)
+- 2 MHz (clockDivider = 99)
+- 1 MHz (clockDivider = 199)
+
+### Example Configurations
+
+**Standard 8-bit UART at 12 MHz (192 MHz clock):**
+\`\`\`javascript
+uart_tx1.$name = "UART_TX_0";
+uart_tx1.pruSelect = 0;
+uart_tx1.channel = 0;
+uart_tx1.clockSource = 0;          // 192 MHz (UART_CLK)
+uart_tx1.baudRate = 12;            // 12 MHz baud rate
+uart_tx1.dataBits = 8;
+uart_tx1.bitSwap = true;           // LSB first (standard UART)
+uart_tx1.startBitPolarity = 0;     // Standard UART start bit (low)
+uart_tx1.stopBitPolarity = 1;      // Standard UART stop bit (high)
+\`\`\`
+
+**8-bit UART at 10 MHz using 200 MHz clock:**
+\`\`\`javascript
+uart_tx1.$name = "UART_TX_200MHz";
+uart_tx1.pruSelect = 0;
+uart_tx1.channel = 0;
+uart_tx1.clockSource = 1;          // 200 MHz (CORE_CLK)
+uart_tx1.baudRate = 10;            // 10 MHz baud rate (200/10 = 20, divider = 19)
+uart_tx1.dataBits = 8;
+uart_tx1.bitSwap = true;
+uart_tx1.startBitPolarity = 0;
+uart_tx1.stopBitPolarity = 1;
+\`\`\`
+
+**Extended 32-bit transmission on PRU1, Channel 2:**
+\`\`\`javascript
+uart_tx1.$name = "UART_TX_Extended";
+uart_tx1.pruSelect = 1;
+uart_tx1.channel = 2;
+uart_tx1.clockSource = 0;          // 192 MHz (UART_CLK)
+uart_tx1.baudRate = 24;            // 24 MHz baud rate
+uart_tx1.dataBits = 32;            // 32 data bits (uses continuous mode)
+uart_tx1.bitSwap = false;          // MSB first
+uart_tx1.startBitPolarity = 1;
+uart_tx1.stopBitPolarity = 0;
+\`\`\`
+
+### Connecting to Other Blocks
+
+\`\`\`javascript
+// Connect data source to UART TX input
+scripting.connect(load_constant1, "output1", uart_tx1, "input1");
+
+// For dataBits > 32, also connect upper 32 bits
+scripting.connect(load_constant2, "output1", uart_tx1, "input2");
+
+// Connect control flow
+scripting.connect(prev_block, "next", uart_tx1, "prev");
+\`\`\`
+
+### Important Notes for Extended Mode (dataBits > 32)
+
+When transmitting more than 32 data bits, you need **two Load Constant blocks** connected to the UART TX:
+- **input1**: Lower 32 bits of data (from first Load Constant block)
+- **input2**: Upper bits of data (from second Load Constant block)
+
+**Example for 40-bit transmission:**
+\`\`\`javascript
+// Add two Load Constant blocks for 40-bit data
+const load_constant_block = scripting.addModule("/pru_blocks/data_handling/load_constant_block", {}, false);
+const load_constant1 = load_constant_block.addInstance();
+const load_constant2 = load_constant_block.addInstance();
+
+load_constant1.$name = "Load_Constant_Lower";
+load_constant1.constant1 = 0xAABBCCDD;    // Lower 32 bits
+
+load_constant2.$name = "Load_Constant_Upper";
+load_constant2.constant1 = 0xFF;          // Upper 8 bits (bits 32-39)
+
+// UART TX configured for 40 data bits
+uart_tx1.$name = "UART_TX_40bit";
+uart_tx1.dataBits = 40;
+
+// Connect both inputs
+scripting.connect(load_constant1, "output1", uart_tx1, "input1");
+scripting.connect(load_constant2, "output1", uart_tx1, "input2");
+\`\`\`
+`;
 }
 
 function getLongDescription() {

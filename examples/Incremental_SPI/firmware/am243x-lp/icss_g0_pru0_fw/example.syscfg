@@ -9,6 +9,7 @@
 /**
  * Import the modules used in this configuration.
  */
+const pru_blocks_static_module = scripting.addModule("/pru_blocks/common/pru_blocks_static_module");
 const arithmetic_block     = scripting.addModule("/pru_blocks/data_handling/arithmetic_block", {}, false);
 const arithmetic_block1    = arithmetic_block.addInstance();
 const load_constant_block  = scripting.addModule("/pru_blocks/data_handling/load_constant_block", {}, false);
@@ -24,6 +25,7 @@ const pru_spi_write1       = pru_spi_write.addInstance();
 /**
  * Write custom configuration values to the imported modules.
  */
+pru_blocks_static_module.signalsToDisplay = ["3","4","5"];
 arithmetic_block1.$name = "Arithmetic_0";
 
 load_constant_block1.$name = "Load_Constant_0";
@@ -33,17 +35,14 @@ load_constant_block2.constant1 = 1;
 
 flow_control_block1.$name = "Flow_Control_0";
 
-loop_block1.$name         = "Loop_0";
-loop_block1.loopCount     = 10;
-loop_block1.preInitBlocks = ["Load_Constant_0"];
-loop_block1.$size         = [500,335];
+loop_block1.$name     = "Loop_0";
+loop_block1.loopCount = 10;
+loop_block1.$size     = [500,315];
 
-pru_spi_write1.$name                                    = "PRU_SPI_Write_0";
-pru_spi_write1["sclk high pulse width (in PRU cycles)"] = 10;
-pru_spi_write1["sclk low pulse width (in PRU cycles)"]  = 10;
-pru_spi_write1["SDO Signal"]                            = "3";
-pru_spi_write1["SCLK Signal"]                           = "4";
-pru_spi_write1["CS Signal"]                             = "5";
+pru_spi_write1.$name          = "PRU0_SPI_Write_0";
+pru_spi_write1["SDO Signal"]  = "3";
+pru_spi_write1["CS Signal"]   = "5";
+pru_spi_write1["SCLK Signal"] = "4";
 
 /**
  * References between modules.
@@ -61,9 +60,9 @@ scripting.connect(flow_control_block1, "prev", loop_block1, "next");
 /**
  * (x,y) coordinates for modules that are displayed in a graph.
  */
-arithmetic_block1.$position    = [150,135];
-load_constant_block1.$position = [30,105];
-load_constant_block2.$position = [30,190];
-flow_control_block1.$position  = [-325,-100];
-loop_block1.$position          = [-490,-115];
-pru_spi_write1.$position       = [270,135];
+arithmetic_block1.$position    = [185,75];
+load_constant_block1.$position = [60,45];
+load_constant_block2.$position = [60,130];
+flow_control_block1.$position  = [145,15];
+loop_block1.$position          = [0,0];
+pru_spi_write1.$position       = [330,75];

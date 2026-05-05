@@ -212,10 +212,18 @@ function getMacro(pruInstructionMacro, opCode) {
     ; ========== Global Reinit THEN de-assert rx_en (TRM Table 6-424 sequence) ==========
 	; TRM note: "assert tx_global_reinit then de-assert rx_en"
 	set     r31, r31, 19                       ; 1. Trigger reinit first
-    ; ========== Delay after Reinit ==========
-    .loop   20
-    nop
-    .endloop
+    ; ========== Wait for Reinit Complete ==========
+    ; Poll busy bit for selected channel (1=active, 0=done)
+    .if ${channel} == 0
+wait_reinit?:
+    qbbs    wait_reinit?, r31, 5
+    .elseif ${channel} == 1
+wait_reinit?:
+    qbbs    wait_reinit?, r31, 13
+    .else
+wait_reinit?:
+    qbbs    wait_reinit?, r31, 21
+    .endif
 	ldi     r30.b3, 0x00                       ; 2. De-assert rx_en after reinit has settled
 
 	; ========== Configure GPCFG${pruNum} for PRU${pruNum} Peripheral Mode ==========
@@ -540,109 +548,109 @@ no_stop_carry?:
 
 function getAIContext() {
     return getLongDescription() + `
-    ## How to Configure (For AI/Scripting)
-    
-    This section describes how to programmatically configure the UART RX block in a .syscfg file.
-    
-    ### Adding a UART RX Instance
-    
-    \`\`\`javascript
-    const uart_rx = scripting.addModule("/pru_blocks/pru_io_blocks/uart_rx", {}, false);
-    const uart_rx1 = uart_rx.addInstance();
-    \`\`\`
-    
-    ### Configuration Parameters
-    
-    | Parameter | Type | Valid Values | Default | Description |
-    |-----------|------|--------------|---------|-------------|
-    | pruSelect | Integer | 0, 1 | Auto-detected | PRU Selection (0=PRU0, 1=PRU1) - auto-detected from system context (read-only) |
-    | channel | Integer | 0, 1, 2 | 2 | ENDAT channel for UART RX |
-    | clockSource | Integer | 0, 1 | 0 | Clock source (0=192MHz UART_CLK, 1=200MHz CORE_CLK) |
-    | baudRate | Integer | MHz value | 12 | Baud rate in MHz. Clock source must be divisible by (baudRate × oversample) |
-    | oversampleSize | Integer | 0, 1, 3, 7 | 7 | Oversample encoding (0=1x, 1=2x, 3=4x, 7=8x) |
-    | startBitPolarity | Integer | 0, 1 | 1 | Start bit edge detection (0=Falling, 1=Rising) |
-    | frameSize | Integer | 3-64 | 10 | Total frame bits (dataBits + 2 for start/stop) |
-    | bitSwap | Boolean | true, false | true | Enable LSB-first reception (true) or MSB-first (false) |
-    
-    ### Valid Baud Rates
-    **With 192 MHz clock source and 8x oversample (default):**
-    192 / (baudRate × 8) must be an integer. Valid baud rates include:
-    - 24 MHz (clockDivider = 0)
-    - 12 MHz (clockDivider = 1)
-    - 8 MHz (clockDivider = 2)
-    - 6 MHz (clockDivider = 3)
-    - 4 MHz (clockDivider = 5)
-    - 3 MHz (clockDivider = 7)
-    - 2 MHz (clockDivider = 11)
-    - 1 MHz (clockDivider = 23)
-    
-    **With 200 MHz clock source and 8x oversample:**
-    200 / (baudRate × 8) must be an integer. Valid baud rates include:
-    - 25 MHz (clockDivider = 0)
-    - 5 MHz (clockDivider = 4)
-    - 2.5 MHz (clockDivider = 9)
-    - 1.25 MHz (clockDivider = 19)
-    
-    ### Example Configurations
-    
-    **Standard 8-bit UART at 12 MHz with 8x oversample (192 MHz clock):**
-    \`\`\`javascript
-    uart_rx1.$name = "UART_RX_0";
-    uart_rx1.pruSelect = 1;
-    uart_rx1.channel = 2;
-    uart_rx1.clockSource = 0;          // 192 MHz (UART_CLK)
-    uart_rx1.baudRate = 12;            // 12 MHz baud rate
-    uart_rx1.oversampleSize = 7;       // 8x oversample
-    uart_rx1.frameSize = 10;           // 8 data bits + start + stop = 10
-    uart_rx1.bitSwap = true;           // LSB first (standard UART)
-    uart_rx1.startBitPolarity = 0;     // Detect falling edge (standard UART)
-    \`\`\`
-    
-    **8-bit UART at 25 MHz using 200 MHz clock:**
-    \`\`\`javascript
-    uart_rx1.$name = "UART_RX_200MHz";
-    uart_rx1.pruSelect = 1;
-    uart_rx1.channel = 2;
-    uart_rx1.clockSource = 1;          // 200 MHz (CORE_CLK)
-    uart_rx1.baudRate = 25;            // 25 MHz baud rate (200 / (25 × 8) = 1, divider = 0)
-    uart_rx1.oversampleSize = 7;       // 8x oversample
-    uart_rx1.frameSize = 10;
-    uart_rx1.bitSwap = true;
-    uart_rx1.startBitPolarity = 0;
-    \`\`\`
-    
-    **Extended 31-bit reception on PRU0, Channel 0:**
-    \`\`\`javascript
-    uart_rx1.$name = "UART_RX_Extended";
-    uart_rx1.pruSelect = 0;
-    uart_rx1.channel = 0;
-    uart_rx1.clockSource = 0;          // 192 MHz (UART_CLK)
-    uart_rx1.baudRate = 12;            // 12 MHz baud rate
-    uart_rx1.oversampleSize = 7;       // 8x oversample
-    uart_rx1.frameSize = 33;           // 31 data bits + start + stop = 33 (uses extended mode)
-    uart_rx1.bitSwap = false;          // MSB first
-    uart_rx1.startBitPolarity = 1;     // Detect rising edge
-    \`\`\`
-    
-    ### Connecting to Other Blocks
-    
-    \`\`\`javascript
-    // Connect UART RX output to downstream processing block
-    scripting.connect(uart_rx1, "output1", process_block, "input1");
-    
-    // Connect control flow
-    scripting.connect(prev_block, "next", uart_rx1, "prev");
-    scripting.connect(uart_rx1, "next", next_block, "prev");
-    \`\`\`
-    
-    ### Important Notes for Extended Mode (frameSize >= 33, i.e., dataBits >= 31)
-    
-    When receiving 31 or more data bits:
-    - The output register is **8 bytes** (two 32-bit registers)
-    - Lower 32 bits are in the first output register
-    - Upper bits are in the second output register
-    - Blocks connected to output1 will automatically receive the full 64-bit value
-    `;
+## How to Configure (For AI/Scripting)
+
+This section describes how to programmatically configure the UART RX block in a .syscfg file.
+
+### Adding a UART RX Instance
+
+\`\`\`javascript
+const uart_rx = scripting.addModule("/pru_blocks/pru_io_blocks/uart_rx", {}, false);
+const uart_rx1 = uart_rx.addInstance();
+\`\`\`
+
+### Configuration Parameters
+
+| Parameter | Type | Valid Values | Default | Description |
+|-----------|------|--------------|---------|-------------|
+| pruSelect | Integer | 0, 1 | Auto-detected | PRU Selection (0=PRU0, 1=PRU1) - auto-detected from system context (read-only) |
+| channel | Integer | 0, 1, 2 | 2 | ENDAT channel for UART RX |
+| clockSource | Integer | 0, 1 | 0 | Clock source (0=192MHz UART_CLK, 1=200MHz CORE_CLK) |
+| baudRate | Integer | MHz value | 12 | Baud rate in MHz. Clock source must be divisible by (baudRate × oversample) |
+| oversampleSize | Integer | 0, 1, 3, 7 | 7 | Oversample encoding (0=1x, 1=2x, 3=4x, 7=8x) |
+| startBitPolarity | Integer | 0, 1 | 1 | Start bit edge detection (0=Falling, 1=Rising) |
+| frameSize | Integer | 3-64 | 10 | Total frame bits (dataBits + 2 for start/stop) |
+| bitSwap | Boolean | true, false | true | Enable LSB-first reception (true) or MSB-first (false) |
+
+### Valid Baud Rates
+**With 192 MHz clock source and 8x oversample (default):**
+192 / (baudRate × 8) must be an integer. Valid baud rates include:
+- 24 MHz (clockDivider = 0)
+- 12 MHz (clockDivider = 1)
+- 8 MHz (clockDivider = 2)
+- 6 MHz (clockDivider = 3)
+- 4 MHz (clockDivider = 5)
+- 3 MHz (clockDivider = 7)
+- 2 MHz (clockDivider = 11)
+- 1 MHz (clockDivider = 23)
+
+**With 200 MHz clock source and 8x oversample:**
+200 / (baudRate × 8) must be an integer. Valid baud rates include:
+- 25 MHz (clockDivider = 0)
+- 5 MHz (clockDivider = 4)
+- 2.5 MHz (clockDivider = 9)
+- 1.25 MHz (clockDivider = 19)
+
+### Example Configurations
+
+**Standard 8-bit UART at 12 MHz with 8x oversample (192 MHz clock):**
+\`\`\`javascript
+uart_rx1.$name = "UART_RX_0";
+uart_rx1.pruSelect = 1;
+uart_rx1.channel = 2;
+uart_rx1.clockSource = 0;          // 192 MHz (UART_CLK)
+uart_rx1.baudRate = 12;            // 12 MHz baud rate
+uart_rx1.oversampleSize = 7;       // 8x oversample
+uart_rx1.frameSize = 10;           // 8 data bits + start + stop = 10
+uart_rx1.bitSwap = true;           // LSB first (standard UART)
+uart_rx1.startBitPolarity = 0;     // Detect falling edge (standard UART)
+\`\`\`
+
+**8-bit UART at 25 MHz using 200 MHz clock:**
+\`\`\`javascript
+uart_rx1.$name = "UART_RX_200MHz";
+uart_rx1.pruSelect = 1;
+uart_rx1.channel = 2;
+uart_rx1.clockSource = 1;          // 200 MHz (CORE_CLK)
+uart_rx1.baudRate = 25;            // 25 MHz baud rate (200 / (25 × 8) = 1, divider = 0)
+uart_rx1.oversampleSize = 7;       // 8x oversample
+uart_rx1.frameSize = 10;
+uart_rx1.bitSwap = true;
+uart_rx1.startBitPolarity = 0;
+\`\`\`
+
+**Extended 31-bit reception on PRU0, Channel 0:**
+\`\`\`javascript
+uart_rx1.$name = "UART_RX_Extended";
+uart_rx1.pruSelect = 0;
+uart_rx1.channel = 0;
+uart_rx1.clockSource = 0;          // 192 MHz (UART_CLK)
+uart_rx1.baudRate = 12;            // 12 MHz baud rate
+uart_rx1.oversampleSize = 7;       // 8x oversample
+uart_rx1.frameSize = 33;           // 31 data bits + start + stop = 33 (uses extended mode)
+uart_rx1.bitSwap = false;          // MSB first
+uart_rx1.startBitPolarity = 1;     // Detect rising edge
+\`\`\`
+
+### Connecting to Other Blocks
+
+\`\`\`javascript
+// Connect UART RX output to downstream processing block
+scripting.connect(uart_rx1, "output1", process_block, "input1");
+
+// Connect control flow
+scripting.connect(prev_block, "next", uart_rx1, "prev");
+scripting.connect(uart_rx1, "next", next_block, "prev");
+\`\`\`
+
+### Important Notes for Extended Mode (frameSize >= 33, i.e., dataBits >= 31)
+
+When receiving 31 or more data bits:
+- The output register is **8 bytes** (two 32-bit registers)
+- Lower 32 bits are in the first output register
+- Upper bits are in the second output register
+- Blocks connected to output1 will automatically receive the full 64-bit value
+`;
 }
 
 function getLongDescription() {
