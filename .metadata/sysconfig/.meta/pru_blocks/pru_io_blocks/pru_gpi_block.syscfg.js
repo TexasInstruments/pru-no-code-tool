@@ -1,3 +1,23 @@
+/**
+ * Helper function to extract PRU number from system context
+ * @returns {number} PRU number (0 or 1), defaults to 0 if cannot determine
+ */
+function getPruNumberFromContext() {
+    const common = system.getScript("/common");
+    const coreName = common.getSelfSysCfgCoreName();
+
+    // coreName format: "icss_g0_pru0" or "icss_g0_pru1"
+	let result = 0;
+    if (coreName && coreName.includes("pru")) {
+        const match = coreName.match(/pru(\d+)$/);
+        if (match && match[1]) {
+            result=parseInt(match[1]);
+        }
+    }
+	if(result==0)return "PRU0";
+    return "PRU1";
+}
+const PRU_USED = getPruNumberFromContext();
 function validate(inst, report) {
 	for(let iterator = 1; iterator <= inst["numOfInputPorts"]; iterator++)
 	{
@@ -29,74 +49,74 @@ function getNumOfBytes(value)
 function getAIContext() {
     return getLongDescription() + `
 
-	## How to Configure (For AI/Scripting)
+## How to Configure (For AI/Scripting)
 
-	This section describes how to programmatically configure the PRU GPI block in a .syscfg file.
-	
-	### Adding a PRU GPI Instance
-	
-	\\\`\\\`\\\`javascript
-	const pru_gpi_block = scripting.addModule("/pru_blocks/pru_io_blocks/pru_gpi_block", {}, false);
-	const gpi1 = pru_gpi_block.addInstance();
-	\\\`\\\`\\\`
-	
-	### Configuration Parameters
-	
-	| Parameter | Type | Valid Values | Default | Description |
-	|-----------|------|--------------|---------|-------------|
-	| constant1 | String | "R31, 1 << 0" to "R31, 1 << 19" | "R31, 1 << 0" | PRU GPI pin selection (bit mask) |
-	
-	### Valid Values for constant1
-	
-	| Value | Display Name | Description |
-	|-------|--------------|-------------|
-	| "R31, 1 << 0" | PRU_GPI_0 | Read input pin 0 |
-	| "R31, 1 << 1" | PRU_GPI_1 | Read input pin 1 |
-	| "R31, 1 << 2" | PRU_GPI_2 | Read input pin 2 |
-	| ... | ... | ... |
-	| "R31, 1 << 19" | PRU_GPI_19 | Read input pin 19 |
-	
-	### Example Configurations
-	
-	**Read from PRU_GPI_0:**
-	\\\`\\\`\\\`javascript
-	gpi1.$name = "PRU_GPI_0";
-	gpi1.constant1 = "R31, 1 << 0";
-	\\\`\\\`\\\`
-	
-	**Read from PRU_GPI_5 (button input):**
-	\\\`\\\`\\\`javascript
-	gpi1.$name = "Button_Input";
-	gpi1.constant1 = "R31, 1 << 5";
-	\\\`\\\`\\\`
-	
-	**Read from PRU_GPI_14 (UART RX line):**
-	\\\`\\\`\\\`javascript
-	gpi1.$name = "UART_RX_Monitor";
-	gpi1.constant1 = "R31, 1 << 14";
-	\\\`\\\`\\\`
-	
-	### Connecting to Other Blocks
-	
-	\\\`\\\`\\\`javascript
-	// Connect GPI output to downstream processing block
-	scripting.connect(gpi1, "output1", process_block, "input1");
-	
-	// Connect control flow
-	scripting.connect(prev_block, "next", gpi1, "prev");
-	scripting.connect(gpi1, "next", next_block, "prev");
-	\\\`\\\`\\\`
-	
-	### Important Notes
-	
-	1. **Output**: The GPI block outputs the masked bit value from R31 (either 0 or non-zero based on pin state).
-	
-	2. **Pin Mux**: Physical pin must be configured as PRU GPI in pin mux settings.
-	
-	3. **Read-Only**: R31 is a read-only register that reflects current pin states.
-	
-	4. **Single Cycle**: Reading takes only 1 PRU cycle.
-	`;
+This section describes how to programmatically configure the PRU GPI block in a .syscfg file.
+
+### Adding a PRU GPI Instance
+
+\\\`\\\`\\\`javascript
+const pru_gpi_block = scripting.addModule("/pru_blocks/pru_io_blocks/pru_gpi_block", {}, false);
+const gpi1 = pru_gpi_block.addInstance();
+\\\`\\\`\\\`
+
+### Configuration Parameters
+
+| Parameter | Type | Valid Values | Default | Description |
+|-----------|------|--------------|---------|-------------|
+| constant1 | String | "R31, 1 << 0" to "R31, 1 << 19" | "R31, 1 << 0" | PRU GPI pin selection (bit mask) |
+
+### Valid Values for constant1
+
+| Value | Display Name | Description |
+|-------|--------------|-------------|
+| "R31, 1 << 0" | PRU_GPI_0 | Read input pin 0 |
+| "R31, 1 << 1" | PRU_GPI_1 | Read input pin 1 |
+| "R31, 1 << 2" | PRU_GPI_2 | Read input pin 2 |
+| ... | ... | ... |
+| "R31, 1 << 19" | PRU_GPI_19 | Read input pin 19 |
+
+### Example Configurations
+
+**Read from PRU_GPI_0:**
+\\\`\\\`\\\`javascript
+gpi1.$name = "PRU_GPI_0";
+gpi1.constant1 = "R31, 1 << 0";
+\\\`\\\`\\\`
+
+**Read from PRU_GPI_5 (button input):**
+\\\`\\\`\\\`javascript
+gpi1.$name = "Button_Input";
+gpi1.constant1 = "R31, 1 << 5";
+\\\`\\\`\\\`
+
+**Read from PRU_GPI_14 (UART RX line):**
+\\\`\\\`\\\`javascript
+gpi1.$name = "UART_RX_Monitor";
+gpi1.constant1 = "R31, 1 << 14";
+\\\`\\\`\\\`
+
+### Connecting to Other Blocks
+
+\\\`\\\`\\\`javascript
+// Connect GPI output to downstream processing block
+scripting.connect(gpi1, "output1", process_block, "input1");
+
+// Connect control flow
+scripting.connect(prev_block, "next", gpi1, "prev");
+scripting.connect(gpi1, "next", next_block, "prev");
+\\\`\\\`\\\`
+
+### Important Notes
+
+1. **Output**: The GPI block outputs the masked bit value from R31 (either 0 or non-zero based on pin state).
+
+2. **Pin Mux**: Physical pin must be configured as PRU GPI in pin mux settings.
+
+3. **Read-Only**: R31 is a read-only register that reflects current pin states.
+
+4. **Single Cycle**: Reading takes only 1 PRU cycle.
+`;
 }
 
 function getLongDescription(){
@@ -212,7 +232,7 @@ R31 Bit 10 - Timestamp Mode:
 
 exports = {
 	displayName: "PRU GPI",
-	defaultInstanceName: "PRU_GPI_",
+	defaultInstanceName: `${PRU_USED}_GPI_INSTANCE_`,
 	longDescription: getLongDescription(),
 	getAIContext: getAIContext,
 	uiView: "graph",
@@ -237,7 +257,7 @@ exports = {
 			default: "R31, 1 << 0",
             options: Array.from({ length: 20 }, (_, i) => ({
                 name: `R31, 1 << ${i}`,
-                displayName: `PRU_GPI_${i}`,
+                displayName: `${PRU_USED}_GPI_${i}`,
             }))
 		},
 		{

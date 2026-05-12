@@ -89,4 +89,13 @@ help:
 	@echo  the PRU firmware.
 	@echo
 
+syscfg-tests-am243x:
+	-$(SYSCFG_NODE) $(SYSCFG_CLI_PATH)/tests/sanityTests.js -s $(SYSCFG_PRU_NO_TOOL_PRODUCT) -d AM243x_ALX_beta -c icss_g0_pru0 --excludeTests="migrateToAnyTarget"
+	-$(SYSCFG_NODE) $(SYSCFG_CLI_PATH)/tests/sanityTests.js -s $(SYSCFG_PRU_NO_TOOL_PRODUCT) -d AM243x_ALX_beta -c icss_g0_pru1 --excludeTests="migrateToAnyTarget"
+	-$(SYSCFG_NODE) $(SYSCFG_CLI_PATH)/tests/sanityTests.js -s $(SYSCFG_PRU_NO_TOOL_PRODUCT) -d AM243x_ALV_beta -c icss_g0_pru0 --excludeTests="migrateToAnyTarget"
+	-$(SYSCFG_NODE) $(SYSCFG_CLI_PATH)/tests/sanityTests.js -s $(SYSCFG_PRU_NO_TOOL_PRODUCT) -d AM243x_ALV_beta -c icss_g0_pru1 --excludeTests="migrateToAnyTarget"
+syscfg-tests-am64x:
+	-$(SYSCFG_NODE) $(SYSCFG_CLI_PATH)/tests/sanityTests.js -s $(SYSCFG_PRU_NO_TOOL_PRODUCT) -d AM64x -c icss_g0_pru0 --excludeTests="migrateToAnyTarget"
+	-$(SYSCFG_NODE) $(SYSCFG_CLI_PATH)/tests/sanityTests.js -s $(SYSCFG_PRU_NO_TOOL_PRODUCT) -d AM64x -c icss_g0_pru1 --excludeTests="migrateToAnyTarget"
+
 .PHONY: all clean pru host help academy examples source syscfg

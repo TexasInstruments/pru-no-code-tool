@@ -179,83 +179,83 @@ function getMacro(pruInstructionMacro, opCode)
 
 function getAIContext(){
 	return getLongDescription() + `
-	## How to Configure (For AI/Scripting)
+## How to Configure (For AI/Scripting)
 
-	This section describes how to programmatically configure the CRC block in a .syscfg file.
+This section describes how to programmatically configure the CRC block in a .syscfg file.
 
-	### Adding a CRC Instance
+### Adding a CRC Instance
 
-	\`\`\`javascript
-	const crc_block = scripting.addModule("/pru_blocks/application_specific/crc_block", {}, false);
-	const crc1 = crc_block.addInstance();
-	\`\`\`
+\`\`\`javascript
+const crc_block = scripting.addModule("/pru_blocks/application_specific/crc_block", {}, false);
+const crc1 = crc_block.addInstance();
+\`\`\`
 
-	### Configuration Parameters
+### Configuration Parameters
 
-	| Parameter | Type | Valid Values | Default | Description |
-	|-----------|------|--------------|---------|-------------|
-	| opCode | String | "m_calculate_crc8", "m_calculate_crc16", "m_calculate_crc32" | "m_calculate_crc8" | CRC algorithm type |
-	| crcPolynomial | Hex | Depends on CRC type | 0x07 | CRC polynomial (generator) |
-	| output1Size | String | "1", "2", "4" | "1" | Output size in bytes |
+| Parameter | Type | Valid Values | Default | Description |
+|-----------|------|--------------|---------|-------------|
+| opCode | String | "m_calculate_crc8", "m_calculate_crc16", "m_calculate_crc32" | "m_calculate_crc8" | CRC algorithm type |
+| crcPolynomial | Hex | Depends on CRC type | 0x07 | CRC polynomial (generator) |
+| output1Size | String | "1", "2", "4" | "1" | Output size in bytes |
 
-	### Valid CRC Types and Polynomials
+### Valid CRC Types and Polynomials
 
-	| CRC Type | Default Polynomial | Common Polynomials | Description |
-	|----------|-------------------|-------------------|-------------|
-	| CRC8 | 0x07 | 0x07, 0x31, 0x9B | 8-bit CRC (1 byte output) |
-	| CRC16 | 0x8005 | 0x8005, 0x1021, 0x8408 | 16-bit CRC (2 byte output) |
-	| CRC32 | 0x04C11DB7 | 0x04C11DB7, 0xEDB88320 | 32-bit CRC (4 byte output) |
+| CRC Type | Default Polynomial | Common Polynomials | Description |
+|----------|-------------------|-------------------|-------------|
+| CRC8 | 0x07 | 0x07, 0x31, 0x9B | 8-bit CRC (1 byte output) |
+| CRC16 | 0x8005 | 0x8005, 0x1021, 0x8408 | 16-bit CRC (2 byte output) |
+| CRC32 | 0x04C11DB7 | 0x04C11DB7, 0xEDB88320 | 32-bit CRC (4 byte output) |
 
-	### Example Configurations
+### Example Configurations
 
-	**Standard CRC8:**
-	\`\`\`javascript
-	crc1.$name = "CRC8_Check";
-	crc1.opCode = "m_calculate_crc8";
-	crc1.crcPolynomial = 0x07;
-	crc1.output1Size = "1";
-	\`\`\`
+**Standard CRC8:**
+\`\`\`javascript
+crc1.$name = "CRC8_Check";
+crc1.opCode = "m_calculate_crc8";
+crc1.crcPolynomial = 0x07;
+crc1.output1Size = "1";
+\`\`\`
 
-	**CRC16 for MODBUS:**
-	\`\`\`javascript
-	crc1.$name = "CRC16_MODBUS";
-	crc1.opCode = "m_calculate_crc16";
-	crc1.crcPolynomial = 0x8005;
-	crc1.output1Size = "2";
-	\`\`\`
+**CRC16 for MODBUS:**
+\`\`\`javascript
+crc1.$name = "CRC16_MODBUS";
+crc1.opCode = "m_calculate_crc16";
+crc1.crcPolynomial = 0x8005;
+crc1.output1Size = "2";
+\`\`\`
 
-	**CRC32 for Ethernet:**
-	\`\`\`javascript
-	crc1.$name = "CRC32_Ethernet";
-	crc1.opCode = "m_calculate_crc32";
-	crc1.crcPolynomial = 0x04C11DB7;
-	crc1.output1Size = "4";
-	\`\`\`
+**CRC32 for Ethernet:**
+\`\`\`javascript
+crc1.$name = "CRC32_Ethernet";
+crc1.opCode = "m_calculate_crc32";
+crc1.crcPolynomial = 0x04C11DB7;
+crc1.output1Size = "4";
+\`\`\`
 
-	### Connecting to Other Blocks
+### Connecting to Other Blocks
 
-	\`\`\`javascript
-	// Connect data input
-	scripting.connect(data_source, "output1", crc1, "input1");
+\`\`\`javascript
+// Connect data input
+scripting.connect(data_source, "output1", crc1, "input1");
 
-	// Connect CRC output to downstream block
-	scripting.connect(crc1, "output1", next_block, "input1");
+// Connect CRC output to downstream block
+scripting.connect(crc1, "output1", next_block, "input1");
 
-	// Connect control flow
-	scripting.connect(prev_block, "next", crc1, "prev");
-	scripting.connect(crc1, "next", next_block, "prev");
-	\`\`\`
+// Connect control flow
+scripting.connect(prev_block, "next", crc1, "prev");
+scripting.connect(crc1, "next", next_block, "prev");
+\`\`\`
 
-	### Important Notes
+### Important Notes
 
-	1. **Input Required**: input1 must be connected to provide data for CRC calculation.
+1. **Input Required**: input1 must be connected to provide data for CRC calculation.
 
-	2. **Polynomial Selection**: Choose appropriate polynomial for your protocol/standard.
+2. **Polynomial Selection**: Choose appropriate polynomial for your protocol/standard.
 
-	3. **Output Size**: Must match CRC type (CRC8=1 byte, CRC16=2 bytes, CRC32=4 bytes).
+3. **Output Size**: Must match CRC type (CRC8=1 byte, CRC16=2 bytes, CRC32=4 bytes).
 
-	4. **Lookup Table**: Block generates optimized lookup table for fast CRC calculation.
-	`;
+4. **Lookup Table**: Block generates optimized lookup table for fast CRC calculation.
+`;
 
 }
 

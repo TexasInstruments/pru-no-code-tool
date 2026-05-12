@@ -6,14 +6,6 @@ The PRU No-Code tool is a visual programming environment for the PRU-ICSS (Progr
 
 The tool generates PRU assembly code from visual block diagrams, handling register allocation, timing calculations, and code organization automatically.
 
-### Target Applications
-
-- Industrial sensor interfacing (SPI, UART)
-- High-speed GPIO control
-- Real-time data acquisition
-- Custom communication protocols
-- Precise timing applications
-
 ### Supported Devices
 
 - AM64x
@@ -199,7 +191,7 @@ Include the generated files and call the generated code from your main.asm:
 ; main.asm
     .include "pru_syscfg.inc"      ; Include macro definitions
     .ref sysconfig_generated_start ; Reference generated code entry
-    .ref sysconfig_generated_end   ; Reference generated code exit
+    .global sysconfig_generated_end   ; Reference generated code exit
 
     .text
     .global main
@@ -285,7 +277,7 @@ The PRU No-Code tool provides helpful summary views to understand your design:
 
 ### Register Allocation Summary
 
-Shows which PRU registers (R0-R27) are allocated to each block's output. This helps you:
+Shows which PRU registers (R0-R27) are allocated to each block's output ( also included in the generated pru_syscfg.asm file ). This helps you:
 - Understand register usage across your design
 - Identify which registers are available for custom code
 - Debug data flow issues
@@ -314,6 +306,7 @@ Pins are sorted by direction (GPO pins first, then GPI pins) and by pin number i
 
 - Simulation runs in JavaScript, not actual PRU hardware
 - External hardware interactions are simulated with test values
+- Simulation currently does not support UART block  
 - Timing is calculated, not measured
 
 ---
@@ -322,7 +315,7 @@ Pins are sorted by direction (GPO pins first, then GPI pins) and by pin number i
 
 ### Design Patterns
 
-1. **Initialize First**: Place configuration blocks (Configure Constant Table, GPIO setup) before main logic
+1. **Initialize First**: Place configuration blocks before main logic
 2. **Use Groups**: Organize related functionality into Group blocks for modularity
 3. **Pre-Initialize Accumulators**: Use Loop block's Pre-Initialization feature for counters and accumulators
 
@@ -402,28 +395,9 @@ The tool generates two files:
 
 ---
 
-## Troubleshooting
-
-### Common Issues
-
-**Issue**: Generated code not executing
-- **Solution**: Ensure main.asm includes pru_syscfg.inc and jumps to sysconfig_generated_start or calls the group block
-
-**Issue**: Register conflicts
-- **Solution**: Avoid using R28 and R29 in custom code; these are reserved as temporary registers 
-
-**Issue**: Memory access fails
-- **Solution**: Ensure a Memory Variable block is defined with the correct symbol name and memory location (DMEM/SMEM) before using a Memory Access block that references it
-
-**Issue**: Timing not as expected
-- **Solution**: Use simulation to verify cycle counts; account for loop overhead
-
-**Issue**: SPI/UART not working
-- **Solution**: Verify pin configuration in SysConfig; check clock and mode settings
-
 ### Getting Help
 
-- Check block-specific READMEs for detailed troubleshooting
+- Check block-specific READMEs for details 
 - Review generated assembly code for unexpected instructions
 - Use simulation to trace data flow issues
 - Use AI chatbot's help for issues or code explanation 

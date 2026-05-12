@@ -4,7 +4,7 @@
 ;***************************************************************************************
 ;   File:     main.asm
 ;
-;   Brief:     example to show UART and CRC functionality with pru-no-code-tool
+;   Brief:     example to SPI loopback using SPI read/write block from the pru-no-code-tool
 ;
 ;   Steps to build :
 ;

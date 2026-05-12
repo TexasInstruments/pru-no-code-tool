@@ -20,9 +20,15 @@ Reads from or writes to a named memory buffer defined by a Memory Variable block
 | Parameter | Description | Options / Range |
 |-----------|-------------|-----------------|
 | Operation | Read or write | Read (Load from Memory), Write (Store to Memory) |
-| Select Memory Symbol | Symbol from a Memory Variable block | Dropdown of all defined symbols |
+| Memory Variable Selected | Shows which Memory Variable is currently bound to this block | — |
+| Memory Variable (nested) | Configure the auto-created buffer's label, size, and location directly below this block | — |
 | Offset (bytes) | Byte offset from symbol base | 0 to (buffer size - data size) |
 | Data Size (bytes) | Number of bytes to access | 1–112 |
+
+When the Memory Access block is added to the design, a Memory Variable block is automatically
+created and nested under it. Configure the buffer through the nested block. If multiple
+Memory Variable blocks exist in the design, use the dropdown to select which one to access.
+Multiple Memory Access blocks can share the same buffer by pointing to the same label name.
 
 ### Ports
 
@@ -62,10 +68,11 @@ The memory location is determined by the referenced Memory Variable block's conf
 
 ### Validation Rules
 
-- A Memory Symbol must be selected
+- A Memory Variable is always available — auto-created if none exist in the design
 - `offsetValue` must be ≥ 0
 - `offset + dataSize` must not exceed the buffer's declared size
 - Write mode requires `input1` to be connected
+- Removing the Memory Access block also removes its auto-created Memory Variable
 
 ### Usage Examples
 

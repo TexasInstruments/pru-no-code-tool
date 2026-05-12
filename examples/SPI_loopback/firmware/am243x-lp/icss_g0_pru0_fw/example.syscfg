@@ -9,16 +9,19 @@
 /**
  * Import the modules used in this configuration.
  */
-const load_constant_block  = scripting.addModule("/pru_blocks/data_handling/load_constant_block", {}, false);
-const load_constant_block1 = load_constant_block.addInstance();
-const flow_control_block   = scripting.addModule("/pru_blocks/program_control/flow_control_block", {}, false);
-const flow_control_block1  = flow_control_block.addInstance();
-const pru_spi_write        = scripting.addModule("/pru_blocks/pru_io_blocks/pru_spi_write", {}, false);
-const pru_spi_write1       = pru_spi_write.addInstance();
+const pru_blocks_static_module = scripting.addModule("/pru_blocks/common/pru_blocks_static_module");
+const load_constant_block      = scripting.addModule("/pru_blocks/data_handling/load_constant_block", {}, false);
+const load_constant_block1     = load_constant_block.addInstance();
+const flow_control_block       = scripting.addModule("/pru_blocks/program_control/flow_control_block", {}, false);
+const flow_control_block1      = flow_control_block.addInstance();
+const pru_spi_write            = scripting.addModule("/pru_blocks/pru_io_blocks/pru_spi_write", {}, false);
+const pru_spi_write1           = pru_spi_write.addInstance();
 
 /**
  * Write custom configuration values to the imported modules.
  */
+pru_blocks_static_module.signalsToDisplay = ["3","4","5"];
+
 load_constant_block1.$name     = "Load_Constant_0";
 load_constant_block1.constant1 = 2882382797;
 

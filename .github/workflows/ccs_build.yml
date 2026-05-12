@@ -306,7 +306,9 @@ jobs:
 
           mapfile -t SPECS < <(find . -name "example.projectspec" | grep "/${DEVICE}-" | sort)
           echo "Found ${#SPECS[@]} projectspecs for ${DEVICE}"
-
+          if [ ${#SPECS[@]} -eq 0 ]; then
+            exit 0
+          fi
           CMD=("${CCS_CLI}" -noSplash
                -workspace "${WORKSPACE}"
                -application com.ti.ccs.apps.importProject)

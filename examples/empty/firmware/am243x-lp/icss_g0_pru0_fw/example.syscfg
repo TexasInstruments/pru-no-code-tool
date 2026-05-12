@@ -1,10 +1,11 @@
 /**
  * These arguments were used when this file was generated. They will be automatically applied on subsequent loads
  * via the GUI or CLI. Run CLI with '--help' for additional information on how to override these arguments.
- * @cliArgs --device "AM243x_ALX_beta" --package "ALX" --part "ALX" --context "icss_g0_pru0" --product "PRU_NO_CODE_TOOL@01.00.01"
- * @versions {"tool":"1.20.0+3587"}
+ * @cliArgs --device "AM243x_ALX_beta" --part "ALX" --package "ALX" --context "icss_g0_pru0" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @v2CliArgs --device "AM2434" --package "FCCSP (ALX)" --variant "AM2434-E" --context "icss_g0_pru0" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @versions {"tool":"1.27.0+4565"}
  */
- 
+
 /**
  * Import the modules used in this configuration.
  */
@@ -20,4 +21,4 @@ flow_control_block1.opCode = "HALT";
 /**
  * (x,y) coordinates for modules that are displayed in a graph.
  */
-flow_control_block1.$position = [0,0];
+flow_control_block1.$position = [-120,-60];

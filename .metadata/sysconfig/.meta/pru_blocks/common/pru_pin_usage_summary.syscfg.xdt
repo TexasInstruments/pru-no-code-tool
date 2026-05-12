@@ -3,6 +3,26 @@
 %const pruRegisterAllocationSummary = system.getScript("/pru_blocks/common/register_allocation/pru_register_allocator.js").getPruRegisterAllocationSummary();
 %const pruInstructionInstances = pruRegisterAllocationSummary.pruInstructionInstances;
 %
+%/**
+% * Helper function to extract PRU number from system context
+% * @returns {number} PRU number (0 or 1), defaults to 0 if cannot determine
+% */
+%function getPruNumberFromContext() {
+%    const common = system.getScript("/common");
+%    const coreName = common.getSelfSysCfgCoreName();
+%
+%    // coreName format: "icss_g0_pru0" or "icss_g0_pru1"
+%	let result = 0;
+%    if (coreName && coreName.includes("pru")) {
+%        const match = coreName.match(/pru(\d+)$/);
+%        if (match && match[1]) {
+%            result=parseInt(match[1]);
+%        }
+%    }
+%	if(result==0)return "PRU0";
+%    return "PRU1";
+%}
+%const PRU_USED = getPruNumberFromContext();
 %// Helper function to extract pins from an instance
 %function getPinInfo(inst) {
 %    const pins = [];
@@ -15,34 +35,34 @@
 %    // PRU GPO block
 %    if (modulePath.includes("pru_gpo_block")) {
 %        const match = inst.constant1?.match(/R30,\s*(\d+)/);
-%        if (match) pins.push({ pin: match[1], func: "GPIO", dir: "GPO" });
+%        if (match) pins.push({ pin: match[1], func: "GPIO", dir: `${PRU_USED}_GPO` });
 %    }
 %    // PRU GPI block
 %    else if (modulePath.includes("pru_gpi_block")) {
 %        const match = inst.constant1?.match(/1\s*<<\s*(\d+)/);
-%        if (match) pins.push({ pin: match[1], func: "GPIO", dir: "GPI" });
+%        if (match) pins.push({ pin: match[1], func: "GPIO", dir: `${PRU_USED}_GPI` });
 %    }
 %    // SPI Write block
 %    else if (modulePath.includes("pru_spi_write")) {
 %        const isCtrl = inst["Device Mode"] === "controller";
-%        pins.push({ pin: inst["SCLK Signal"], func: "SCLK", dir: isCtrl ? "GPO" : "GPI" });
-%        pins.push({ pin: inst["SDO Signal"], func: "SDO", dir: "GPO" });
-%        pins.push({ pin: inst["CS Signal"], func: "CS", dir: isCtrl ? "GPO" : "GPI" });
+%        pins.push({ pin: inst["SCLK Signal"], func: "SCLK", dir: isCtrl ? `${PRU_USED}_GPO` : `${PRU_USED}_GPI` });
+%        pins.push({ pin: inst["SDO Signal"], func: "SDO", dir: `${PRU_USED}_GPO` });
+%        pins.push({ pin: inst["CS Signal"], func: "CS", dir: isCtrl ? `${PRU_USED}_GPO` : `${PRU_USED}_GPI` });
 %    }
 %    // SPI Read block
 %    else if (modulePath.includes("pru_spi_read")) {
 %        const isCtrl = inst["Device Mode"] === "controller";
-%        pins.push({ pin: inst["SCLK Signal"], func: "SCLK", dir: isCtrl ? "GPO" : "GPI" });
-%        pins.push({ pin: inst["SDI Signal"], func: "SDI", dir: "GPI" });
-%        pins.push({ pin: inst["CS Signal"], func: "CS", dir: isCtrl ? "GPO" : "GPI" });
+%        pins.push({ pin: inst["SCLK Signal"], func: "SCLK", dir: isCtrl ? `${PRU_USED}_GPO` : `${PRU_USED}_GPI` });
+%        pins.push({ pin: inst["SDI Signal"], func: "SDI", dir: `${PRU_USED}_GPI` });
+%        pins.push({ pin: inst["CS Signal"], func: "CS", dir: isCtrl ? `${PRU_USED}_GPO` : `${PRU_USED}_GPI` });
 %    }
 %    // SPI Transfer block
 %    else if (modulePath.includes("pru_spi_transfer")) {
 %        const isCtrl = inst["Device Mode"] === "controller";
-%        pins.push({ pin: inst["SCLK Signal"], func: "SCLK", dir: isCtrl ? "GPO" : "GPI" });
-%        pins.push({ pin: inst["SDI Signal"], func: "SDI", dir: "GPI" });
-%        pins.push({ pin: inst["SDO Signal"], func: "SDO", dir: "GPO" });
-%        pins.push({ pin: inst["CS Signal"], func: "CS", dir: isCtrl ? "GPO" : "GPI" });
+%        pins.push({ pin: inst["SCLK Signal"], func: "SCLK", dir: isCtrl ? `${PRU_USED}_GPO` : `${PRU_USED}_GPI` });
+%        pins.push({ pin: inst["SDI Signal"], func: "SDI", dir: `${PRU_USED}_GPI` });
+%        pins.push({ pin: inst["SDO Signal"], func: "SDO", dir: `${PRU_USED}_GPO` });
+%        pins.push({ pin: inst["CS Signal"], func: "CS", dir: isCtrl ? `${PRU_USED}_GPO` : `${PRU_USED}_GPI` });
 %    }
 %    // UART TX block - uses ENDAT peripheral with fixed pins per channel
 %    else if (modulePath.includes("uart_tx")) {
@@ -51,9 +71,9 @@
 %        // Channel 1: GPO3, GPO4, GPO5
 %        // Channel 2: GPO6, GPO7, GPO8
 %        const basePin = ch * 3;
-%        pins.push({ pin: basePin, func: "PERIF" + ch + "_CLK", dir: "GPO" });
-%        pins.push({ pin: basePin + 1, func: "PERIF" + ch + "_DOUT", dir: "GPO" });
-%        pins.push({ pin: basePin + 2, func: "PERIF" + ch + "_OE", dir: "GPO" });
+%        pins.push({ pin: basePin, func: "PERIF" + ch + "_CLK", dir: `${PRU_USED}_GPO` });
+%        pins.push({ pin: basePin + 1, func: "PERIF" + ch + "_DOUT", dir: `${PRU_USED}_GPO` });
+%        pins.push({ pin: basePin + 2, func: "PERIF" + ch + "_OE", dir: `${PRU_USED}_GPO` });
 %    }
 %    // UART RX block - uses ENDAT peripheral with fixed pins per channel
 %    else if (modulePath.includes("uart_rx")) {
@@ -62,7 +82,7 @@
 %        // Channel 1: GPI10
 %        // Channel 2: GPI11
 %        const rxPin = 9 + ch;
-%        pins.push({ pin: rxPin, func: "PERIF" + ch + "_DIN", dir: "GPI" });
+%        pins.push({ pin: rxPin, func: "PERIF" + ch + "_DIN", dir: `${PRU_USED}_GPI` });
 %    }
 %    return pins;
 %}
@@ -90,8 +110,8 @@
 %
 %// Sort pins by direction (GPO first) then by pin number
 %const sortedPins = Object.keys(pinToBlocks).sort((a, b) => {
-%    const aDir = a.startsWith("GPO") ? 0 : 1;
-%    const bDir = b.startsWith("GPO") ? 0 : 1;
+%    const aDir = a.startsWith(`${PRU_USED}_GPO`) ? 0 : 1;
+%    const bDir = b.startsWith(`${PRU_USED}_GPO`) ? 0 : 1;
 %    if (aDir !== bDir) return aDir - bDir;
 %    const aNum = parseInt(a.match(/\d+/)[0]);
 %    const bNum = parseInt(b.match(/\d+/)[0]);

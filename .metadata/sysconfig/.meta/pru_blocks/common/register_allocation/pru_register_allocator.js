@@ -373,6 +373,90 @@ function processGroupBlock(instance){
     return maxCycles + 1;
 }
 /**
+ * Step 1: Collect all blocks on a branch by following next and output1
+ * ports forward from the branch head.
+ * @param {Object} instance - Branch head (block connected to T or F port)
+ * @returns {Set<string>} Set of instance names on this branch's chain
+ */
+function collectBranchChain(instance) {
+    const chain = new Set();
+    const queue = [instance];
+
+    while (queue.length > 0) {
+        const inst = queue.shift();
+        if (!inst || !inst.$name) continue;
+        const name = inst.$name;
+        if (chain.has(name)) continue;
+        chain.add(name);
+
+        // Forward: control flow
+        const nextInst = inst.next?.[0]?.inst;
+        if (nextInst) queue.push(nextInst);
+
+        // Forward: data flow to consumers
+        if (inst.output1) {
+            for (const conn of inst.output1) {
+                if (conn?.inst) queue.push(conn.inst);
+            }
+        }
+    }
+
+    return chain;
+}
+
+/**
+ * Step 2: Collect all transitive input-port predecessors of a set of blocks.
+ * Only walks backward via input ports — never crosses into branch blocks.
+ * @param {Set<string>} chainNames - Set of block names on the branch chain
+ * @returns {Set<string>} Set of input dependency instance names
+ */
+function collectInputDependencies(chainNames) {
+    const deps = new Set();
+    const queue = [];
+
+    // Seed the queue with direct inputs of every block in the chain
+    for (const name of chainNames) {
+        const { moduleName, instanceNum } = moduleInstanceRegisterMap[name] || {};
+        if (moduleName === undefined) continue;
+        const inst = system.modules[moduleName]?.$instances[instanceNum];
+        if (!inst) continue;
+        for (let i = 1; i <= (inst.numOfInputPorts || 0); i++) {
+            const inputInst = inst["input" + i]?.[0]?.inst;
+            if (inputInst && !chainNames.has(inputInst.$name)) {
+                queue.push(inputInst);
+            }
+        }
+    }
+
+    while (queue.length > 0) {
+        const inst = queue.shift();
+        if (!inst || !inst.$name) continue;
+        const name = inst.$name;
+        if (deps.has(name)) continue;
+        deps.add(name);
+
+        // Keep walking backward via input ports
+        for (let i = 1; i <= (inst.numOfInputPorts || 0); i++) {
+            const inputInst = inst["input" + i]?.[0]?.inst;
+            if (inputInst) queue.push(inputInst);
+        }
+    }
+
+    return deps;
+}
+
+/**
+ * Collects all input dependencies of a branch (data blocks that feed into
+ * the branch but are not part of the branch chain itself).
+ * @param {Object} instance - Branch head (block connected to T or F port)
+ * @returns {Set<string>} Set of input dependency instance names
+ */
+function collectInputPredecessors(instance) {
+    const chain = collectBranchChain(instance);
+    return collectInputDependencies(chain);
+}
+
+/**
  * Gets PRU Instructions from blocks connected in the system
  * @param {Object} instance - The current block instance
  * @param {Object} parentInstance - The parent block instance
@@ -400,22 +484,53 @@ function pushInstruction(instance, parentInstance) {
     if (moduleInstanceRegisterMap[instanceName]?.conditionCalculated === 1) {
         return moduleInstanceRegisterMap[instanceName].label;
     }
-
     // Process prev port if it exists and is connected
     let label;
     if (instance?.["prev"] && instance?.["prev"][0]?.["inst"]) {
         const prevPortInstanceName = instance["prev"][0]?.["inst"]?.$name;
         // Process the previous block
         label = pushInstruction(instance["prev"][0]["inst"], instance);
-        moduleInstanceRegisterMap[instanceName].connectedNodesInPeakCyclePath = 
+        moduleInstanceRegisterMap[instanceName].connectedNodesInPeakCyclePath =
         new Set([...moduleInstanceRegisterMap[prevPortInstanceName].connectedNodesInPeakCyclePath]);
+        // If prev returned a conditional branch label, emit it as a standalone
+        // label line now — before any input processing — so that all inputs
+        // for this branch are emitted AFTER the label, not before it.
+        if (typeof label === "string" && label !== "") {
+            addToPruRegisterAllocationSummary(label, "0", instance, instanceName, 0);
+            label = 0;
+        }
+    }
+
+    // If this is a conditional block, hoist shared input predecessors of both
+    // branches BEFORE processing the if/else's own input ports.
+    // This ensures hoisted blocks get their registers first, so the input
+    // registers are not deallocated and reused by hoisted blocks.
+    // This issue comes cause we are not going with the noraml register allocation
+    // process and are allocating the registers for the blocks connected to the T/F ports 
+    // of the if/else block first 
+    if (instance.T && instance.F) {
+        const trueHead  = instance.T?.[0]?.inst;
+        const falseHead = instance.F?.[0]?.inst;
+        if (trueHead && falseHead) {
+            const truePreds  = collectInputPredecessors(trueHead);
+            const falsePreds = collectInputPredecessors(falseHead);
+            for (const sharedName of truePreds) {
+                if (falsePreds.has(sharedName)) {
+                    const { moduleName, instanceNum } = moduleInstanceRegisterMap[sharedName];
+                    const sharedInst = systemModules[moduleName]?.$instances[instanceNum];
+                    if (sharedInst) {
+                        pushInstruction(sharedInst, null);
+                    }
+                }
+            }
+        }
     }
 
     // Process input ports
     const inputPort = "input";
     let maxBytesUsed = 1;
     let inputValues = "";
-    
+
     // Process each input port
     for (let iterator1 = 1; iterator1 <= instance.numOfInputPorts; iterator1++) {
         const inputInstance = instance[inputPort + iterator1]?.[0]?.inst;
@@ -571,9 +686,13 @@ function pushInstruction(instance, parentInstance) {
                 moduleInstanceRegisterMap[instanceName].label = `${instance.$name}_TRUE`;
             }
             inputValues  = inputValues.trim().slice(0, -1); // Remove trailing comma
+            // Swap operands: PRU QB* semantics are QBGT LABEL, REG1, OP → branches if OP > REG1
+            // So to branch if input1 > input2, we need: QBGT LABEL, input2, input1
+            const inputParts = inputValues.split(",").map(s => s.trim());
+            const swappedInputValues = `${inputParts[1]} , ${inputParts[0]}`;
             const outputLabel = moduleInstanceRegisterMap[instanceName].label;
             // create instruction
-            instruction = `${opCode} ${outputLabel}, ${inputValues}`;
+            instruction = `${opCode} ${outputLabel}, ${swappedInputValues}`;
         } 
         // Process GPO blocks where out register is specified and fixed
         else if(instance.outputReg)

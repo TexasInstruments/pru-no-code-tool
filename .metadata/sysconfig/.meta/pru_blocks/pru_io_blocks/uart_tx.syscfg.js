@@ -18,7 +18,7 @@ function getPruNumberFromContext() {
     // Default to PRU0 if unable to determine
     return 0;
 }
-
+const PRU_USED = getPruNumberFromContext(); 
 function validate(inst, report) {
     // Get clock frequency based on clock source selection
     // 0 = 192 MHz (ICSSGn_UART_CLK), 1 = 200 MHz (ICSSGn_CORE_CLK)
@@ -155,13 +155,23 @@ function getMacroSingleShot(pruInstructionMacro, opCode) {
 
     macroBody += `
 \t; ========== ENDAT Peripheral Reset Sequence ==========
-\t; Global Reinit to clear FIFO and state machines
-\tset     r31, r31, 19
+\t; Disable RX before reinit, then de-assert rx_en after (TRM-mandated sequence)
+\tldi     r30.b3, 0x00                       ; 1. Disable rx_en for all channels
+\tset     r31, r31, 19                       ; 2. Global Reinit to clear FIFO and state machines
 
-\t; ========== Delay after Reinit ==========
-\t.loop   20
-\tnop
-\t.endloop
+\t; ========== Wait for Reinit Complete ==========
+\t; Poll busy bit for selected channel (1=active, 0=done)
+\t.if ${channel} == 0
+wait_reinit?:
+\tqbbs    wait_reinit?, r31, 5
+\t.elseif ${channel} == 1
+wait_reinit?:
+\tqbbs    wait_reinit?, r31, 13
+\t.else
+wait_reinit?:
+\tqbbs    wait_reinit?, r31, 21
+\t.endif
+\tldi     r30.b3, 0x00                       ; 3. De-assert rx_en after reinit confirmed complete
 
 \t; ========== Configure GPCFG${pruNum} for PRU${pruNum} Peripheral Mode ==========
 \tldi32   TEMP_REG1, 0x04000000
@@ -197,11 +207,11 @@ function getMacroSingleShot(pruInstructionMacro, opCode) {
 
 \t; ========== Select Channel ==========
 \t.if ${channel} == 0
-\tldi     r30.w2, 0x0000
+\tldi     r30.w2, 0x0018                    ; clk_mode=3 (bits[20:19]=0b11, stop high on TX), ch=0
 \t.elseif ${channel} == 1
-\tldi     r30.w2, 0x0001
+\tldi     r30.w2, 0x0019                    ; clk_mode=3, ch=1
 \t.else
-\tldi     r30.w2, 0x0002
+\tldi     r30.w2, 0x001A                    ; clk_mode=3, ch=2
 \t.endif
 
 \t; ========== Construct Frame ==========
@@ -355,13 +365,23 @@ function getMacroContinuous(pruInstructionMacro, opCode) {
 
     macroBody += `
 \t; ========== ENDAT Peripheral Reset Sequence ==========
-\t; Global Reinit to clear FIFO and state machines
-\tset     r31, r31, 19
+\t; Disable RX before reinit, then de-assert rx_en after (TRM-mandated sequence)
+\tldi     r30.b3, 0x00                       ; 1. Disable rx_en for all channels
+\tset     r31, r31, 19                       ; 2. Global Reinit to clear FIFO and state machines
 
-\t; ========== Delay after Reinit ==========
-\t.loop   20
-\tnop
-\t.endloop
+\t; ========== Wait for Reinit Complete ==========
+\t; Poll busy bit for selected channel (1=active, 0=done)
+\t.if ${channel} == 0
+wait_reinit?:
+\tqbbs    wait_reinit?, r31, 5
+\t.elseif ${channel} == 1
+wait_reinit?:
+\tqbbs    wait_reinit?, r31, 13
+\t.else
+wait_reinit?:
+\tqbbs    wait_reinit?, r31, 21
+\t.endif
+\tldi     r30.b3, 0x00                       ; 3. De-assert rx_en after reinit confirmed complete
 
 \t; ========== Configure GPCFG${pruNum} for PRU${pruNum} Peripheral Mode ==========
 \tldi32   TEMP_REG1, 0x04000000
@@ -398,11 +418,11 @@ function getMacroContinuous(pruInstructionMacro, opCode) {
 \t; ========== Select Channel ==========
 \t; Use ldi to r30.w2 to avoid read-modify-write on r30.b0 (FIFO port)
 \t.if ${channel} == 0
-\tldi     r30.w2, 0x0000
+\tldi     r30.w2, 0x0018                    ; clk_mode=3 (bits[20:19]=0b11, stop high on TX), ch=0
 \t.elseif ${channel} == 1
-\tldi     r30.w2, 0x0001
+\tldi     r30.w2, 0x0019                    ; clk_mode=3, ch=1
 \t.else
-\tldi     r30.w2, 0x0002
+\tldi     r30.w2, 0x001A                    ; clk_mode=3, ch=2
 \t.endif
 
 `;
@@ -708,13 +728,23 @@ function getMacroSpecificBits(pruInstructionMacro, opCode, bitSize) {
     // Common configuration section
     macroBody += `
 \t; ========== ENDAT Peripheral Reset Sequence ==========
-\t; Global Reinit to clear FIFO and state machines
-\tset     r31, r31, 19
+\t; Disable RX before reinit, then de-assert rx_en after (TRM-mandated sequence)
+\tldi     r30.b3, 0x00                       ; 1. Disable rx_en for all channels
+\tset     r31, r31, 19                       ; 2. Global Reinit to clear FIFO and state machines
 
-\t; ========== Delay after Reinit ==========
-\t.loop   20
-\tnop
-\t.endloop
+\t; ========== Wait for Reinit Complete ==========
+\t; Poll busy bit for selected channel (1=active, 0=done)
+\t.if ${channel} == 0
+wait_reinit?:
+\tqbbs    wait_reinit?, r31, 5
+\t.elseif ${channel} == 1
+wait_reinit?:
+\tqbbs    wait_reinit?, r31, 13
+\t.else
+wait_reinit?:
+\tqbbs    wait_reinit?, r31, 21
+\t.endif
+\tldi     r30.b3, 0x00                       ; 3. De-assert rx_en after reinit confirmed complete
 
 \t; ========== Configure GPCFG${pruNum} for PRU${pruNum} Peripheral Mode ==========
 \tldi32   TEMP_REG1, 0x04000000
@@ -751,11 +781,11 @@ function getMacroSpecificBits(pruInstructionMacro, opCode, bitSize) {
 \t; ========== Select Channel ==========
 \t; Use ldi to r30.w2 to avoid read-modify-write on r30.b0 (FIFO port)
 \t.if ${channel} == 0
-\tldi     r30.w2, 0x0000
+\tldi     r30.w2, 0x0018                    ; clk_mode=3 (bits[20:19]=0b11, stop high on TX), ch=0
 \t.elseif ${channel} == 1
-\tldi     r30.w2, 0x0001
+\tldi     r30.w2, 0x0019                    ; clk_mode=3, ch=1
 \t.else
-\tldi     r30.w2, 0x0002
+\tldi     r30.w2, 0x001A                    ; clk_mode=3, ch=2
 \t.endif
 
 `;
@@ -1042,145 +1072,145 @@ wait_tx_done?:
 function getAIContext() {
     return getLongDescription() + `
 
-    ## How to Configure (For AI/Scripting)
-    
-    This section describes how to programmatically configure the UART TX block in a .syscfg file.
-    
-    ### Adding a UART TX Instance
-    
-    \`\`\`javascript
-    const uart_tx = scripting.addModule("/pru_blocks/pru_io_blocks/uart_tx", {}, false);
-    const uart_tx1 = uart_tx.addInstance();
-    \`\`\`
-    
-    ### Configuration Parameters
-    
-    | Parameter | Type | Valid Values | Default | Description |
-    |-----------|------|--------------|---------|-------------|
-    | pruSelect | Integer | 0, 1 | Auto-detected | PRU Selection (0=PRU0, 1=PRU1) - auto-detected from system context (read-only) |
-    | channel | Integer | 0, 1, 2 | 0 | ENDAT channel for UART TX |
-    | clockSource | Integer | 0, 1 | 0 | Clock source (0=192MHz UART_CLK, 1=200MHz CORE_CLK) |
-    | baudRate | Integer | MHz value | 12 | Baud rate in MHz. Clock source must be divisible by baudRate |
-    | startBitPolarity | Integer | 0, 1 | 1 | Start bit polarity (0=Low, 1=High) |
-    | stopBitPolarity | Integer | 0, 1 | 0 | Stop bit polarity (0=Low, 1=High) |
-    | bitSwap | Boolean | true, false | true | Enable LSB-first transmission (true) or MSB-first (false) |
-    | dataBits | Integer | 1-62 | 8 | Number of data bits to transmit (NOT including start/stop) |
-    
-    ### Valid Baud Rates
-    **With 192 MHz clock source (default):**
-    192 / baudRate must be an integer. Valid baud rates include:
-    - 192 MHz (clockDivider = 0)
-    - 96 MHz (clockDivider = 1)
-    - 64 MHz (clockDivider = 2)
-    - 48 MHz (clockDivider = 3)
-    - 32 MHz (clockDivider = 5)
-    - 24 MHz (clockDivider = 7)
-    - 16 MHz (clockDivider = 11)
-    - 12 MHz (clockDivider = 15)
-    - 8 MHz (clockDivider = 23)
-    - 6 MHz (clockDivider = 31)
-    - 4 MHz (clockDivider = 47)
-    - 3 MHz (clockDivider = 63)
-    - 2 MHz (clockDivider = 95)
-    - 1 MHz (clockDivider = 191)
-    
-    **With 200 MHz clock source:**
-    200 / baudRate must be an integer. Valid baud rates include:
-    - 200 MHz (clockDivider = 0)
-    - 100 MHz (clockDivider = 1)
-    - 50 MHz (clockDivider = 3)
-    - 40 MHz (clockDivider = 4)
-    - 25 MHz (clockDivider = 7)
-    - 20 MHz (clockDivider = 9)
-    - 10 MHz (clockDivider = 19)
-    - 8 MHz (clockDivider = 24)
-    - 5 MHz (clockDivider = 39)
-    - 4 MHz (clockDivider = 49)
-    - 2 MHz (clockDivider = 99)
-    - 1 MHz (clockDivider = 199)
-    
-    ### Example Configurations
-    
-    **Standard 8-bit UART at 12 MHz (192 MHz clock):**
-    \`\`\`javascript
-    uart_tx1.$name = "UART_TX_0";
-    uart_tx1.pruSelect = 0;
-    uart_tx1.channel = 0;
-    uart_tx1.clockSource = 0;          // 192 MHz (UART_CLK)
-    uart_tx1.baudRate = 12;            // 12 MHz baud rate
-    uart_tx1.dataBits = 8;
-    uart_tx1.bitSwap = true;           // LSB first (standard UART)
-    uart_tx1.startBitPolarity = 0;     // Standard UART start bit (low)
-    uart_tx1.stopBitPolarity = 1;      // Standard UART stop bit (high)
-    \`\`\`
-    
-    **8-bit UART at 10 MHz using 200 MHz clock:**
-    \`\`\`javascript
-    uart_tx1.$name = "UART_TX_200MHz";
-    uart_tx1.pruSelect = 0;
-    uart_tx1.channel = 0;
-    uart_tx1.clockSource = 1;          // 200 MHz (CORE_CLK)
-    uart_tx1.baudRate = 10;            // 10 MHz baud rate (200/10 = 20, divider = 19)
-    uart_tx1.dataBits = 8;
-    uart_tx1.bitSwap = true;
-    uart_tx1.startBitPolarity = 0;
-    uart_tx1.stopBitPolarity = 1;
-    \`\`\`
-    
-    **Extended 32-bit transmission on PRU1, Channel 2:**
-    \`\`\`javascript
-    uart_tx1.$name = "UART_TX_Extended";
-    uart_tx1.pruSelect = 1;
-    uart_tx1.channel = 2;
-    uart_tx1.clockSource = 0;          // 192 MHz (UART_CLK)
-    uart_tx1.baudRate = 24;            // 24 MHz baud rate
-    uart_tx1.dataBits = 32;            // 32 data bits (uses continuous mode)
-    uart_tx1.bitSwap = false;          // MSB first
-    uart_tx1.startBitPolarity = 1;
-    uart_tx1.stopBitPolarity = 0;
-    \`\`\`
-    
-    ### Connecting to Other Blocks
-    
-    \`\`\`javascript
-    // Connect data source to UART TX input
-    scripting.connect(load_constant1, "output1", uart_tx1, "input1");
-    
-    // For dataBits > 32, also connect upper 32 bits
-    scripting.connect(load_constant2, "output1", uart_tx1, "input2");
-    
-    // Connect control flow
-    scripting.connect(prev_block, "next", uart_tx1, "prev");
-    \`\`\`
-    
-    ### Important Notes for Extended Mode (dataBits > 32)
-    
-    When transmitting more than 32 data bits, you need **two Load Constant blocks** connected to the UART TX:
-    - **input1**: Lower 32 bits of data (from first Load Constant block)
-    - **input2**: Upper bits of data (from second Load Constant block)
-    
-    **Example for 40-bit transmission:**
-    \`\`\`javascript
-    // Add two Load Constant blocks for 40-bit data
-    const load_constant_block = scripting.addModule("/pru_blocks/data_handling/load_constant_block", {}, false);
-    const load_constant1 = load_constant_block.addInstance();
-    const load_constant2 = load_constant_block.addInstance();
-    
-    load_constant1.$name = "Load_Constant_Lower";
-    load_constant1.constant1 = 0xAABBCCDD;    // Lower 32 bits
-    
-    load_constant2.$name = "Load_Constant_Upper";
-    load_constant2.constant1 = 0xFF;          // Upper 8 bits (bits 32-39)
-    
-    // UART TX configured for 40 data bits
-    uart_tx1.$name = "UART_TX_40bit";
-    uart_tx1.dataBits = 40;
-    
-    // Connect both inputs
-    scripting.connect(load_constant1, "output1", uart_tx1, "input1");
-    scripting.connect(load_constant2, "output1", uart_tx1, "input2");
-    \`\`\`
-    `;
+## How to Configure (For AI/Scripting)
+
+This section describes how to programmatically configure the UART TX block in a .syscfg file.
+
+### Adding a UART TX Instance
+
+\`\`\`javascript
+const uart_tx = scripting.addModule("/pru_blocks/pru_io_blocks/uart_tx", {}, false);
+const uart_tx1 = uart_tx.addInstance();
+\`\`\`
+
+### Configuration Parameters
+
+| Parameter | Type | Valid Values | Default | Description |
+|-----------|------|--------------|---------|-------------|
+| pruSelect | Integer | 0, 1 | Auto-detected | PRU Selection (0=PRU0, 1=PRU1) - auto-detected from system context (read-only) |
+| channel | Integer | 0, 1, 2 | 0 | ENDAT channel for UART TX |
+| clockSource | Integer | 0, 1 | 0 | Clock source (0=192MHz UART_CLK, 1=200MHz CORE_CLK) |
+| baudRate | Integer | MHz value | 12 | Baud rate in MHz. Clock source must be divisible by baudRate |
+| startBitPolarity | Integer | 0, 1 | 1 | Start bit polarity (0=Low, 1=High) |
+| stopBitPolarity | Integer | 0, 1 | 0 | Stop bit polarity (0=Low, 1=High) |
+| bitSwap | Boolean | true, false | true | Enable LSB-first transmission (true) or MSB-first (false) |
+| dataBits | Integer | 1-62 | 8 | Number of data bits to transmit (NOT including start/stop) |
+
+### Valid Baud Rates
+**With 192 MHz clock source (default):**
+192 / baudRate must be an integer. Valid baud rates include:
+- 192 MHz (clockDivider = 0)
+- 96 MHz (clockDivider = 1)
+- 64 MHz (clockDivider = 2)
+- 48 MHz (clockDivider = 3)
+- 32 MHz (clockDivider = 5)
+- 24 MHz (clockDivider = 7)
+- 16 MHz (clockDivider = 11)
+- 12 MHz (clockDivider = 15)
+- 8 MHz (clockDivider = 23)
+- 6 MHz (clockDivider = 31)
+- 4 MHz (clockDivider = 47)
+- 3 MHz (clockDivider = 63)
+- 2 MHz (clockDivider = 95)
+- 1 MHz (clockDivider = 191)
+
+**With 200 MHz clock source:**
+200 / baudRate must be an integer. Valid baud rates include:
+- 200 MHz (clockDivider = 0)
+- 100 MHz (clockDivider = 1)
+- 50 MHz (clockDivider = 3)
+- 40 MHz (clockDivider = 4)
+- 25 MHz (clockDivider = 7)
+- 20 MHz (clockDivider = 9)
+- 10 MHz (clockDivider = 19)
+- 8 MHz (clockDivider = 24)
+- 5 MHz (clockDivider = 39)
+- 4 MHz (clockDivider = 49)
+- 2 MHz (clockDivider = 99)
+- 1 MHz (clockDivider = 199)
+
+### Example Configurations
+
+**Standard 8-bit UART at 12 MHz (192 MHz clock):**
+\`\`\`javascript
+uart_tx1.$name = "UART_TX_0";
+uart_tx1.pruSelect = 0;
+uart_tx1.channel = 0;
+uart_tx1.clockSource = 0;          // 192 MHz (UART_CLK)
+uart_tx1.baudRate = 12;            // 12 MHz baud rate
+uart_tx1.dataBits = 8;
+uart_tx1.bitSwap = true;           // LSB first (standard UART)
+uart_tx1.startBitPolarity = 0;     // Standard UART start bit (low)
+uart_tx1.stopBitPolarity = 1;      // Standard UART stop bit (high)
+\`\`\`
+
+**8-bit UART at 10 MHz using 200 MHz clock:**
+\`\`\`javascript
+uart_tx1.$name = "UART_TX_200MHz";
+uart_tx1.pruSelect = 0;
+uart_tx1.channel = 0;
+uart_tx1.clockSource = 1;          // 200 MHz (CORE_CLK)
+uart_tx1.baudRate = 10;            // 10 MHz baud rate (200/10 = 20, divider = 19)
+uart_tx1.dataBits = 8;
+uart_tx1.bitSwap = true;
+uart_tx1.startBitPolarity = 0;
+uart_tx1.stopBitPolarity = 1;
+\`\`\`
+
+**Extended 32-bit transmission on PRU1, Channel 2:**
+\`\`\`javascript
+uart_tx1.$name = "UART_TX_Extended";
+uart_tx1.pruSelect = 1;
+uart_tx1.channel = 2;
+uart_tx1.clockSource = 0;          // 192 MHz (UART_CLK)
+uart_tx1.baudRate = 24;            // 24 MHz baud rate
+uart_tx1.dataBits = 32;            // 32 data bits (uses continuous mode)
+uart_tx1.bitSwap = false;          // MSB first
+uart_tx1.startBitPolarity = 1;
+uart_tx1.stopBitPolarity = 0;
+\`\`\`
+
+### Connecting to Other Blocks
+
+\`\`\`javascript
+// Connect data source to UART TX input
+scripting.connect(load_constant1, "output1", uart_tx1, "input1");
+
+// For dataBits > 32, also connect upper 32 bits
+scripting.connect(load_constant2, "output1", uart_tx1, "input2");
+
+// Connect control flow
+scripting.connect(prev_block, "next", uart_tx1, "prev");
+\`\`\`
+
+### Important Notes for Extended Mode (dataBits > 32)
+
+When transmitting more than 32 data bits, you need **two Load Constant blocks** connected to the UART TX:
+- **input1**: Lower 32 bits of data (from first Load Constant block)
+- **input2**: Upper bits of data (from second Load Constant block)
+
+**Example for 40-bit transmission:**
+\`\`\`javascript
+// Add two Load Constant blocks for 40-bit data
+const load_constant_block = scripting.addModule("/pru_blocks/data_handling/load_constant_block", {}, false);
+const load_constant1 = load_constant_block.addInstance();
+const load_constant2 = load_constant_block.addInstance();
+
+load_constant1.$name = "Load_Constant_Lower";
+load_constant1.constant1 = 0xAABBCCDD;    // Lower 32 bits
+
+load_constant2.$name = "Load_Constant_Upper";
+load_constant2.constant1 = 0xFF;          // Upper 8 bits (bits 32-39)
+
+// UART TX configured for 40 data bits
+uart_tx1.$name = "UART_TX_40bit";
+uart_tx1.dataBits = 40;
+
+// Connect both inputs
+scripting.connect(load_constant1, "output1", uart_tx1, "input1");
+scripting.connect(load_constant2, "output1", uart_tx1, "input2");
+\`\`\`
+`;
 }
 
 function getLongDescription() {
@@ -1332,7 +1362,7 @@ In continuous mode (dataBits > 29):
 
 exports = {
     displayName: "PRU UART TX",
-    defaultInstanceName: "PRU_UART_TX_",
+    defaultInstanceName: `PRU${PRU_USED}_UART_TX_`,
     longDescription: getLongDescription(),
     getAIContext: getAIContext,
     uiView: "graph",
