@@ -47,6 +47,56 @@ The file contains critical workflow rules that prevent common AI mistakes such a
 - For AM64x install the dependencies by following the steps [here](https://software-dl.ti.com/mcu-plus-sdk/esd/AM64X/latest/exports/docs/api_guide_am64x/SDK_DOWNLOAD_PAGE.html)
 - For AM243x install the dependencies by following the steps [here](https://software-dl.ti.com/mcu-plus-sdk/esd/AM243X/latest/exports/docs/api_guide_am243x/SDK_DOWNLOAD_PAGE.html)
 
+## Building the examples 
+
+### Building With Makefiles
+
+> [!NOTE]
+> Use `gmake` in Windows, and `make` in Linux.
+>
+> gmake is present in CCS. Add the path to the CCS gmake at
+> `C:\ti\ccsxxxx\ccs\utils\bin` to your windows PATH.
+>
+> Unless mentioned otherwise, all `make` commands are invoked from the root
+> folder of the `pru-no-code-tool` repository.
+
+Makefiles can be used to:
+   - build or clean all pru-no-code-tool projects
+   - build or clean a specific pru-no-code-tool project
+   - build or clean code for a specific core
+
+For detailed steps on how to use makefiles, run ```make help``` from the root
+folder of the `pru-no-code-tool` repository.
+
+### Building With CCS
+
+#### Building MCU+ projects in CCS
+
+- The PRU firmware must be built before the MCU+ firmware. By default, projects
+  from the pru-no-code-tool repo place the PRU firmware header file in the CCS workspace,
+  in the top level of the PRU project's directory
+
+- The MCU+ project include paths **must** include the path to the PRU project
+  directory in the CCS workspace
+
+- For more information about using MCU+ SDK projects with CCS, refer to the
+  MCU+ SDK documentation: **Developer Guides > Using SDK with CCS Projects** 
+  - [AM64x](https://software-dl.ti.com/mcu-plus-sdk/esd/AM64X/latest/exports/docs/api_guide_am64x/CCS_PROJECTS_PAGE.html)
+  - [AM243x](https://software-dl.ti.com/mcu-plus-sdk/esd/AM243X/latest/exports/docs/api_guide_am243x/CCS_PROJECTS_PAGE.html)
+
+### Using an EVM with MCU+ SDK
+
+For more details on EVM Board usage, please refer to the Getting started section of MCU+ SDK README_FIRST_*.html page. The MCU+ SDK User guides contain information on
+  
+- EVM setup
+- CCS Setup, loading and running examples
+- Flashing the EVM
+- SBL, ROV and much more.
+
+Getting started guides of MCU+ SDK are specific to a particular device. The links for all the supported devices are given below
+- [AM64x  Getting Started Guide](https://software-dl.ti.com/mcu-plus-sdk/esd/AM64X/latest/exports/docs/api_guide_am64x/GETTING_STARTED.html)
+- [AM243x Getting Started Guide](https://software-dl.ti.com/mcu-plus-sdk/esd/AM243X/latest/exports/docs/api_guide_am243x/GETTING_STARTED.html)
+
 ### Basic Workflow
 
 1. Open SysConfig from your firmware project and add PRU No-Code module
