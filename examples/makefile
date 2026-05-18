@@ -2,11 +2,11 @@ include ../imports.mak
 
 SUBDIRS := \
     empty \
-	SPI_loopback \
-	UART_CRC \
-	Conditional \
-	Gray_encoder_4_bit \
-	Incremental_SPI \
+	spi_loopback \
+	uart_crc \
+	conditional \
+	gray_encoder_4_bit \
+	incremental_spi \
 
 # "make" or "make all" builds projects that match $(DEVICE) set in imports.mak
 all: ARGUMENTS = all
