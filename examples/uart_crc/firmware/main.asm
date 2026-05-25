@@ -37,10 +37,13 @@ main:
      zero  &r0, 120 ; Clear the register space
     JMP sysconfig_generated_start
 sysconfig_generated_end:
+    .if	$isdefed("SOC_AM243X")
     LDI32  R2, 0x30010000
-
+    .elseif $isdefed("SOC_AM261X")
+    LDI32  R2, 0x48010000
+    .endif
     ; Store TX data sent at SMEM[4] using SBBO
-    SBBO   &R0.b2, R2, 4, 1     ; Store R0.b0 at [0x30010000 + 0]
+    SBBO   &R0.b2, R2, 4, 1     ; Store R0.b0 at [smem + 0]
     halt
     .elseif	$isdefed("PRU1")
     zero   &r0, 120 ; Clear the register space
@@ -51,13 +54,17 @@ sysconfig_generated_end:
     ; R0.b0 = RX calculated CRC, R0.b1 = TX received CRC
 
     ; Load SMEM base address into R2
+    .if	$isdefed("SOC_AM243X")
     LDI32  R2, 0x30010000
+    .elseif $isdefed("SOC_AM261X")
+    LDI32  R2, 0x48010000
+    .endif
 
     ; Store RX calculated CRC at SMEM[0] using SBBO
-    SBBO   &R1.b1, R2, 0, 1     ; Store R0.b0 at [0x30010000 + 0]
+    SBBO   &R1.b1, R2, 0, 1     ; Store R0.b0 at [smem + 0]
 
     ; Store TX received CRC at SMEM[1] using SBBO
-    SBBO   &R0.b1, R2, 1, 1     ; Store R0.b1 at [0x30010000 + 1]
+    SBBO   &R0.b1, R2, 1, 1     ; Store R0.b1 at [smem + 1]
 
     SBBO   &R0.b0, R2, 3, 1
 
@@ -66,13 +73,13 @@ sysconfig_generated_end:
 
     ; CRC mismatch - store 0xFF at SMEM[2]
     LDI    R3.b0, 0xFF
-    SBBO   &R3.b0, R2, 2, 1     ; Store 0xFF at [0x30010000 + 2]
+    SBBO   &R3.b0, R2, 2, 1     ; Store 0xFF at [smem + 2]
     JMP    end_check
 
 crc_match:
     ; CRC match - store 0x01 at SMEM[2]
     LDI    R3.b0, 0x01
-    SBBO   &R3.b0, R2, 2, 1     ; Store 0x01 at [0x30010000 + 2]
+    SBBO   &R3.b0, R2, 2, 1     ; Store 0x01 at [smem + 2]
 
 end_check:
     HALT 

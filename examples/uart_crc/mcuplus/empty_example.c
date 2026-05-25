@@ -116,7 +116,11 @@ void empty_example_main(void *args)
      ClockP_usleep(10);
 
      // Direct memory access to SMEM at 0x30010000 (PRU_ICSSG0 Shared RAM)
+# if defined (SOC_AM261X)  
+     volatile uint8_t *smemBase = (volatile uint8_t *)0x48010000;
+# else 
      volatile uint8_t *smemBase = (volatile uint8_t *)0x30010000;
+#endif
      uint8_t rxCalcCrc = smemBase[0];
      uint8_t rxRecvCrc = smemBase[1];
      uint8_t crcStatus = smemBase[2];

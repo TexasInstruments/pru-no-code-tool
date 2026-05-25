@@ -43,31 +43,26 @@ main:
 sysconfig_generated_end:
     ; Store results to SMEM (base address 0x30010000)
     ; R28 = SMEM base address
-    LDI32   R28, 0x30010000
+    .if	$isdefed("SOC_AM243X")
+    LDI32  R28, 0x30010000
+    .elseif $isdefed("SOC_AM261X")
+    LDI32  R28, 0x48010000
+    .endif
 
     ; Check R30 bit 0 to determine which branch was taken
-    ; bit 0 clear -> TRUE branch (data_1 >= data_2): bit_set result in R0.b2, smem[0]=0
-    ; bit 0 set   -> FALSE branch (data_1 < data_2): bit_clear result in R1.b1, smem[0]=1
+    ; bit 0 clear -> TRUE branch (data_1 >= data_2): GPO cleared 
+    ; bit 0 set   -> FALSE branch (data_1 < data_2): GPO set 
     QBBS    gpo_was_set, R30, 0
 
 gpo_was_cleared:
     ; smem[0] = 0 (TRUE branch: bit 7 was set)
     LDI     R29.b0, 0
     SBBO    &R29.b0, R28, 0, 1
-    ; smem[1] = R0.b2 (bit_set result)
-    SBBO    &R0.b2, R28, 1, 1
-    ; smem[2] = R0.b0 (bit_set_original_data)
-    SBBO    &R0.b0, R28, 2, 1
-    JMP     store_done
 
 gpo_was_set:
     ; smem[0] = 1 (FALSE branch: bit 7 was cleared)
     LDI     R29.b0, 1
     SBBO    &R29.b0, R28, 0, 1
-    ; smem[1] = R1.b1 (bit_clear result)
-    SBBO    &R1.b1, R28, 1, 1
-    ; smem[2] = R0.b3 (bit_clear_original_data)
-    SBBO    &R0.b3, R28, 2, 1
 
 store_done:
     halt

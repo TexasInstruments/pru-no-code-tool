@@ -22,7 +22,6 @@
 ; CCS/makefile specific settings
     .retain     ; Required for building .out with assembly file
     .retainrefs ; Required for building .out with assembly file
-
     .include    "pru_syscfg.inc"
 
     .global     main
@@ -53,7 +52,11 @@ main:
     CALL    gray_encoder_start
 
     ; R0.b2 = binary input index (4-bit), R0.b3 = Gray code encoded output
-    LDI32   R2, 0x30010000
+    .if	$isdefed("SOC_AM243X")
+    LDI32  R2, 0x30010000
+    .elseif $isdefed("SOC_AM261X")
+    LDI32  R2, 0x48010000
+    .endif
     SBBO    &R0.b2, R2, 0, 1   ; Store input  at SMEM[0x30010000 + 0]
     SBBO    &R0.b3, R2, 1, 1   ; Store output at SMEM[0x30010000 + 1]
     halt

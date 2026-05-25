@@ -112,9 +112,11 @@ else
 
 # All Target
 ifeq ($(wildcard ../example.syscfg),)
-# If Sysconfig file is not present
+# If Sysconfig file is not present — define a no-op syscfg target so that
+# the order-only prerequisite on the .obj rules is always satisfiable
 all: $(OBJECTS) $(COMMAND_FILES)
 	@$(MAKE) --no-print-directory -Onone "$(TARGET)"
+syscfg:
 else
 # If Sysconfig file is present then invoke syscfg target
 all: syscfg $(OBJECTS) $(COMMAND_FILES)
@@ -126,7 +128,9 @@ $(GEN_DIR):
 	$(MKDIR) $(GEN_DIR)
 
 # Invoke the compiler on all assembly files in vpath to create the object files
-$(GEN_DIR)/%.obj: %.asm | $(GEN_DIR)
+# syscfg is an order-only prerequisite: ensures SysConfig completes before
+# any object file is compiled (prevents race condition under parallel make -j)
+$(GEN_DIR)/%.obj: %.asm | $(GEN_DIR) syscfg
 	@echo 'Building file: "$<"'
 	@echo 'Invoking: PRU Compiler'
 	"$(CGT_TI_PRU_PATH)/bin/clpru" $(INCLUDE) $(CFLAGS) $(DFLAGS) --output_file=$@ $<
@@ -134,7 +138,7 @@ $(GEN_DIR)/%.obj: %.asm | $(GEN_DIR)
 	@echo ' '
 
 # Invoke the compiler on all c files in vpath to create the object files
-$(GEN_DIR)/%.obj: %.c | $(GEN_DIR)
+$(GEN_DIR)/%.obj: %.c | $(GEN_DIR) syscfg
 	@echo 'Building file: "$<"'
 	@echo 'Invoking: PRU Compiler'
 	"$(CGT_TI_PRU_PATH)/bin/clpru" $(INCLUDE) $(CFLAGS) $(DFLAGS) --output_file=$@ $<

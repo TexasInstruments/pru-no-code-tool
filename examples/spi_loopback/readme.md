@@ -8,8 +8,9 @@ This example demonstrates the use of pru-no-code-tool for SPI loopback, the code
  Parameter      | Value
  ---------------|-----------
  ICSSG          | ICSSG0 - PRU0, PRU1
+ ICSSM          | ICSSM1 - PRU0, PRU1 (am261x only)
  Toolchain      | pru-cgt
- Board          | am243x-lp
+ Board          | am243x-lp, am261x-lp
  Example folder | examples/spi_loopback/
 
 # Steps to Run the Example
@@ -27,7 +28,7 @@ This example demonstrates the use of pru-no-code-tool for SPI loopback, the code
 
      - Launch a CCS debug session and run the executable, (see [for AM64x](https://software-dl.ti.com/mcu-plus-sdk/esd/AM64X/latest/exports/docs/api_guide_am64x/CCS_LAUNCH_PAGE.html), [for AM243x](https://software-dl.ti.com/mcu-plus-sdk/esd/AM243X/latest/exports/docs/api_guide_am243x/CCS_LAUNCH_PAGE.html), [for AM261x](https://software-dl.ti.com/mcu-plus-sdk/esd/AM261X/latest/exports/docs/api_guide_am261x/CCS_LAUNCH_PAGE.html))
 
-     - Connect the SPI master and slave pins as per configuration. In the example these pins are mapped as shown below:
+     - Connect the SPI master and slave pins as per configuration. In the example for am243x these pins are mapped as shown below:
      <table>
      <tr>
      <th colspan="4">Slave

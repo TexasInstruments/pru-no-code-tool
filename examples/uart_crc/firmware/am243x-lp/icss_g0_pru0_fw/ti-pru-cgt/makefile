@@ -40,7 +40,7 @@ include $(PRU_NO_CODE_TOOL_PATH)/pru_rules.mak
 # see --define or -D in 'PRU Optimizing C/C++ Compiler User's Guide'
 # For example, to define PRU0, ICSSG1, SOC_AM243X, and set _DEBUG_=1:
 # -DPRU0 -DICSSG1 --define=SOC_AM243X -D_DEBUG_=1
-DFLAGS := -DPRU0 -DPRU1
+DFLAGS := -DPRU0 -DPRU1 --define=SOC_AM243X
 
 # Libraries
 # see --library in 'PRU Optimizing C/C++ Compiler User's Guide'
