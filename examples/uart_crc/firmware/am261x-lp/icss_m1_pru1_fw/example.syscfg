@@ -1,0 +1,71 @@
+/**
+ * These arguments were used when this file was generated. They will be automatically applied on subsequent loads
+ * via the GUI or CLI. Run CLI with '--help' for additional information on how to override these arguments.
+ * @cliArgs --device "AM261x_ZFG" --part "AM2612" --package "ZFG" --context "icss_m1_pru1" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @v2CliArgs --device "AM2612" --package "NFBGA (ZFG)" --variant "500MHz" --context "icss_m1_pru1" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @versions {"tool":"1.27.0+4565"}
+ */
+
+/**
+ * Import the modules used in this configuration.
+ */
+const crc_block            = scripting.addModule("/pru_blocks/application_specific/crc_block", {}, false);
+const crc_block1           = crc_block.addInstance();
+const load_constant_block  = scripting.addModule("/pru_blocks/data_handling/load_constant_block", {}, false);
+const load_constant_block1 = load_constant_block.addInstance();
+const flow_control_block   = scripting.addModule("/pru_blocks/program_control/flow_control_block", {}, false);
+const flow_control_block1  = flow_control_block.addInstance();
+const uart_rx              = scripting.addModule("/pru_blocks/pru_io_blocks/uart_rx", {}, false);
+const uart_rx1             = uart_rx.addInstance();
+const memory_access_block  = scripting.addModule("/pru_blocks/utils/memory_access_block", {}, false);
+const memory_access_block1 = memory_access_block.addInstance();
+const memory_access_block2 = memory_access_block.addInstance();
+
+/**
+ * Write custom configuration values to the imported modules.
+ */
+crc_block1.$name         = "CRC_0";
+crc_block1.crcPolynomial = 0x7;
+
+load_constant_block1.$name = "Load_Constant_0";
+
+flow_control_block1.$name = "Flow_Control_0";
+
+uart_rx1.$name     = "PRU_UART_RX_0";
+uart_rx1.frameSize = 18;
+
+memory_access_block1.$name         = "Memory_Access_0";
+memory_access_block1.operationMode = "write";
+memory_access_block1.dataSize      = 2;
+
+memory_access_block2.$name    = "Memory_Access_1";
+memory_access_block2.dataSize = 1;
+
+const memory_variable_block        = scripting.addModule("/pru_blocks/utils/memory_variable_block", {}, false);
+const memory_variable_block1       = memory_variable_block.addInstance({}, false);
+memory_variable_block1.$name       = "Memory_Variable_0";
+memory_access_block1.memVar        = memory_variable_block1;
+memory_access_block2.memVar        = memory_variable_block1;
+memory_variable_block1.sizeInBytes = 4;
+
+/**
+ * Connections between modules.
+ */
+scripting.connect(crc_block1, "input1", load_constant_block1, "output1");
+scripting.connect(crc_block1, "input2", memory_access_block2, "output1");
+scripting.connect(crc_block1, "prev", memory_access_block2, "next");
+scripting.connect(crc_block1, "next", flow_control_block1, "prev");
+scripting.connect(uart_rx1, "output1", memory_access_block1, "input1");
+scripting.connect(uart_rx1, "next", memory_access_block1, "prev");
+scripting.connect(memory_access_block1, "next", memory_access_block2, "prev");
+
+/**
+ * (x,y) coordinates for modules that are displayed in a graph.
+ */
+crc_block1.$position             = [140,-80];
+load_constant_block1.$position   = [-10,-130];
+flow_control_block1.$position    = [285,-90];
+uart_rx1.$position               = [-315,-75];
+memory_access_block1.$position   = [-150,-65];
+memory_access_block2.$position   = [-10,-25];
+memory_variable_block1.$position = [-320,-195];

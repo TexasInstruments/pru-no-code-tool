@@ -2,14 +2,15 @@
 
 ## Introduction
 
-This example demonstrates the use of pru-no-code-tool Bit set/clear operation using the bitwise blocks and the if/else block, if the condition is true , we set the bit or else we clear the bit of the data 
+This example demonstrates the use of pru-no-code-tool for GPO set/clear operation using the if/else block, if the condition is true , we set GPO0 or else we clear GPO0
 # Supported Combinations
 
  Parameter      | Value
  ---------------|-----------
  ICSSG          | ICSSG0 - PRU0
+ ICSSM          | ICSSM1 - PRU0 (am261x only)
  Toolchain      | pru-cgt
- Board          | am243x-lp
+ Board          | am243x-lp, am261x-lp
  Example folder | examples/conditional/
 
 # Steps to Run the Example

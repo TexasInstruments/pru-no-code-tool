@@ -15,6 +15,7 @@ The tool generates PRU assembly code from visual block diagrams, handling regist
 
 - AM64x
 - AM243x
+- AM261x
 
 ---
 
@@ -88,6 +89,7 @@ folder of the `pru-no-code-tool` repository.
   MCU+ SDK documentation: **Developer Guides > Using SDK with CCS Projects** 
   - [AM64x](https://software-dl.ti.com/mcu-plus-sdk/esd/AM64X/latest/exports/docs/api_guide_am64x/CCS_PROJECTS_PAGE.html)
   - [AM243x](https://software-dl.ti.com/mcu-plus-sdk/esd/AM243X/latest/exports/docs/api_guide_am243x/CCS_PROJECTS_PAGE.html)
+  - [AM261x](https://software-dl.ti.com/mcu-plus-sdk/esd/AM261X/latest/exports/docs/api_guide_am261x/CCS_PROJECTS_PAGE.html)
 
 ### Using an EVM with MCU+ SDK
 
@@ -101,6 +103,7 @@ For more details on EVM Board usage, please refer to the Getting started section
 Getting started guides of MCU+ SDK are specific to a particular device. The links for all the supported devices are given below
 - [AM64x  Getting Started Guide](https://software-dl.ti.com/mcu-plus-sdk/esd/AM64X/latest/exports/docs/api_guide_am64x/GETTING_STARTED.html)
 - [AM243x Getting Started Guide](https://software-dl.ti.com/mcu-plus-sdk/esd/AM243X/latest/exports/docs/api_guide_am243x/GETTING_STARTED.html)
+- [AM261x Getting Started Guide](https://software-dl.ti.com/mcu-plus-sdk/esd/AM261X/latest/exports/docs/api_guide_am261x/GETTING_STARTED.html)
 
 ### Basic Workflow
 
@@ -146,7 +149,6 @@ Blocks for controlling execution flow, repetition, and code organization.
 | If/Else | Conditional branching | 1 |
 | Group | Organize code into callable sections | 0 |
 | Flow Control | End execution or halt PRU | 1 |
-| Configure Constant Table | Setup memory pointers | 2 |
 
 
 ### PRU I/O Blocks
@@ -421,18 +423,6 @@ At 200 MHz PRU clock:
 | 1000 | 5 µs |
 | 200,000 | 1 ms |
 
-### Constant Tables
-
-| Table | Default Mapping |
-|-------|-----------------|
-| C0-C23 | Hardware-configured (not programmable) |
-| C24 | PRU0/PRU1 Local DMEM |
-| C25 | PRU1/PRU0 Local DMEM (cross-core) |
-| C26 | IEP |
-| C27 | MII_RT/SGMII |
-| C28 | Shared RAM |
-| C29-C31 | External memory via RAT |
-
 ### Generated Code Structure
 
 The tool generates two files:
@@ -465,7 +455,6 @@ The tool generates two files:
 |------|------------|
 | **Block** | Visual programming element that generates PRU instructions |
 | **CRC** | Cyclic Redundancy Check — error-detecting checksum computed from data using a generator polynomial |
-| **Constant Table** | PRU register holding base address for memory operations |
 | **DMEM** | PRU Data Memory — 8 KB local RAM per PRU core, fast private access |
 | **SMEM** | Shared Memory — 64 KB RAM shared between all PRU cores and ARM |
 | **GPI** | General Purpose Input (R31) |

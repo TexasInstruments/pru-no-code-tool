@@ -79,7 +79,11 @@ void empty_example_main(void *args)
      ClockP_usleep(10);
 
      /* Read results from PRU ICSSG0 Shared RAM at 0x30010000 */
+# if defined (SOC_AM261X)  
+     volatile uint8_t *smemBase = (volatile uint8_t *)0x48010000;
+# else 
      volatile uint8_t *smemBase = (volatile uint8_t *)0x30010000;
+#endif
      uint8_t binInput  = smemBase[0];   /* R0.b2: binary index fed into LUT */
      uint8_t grayOut   = smemBase[1];   /* R0.b3: Gray code encoded output  */
 

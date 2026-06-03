@@ -39,6 +39,8 @@ jobs:
             make_target: syscfg-tests-am243x
           - device: am64x
             make_target: syscfg-tests-am64x
+          - device: am261x
+            make_target: syscfg-tests-am261x
 
     steps:
       - name: Checkout repository

@@ -16,8 +16,9 @@ The data and its CRC are transmitted in a single UART frame whose snapshot from 
  Parameter      | Value
  ---------------|-----------
  ICSSG          | ICSSG0 - PRU0, PRU1
+ ICSSM          | ICSSM1 - PRU0, PRU1 (am261x only)
  Toolchain      | pru-cgt
- Board          | am243x-lp
+ Board          | am243x-lp, am261x-lp
  Example folder | examples/uart_crc/
 
 # Steps to Run the Example
@@ -35,4 +36,4 @@ The data and its CRC are transmitted in a single UART frame whose snapshot from 
 
      - Launch a CCS debug session and run the executable, (see [for AM64x](https://software-dl.ti.com/mcu-plus-sdk/esd/AM64X/latest/exports/docs/api_guide_am64x/CCS_LAUNCH_PAGE.html), [for AM243x](https://software-dl.ti.com/mcu-plus-sdk/esd/AM243X/latest/exports/docs/api_guide_am243x/CCS_LAUNCH_PAGE.html), [for AM261x](https://software-dl.ti.com/mcu-plus-sdk/esd/AM261X/latest/exports/docs/api_guide_am261x/CCS_LAUNCH_PAGE.html))
 
-     - Connect on the 243x-lp board the following pins with a wire -> PRG0_PRU1_GPI11 (J7.10 , pin number 70) which is the PERIF2_IN (for UART rx) to PRG0_PRU0_GPO1 (J4.2, pin number 32) which is the PERIF0_OUT (for UART tx) , the data and its CRC flows from tx to rx. 
+     - Connect on the 243x-lp board the following pins with a wire -> PRG0_PRU1_GPI11 (J7.10 , pin number 70) which is the PERIF2_IN (for UART rx) to PRG0_PRU0_GPO1 (J4.2, pin number 32) which is the PERIF0_OUT (for UART tx) , the data and its CRC flows from tx to rx. For the am261x-lp board connect the following pins -> PR1_PRU0_GPIO1 (J7.67) which is the PERIF0_OUT (for UART tx) to  PR1_PRU1_GPIO11 (J1.8) which is the PERIF2_IN (for UART rx)

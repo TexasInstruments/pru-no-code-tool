@@ -1,0 +1,63 @@
+/**
+ * These arguments were used when this file was generated. They will be automatically applied on subsequent loads
+ * via the GUI or CLI. Run CLI with '--help' for additional information on how to override these arguments.
+ * @cliArgs --device "AM261x_ZFG" --part "AM2612" --package "ZFG" --context "icss_m1_pru0" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @v2CliArgs --device "AM2612" --package "NFBGA (ZFG)" --variant "500MHz" --context "icss_m1_pru0" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @versions {"tool":"1.27.0+4565"}
+ */
+
+/**
+ * Import the modules used in this configuration.
+ */
+const load_constant_block  = scripting.addModule("/pru_blocks/data_handling/load_constant_block", {}, false);
+const load_constant_block1 = load_constant_block.addInstance();
+const load_constant_block2 = load_constant_block.addInstance();
+const conditional_block    = scripting.addModule("/pru_blocks/program_control/conditional_block", {}, false);
+const conditional_block1   = conditional_block.addInstance();
+const flow_control_block   = scripting.addModule("/pru_blocks/program_control/flow_control_block", {}, false);
+const flow_control_block1  = flow_control_block.addInstance();
+const flow_control_block2  = flow_control_block.addInstance();
+const pru_gpo_block        = scripting.addModule("/pru_blocks/pru_io_blocks/pru_gpo_block", {}, false);
+const pru_gpo_block1       = pru_gpo_block.addInstance();
+const pru_gpo_block2       = pru_gpo_block.addInstance();
+
+/**
+ * Write custom configuration values to the imported modules.
+ */
+load_constant_block1.$name     = "data_1";
+load_constant_block1.constant1 = 4;
+
+load_constant_block2.$name     = "data_2";
+load_constant_block2.constant1 = 5;
+
+conditional_block1.$name            = "If_Else_0";
+conditional_block1.conditionToCheck = "lessThanInput2";
+
+flow_control_block1.$name = "Flow_Control_0";
+
+flow_control_block2.$name = "Flow_Control_1";
+
+pru_gpo_block1.$name = "set_gpo";
+
+pru_gpo_block2.$name = "clear_gpo";
+
+/**
+ * Connections between modules.
+ */
+scripting.connect(load_constant_block1, "output1", conditional_block1, "input1");
+scripting.connect(load_constant_block2, "output1", conditional_block1, "input2");
+scripting.connect(conditional_block1, "T", pru_gpo_block1, "prev");
+scripting.connect(conditional_block1, "F", pru_gpo_block2, "prev");
+scripting.connect(flow_control_block1, "prev", pru_gpo_block2, "next");
+scripting.connect(flow_control_block2, "prev", pru_gpo_block1, "next");
+
+/**
+ * (x,y) coordinates for modules that are displayed in a graph.
+ */
+load_constant_block1.$position = [-305,-55];
+load_constant_block2.$position = [-300,50];
+conditional_block1.$position   = [-155,-15];
+flow_control_block1.$position  = [180,70];
+flow_control_block2.$position  = [185,-30];
+pru_gpo_block1.$position       = [60,-10];
+pru_gpo_block2.$position       = [65,60];

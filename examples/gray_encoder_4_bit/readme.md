@@ -13,8 +13,9 @@ The R5F reads the result from PRU ICSSG0 Shared RAM (SMEM at `0x30010000`) and p
  Parameter      | Value
  ---------------|-----------
  ICSSG          | ICSSG0 - PRU0
+ ICSSM          | ICSSM1 - PRU1 (am261x only)
  Toolchain      | pru-cgt
- Board          | am243x-lp
+ Board          | am243x-lp, am261x-lp
  Example folder | examples/gray_encoder_4_bit/
 
 # Steps to Run the Example

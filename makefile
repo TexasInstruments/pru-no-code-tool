@@ -97,5 +97,8 @@ syscfg-tests-am243x:
 syscfg-tests-am64x:
 	-$(SYSCFG_NODE) $(SYSCFG_CLI_PATH)/tests/sanityTests.js -s $(SYSCFG_PRU_NO_TOOL_PRODUCT) -d AM64x -c icss_g0_pru0 --excludeTests="migrateToAnyTarget"
 	-$(SYSCFG_NODE) $(SYSCFG_CLI_PATH)/tests/sanityTests.js -s $(SYSCFG_PRU_NO_TOOL_PRODUCT) -d AM64x -c icss_g0_pru1 --excludeTests="migrateToAnyTarget"
+syscfg-tests-am261x:
+	-$(SYSCFG_NODE) $(SYSCFG_CLI_PATH)/tests/sanityTests.js -s $(SYSCFG_PRU_NO_TOOL_PRODUCT) -d AM261x -c icss_m0_pru0 --excludeTests="migrateToAnyTarget"
+	-$(SYSCFG_NODE) $(SYSCFG_CLI_PATH)/tests/sanityTests.js -s $(SYSCFG_PRU_NO_TOOL_PRODUCT) -d AM261x -c icss_m0_pru1 --excludeTests="migrateToAnyTarget"
 
 .PHONY: all clean pru host help academy examples source syscfg

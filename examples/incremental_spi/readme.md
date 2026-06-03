@@ -3,7 +3,7 @@
 ## Introduction
 
 This example demonstrates the use of pru-no-code-tool to send incremental data (1 to 10 (LSB first)) through SPI protocol using the pre-init feature of the loop block 
-probe pin 19 (SDO pin) and pin 17 (SCLK pin) to observe the waveform which should be similar to the following snapshot taken from the logic analyzer 
+probe pin 19 (SDO) and pin 17 (SCLK) in case of am243x and pin 11 (SCLK) and pin 67 (SDO) in case of am261x and to observe the waveform which should be similar to the following snapshot taken from the logic analyzer 
 
 <figure>
 <img src="images\incremental_spi.png" alt="incremental_spi" width="900">
@@ -15,8 +15,9 @@ probe pin 19 (SDO pin) and pin 17 (SCLK pin) to observe the waveform which shoul
  Parameter      | Value
  ---------------|-----------
  ICSSG          | ICSSG0 - PRU0
+ ICSSM          | ICSSM1 - PRU0, PRU1 (am261x only)
  Toolchain      | pru-cgt
- Board          | am243x-lp
+ Board          | am243x-lp, am261x-lp
  Example folder | examples/incremental_spi/
 
 # Steps to Run the Example

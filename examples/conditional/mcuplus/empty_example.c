@@ -74,26 +74,21 @@ void empty_example_main(void *args)
       *                         1 = FALSE (data_1 < data_2, bit 7 cleared), R1.b1 stored
       * smem[1]: result of the bitwise operation
       */
+# if defined (SOC_AM261X)  
+     volatile uint8_t *smemBase = (volatile uint8_t *)0x48010000;
+# else 
      volatile uint8_t *smemBase = (volatile uint8_t *)0x30010000;
+#endif
      uint8_t gpo_status    = smemBase[0];
-     uint8_t result        = smemBase[1];
-     uint8_t original_data = smemBase[2];
 
      if (gpo_status == 0)
      {
-         DebugP_log("Branch: TRUE (data_1 >= data_2) - Bit 7 was set\r\n");
+         DebugP_log("GPO 0 was cleared\r\n");
      }
      else if (gpo_status == 1)
      {
-         DebugP_log("Branch: FALSE (data_1 < data_2) - Bit 7 was cleared\r\n");
+         DebugP_log("GPO 0 was set\r\n");
      }
-     DebugP_log("Original Data : 0x%02X\r\n", original_data);
-     DebugP_log("Result        : 0x%02X\r\n", result);
-     while (1)
-     {
-        ClockP_usleep(1);
-     }
-
      Board_driversClose();
      Drivers_close();
 }
