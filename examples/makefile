@@ -7,6 +7,7 @@ SUBDIRS := \
 	conditional \
 	gray_encoder_4_bit \
 	incremental_spi \
+	tamagawa_single_channel \
 
 # "make" or "make all" builds projects that match $(DEVICE) set in imports.mak
 all: ARGUMENTS = all

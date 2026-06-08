@@ -22,6 +22,7 @@ Users can either install the prebuilt MCU+ SDK :
 installer can be downloaded here:
    - [AM243x MCU+ SDK](https://www.ti.com/tool/download/MCU-PLUS-SDK-AM243X)
    - [AM64x MCU+ SDK](https://www.ti.com/tool/download/MCU-PLUS-SDK-AM64X)
+   - [AM261x MCU+ SDK](https://www.ti.com/tool/download/MCU-PLUS-SDK-AM261X)
 
 ## Install the tools
 

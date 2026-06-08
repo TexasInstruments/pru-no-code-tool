@@ -26,6 +26,7 @@ const pru_spi_write1       = pru_spi_write.addInstance();
  * Write custom configuration values to the imported modules.
  */
 pru_blocks_static_module.signalsToDisplay = ["3","4","5"];
+
 arithmetic_block1.$name = "Arithmetic_0";
 
 load_constant_block1.$name = "Load_Constant_0";
@@ -35,9 +36,10 @@ load_constant_block2.constant1 = 1;
 
 flow_control_block1.$name = "Flow_Control_0";
 
-loop_block1.$name     = "Loop_0";
-loop_block1.loopCount = 10;
-loop_block1.$size     = [500,315];
+loop_block1.$name         = "Loop_0";
+loop_block1.loopCount     = 10;
+loop_block1.preInitBlocks = ["Load_Constant_0"];
+loop_block1.$size         = [500,315];
 
 pru_spi_write1.$name          = "PRU0_SPI_Write_0";
 pru_spi_write1["SDO Signal"]  = "3";

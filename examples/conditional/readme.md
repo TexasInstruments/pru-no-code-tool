@@ -3,6 +3,97 @@
 ## Introduction
 
 This example demonstrates the use of pru-no-code-tool for GPO set/clear operation using the if/else block, if the condition is true , we set GPO0 or else we clear GPO0
+---
+
+## No-Code Tool Block Design
+
+This example demonstrates the If/Else block's branching behaviour and highlights a critical wiring rule: **each branch must be terminated with a Flow Control block**.
+
+### Why Flow Control Termination is Required
+
+The If/Else block generates a conditional branch instruction (`QBLT` in this case). The code generator lays out the FALSE path immediately after the branch, followed by the TRUE path at the branch target label. Without an explicit terminator at the end of the FALSE path, execution falls through into the TRUE path's code — meaning both GPO set and GPO clear would run regardless of the condition.
+
+Adding a Flow Control (HALT) block at the end of each branch prevents this fall-through. Each path executes its own GPO operation and halts independently.
+
+```
+Without termination (WRONG):          With termination (CORRECT):
+
+QBLT TRUE_LABEL, R0, R1               QBLT TRUE_LABEL, R0, R1
+; FALSE path                          ; FALSE path
+<clear_gpo>                           <clear_gpo>
+; falls through into TRUE path!       HALT          ← Flow_Control_0 stops here
+TRUE_LABEL:                           TRUE_LABEL:
+<set_gpo>                             <set_gpo>
+                                      HALT          ← Flow_Control_1 stops here
+```
+
+### Block Flow
+
+```
+[Load Constant: data_1]   value = 4  ──┐
+                                        ├──► [If/Else: If_Else_0]   condition: input1 < input2
+[Load Constant: data_2]   value = 5  ──┘         │            │
+                                                  │ T          │ F
+                                              (4 < 5          (4 < 5
+                                             = TRUE)         = FALSE)
+                                                  │            │
+                                                  ▼            ▼
+                                           [GPO: set_gpo]  [GPO: clear_gpo]
+                                                  │            │
+                                                  ▼            ▼
+                                        [Flow_Control_1]  [Flow_Control_0]
+                                              HALT             HALT
+```
+
+Since 4 < 5 is TRUE, the T branch executes: `set_gpo` runs and the PRU halts. The `clear_gpo` path is never reached.
+
+### Block Configuration Details
+
+**Load Constant (`data_1`)**
+- Value: 4 — feeds If/Else input1
+
+**Load Constant (`data_2`)**
+- Value: 5 — feeds If/Else input2 (the threshold)
+
+**If/Else (`If_Else_0`)**
+- Condition: `lessThanInput2` — TRUE when input1 < input2 (4 < 5 → TRUE)
+- T port → `set_gpo`
+- F port → `clear_gpo`
+- 1 PRU cycle for the comparison and branch
+
+**PRU GPO (`set_gpo`)**
+- Sets GPO0 HIGH on the TRUE branch
+
+**PRU GPO (`clear_gpo`)**
+- Clears GPO0 LOW on the FALSE branch
+
+**Flow Control (`Flow_Control_1`)**
+- HALT — terminates the TRUE branch after `set_gpo`
+- Prevents fall-through into any code that follows
+
+**Flow Control (`Flow_Control_0`)**
+- HALT — terminates the FALSE branch after `clear_gpo`
+- Same reason — each branch needs its own explicit terminator
+
+### Generated Assembly Structure
+
+```asm
+    LDI    Ra.b0, 4                 ; data_1
+    LDI    Rb.b0, 5                 ; data_2
+    QBLT   TRUE_LABEL, Ra.b0, Rb.b0 ; branch if Ra < Rb (4 < 5 → taken)
+
+; FALSE path (clear_gpo)
+    CLR    R30, R30, <gpo_bit>      ; clear GPO
+    HALT                            ; Flow_Control_0
+
+TRUE_LABEL:
+; TRUE path (set_gpo)
+    SET    R30, R30, <gpo_bit>      ; set GPO
+    HALT                            ; Flow_Control_1
+```
+
+---
+
 # Supported Combinations
 
  Parameter      | Value
