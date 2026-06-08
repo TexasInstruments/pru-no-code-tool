@@ -98,6 +98,8 @@ scripting.connect(prev_block, "next", if_else1, "prev");
 4. **Single Cycle**: Comparison and branch decision execute in 1 PRU cycle.
 
 5. **Port Names**: True path uses "T" port, False path uses "F" port (displayed as t_next/f_next).
+
+6. **Terminate Each Branch with a Flow Control Block**: The code generator places the FALSE path immediately after the branch instruction, with the TRUE path at the branch target label. If the FALSE path has no explicit terminator, execution falls through into the TRUE path — causing both branches to execute regardless of the condition. Always end each branch (T and F) with a Flow Control block (HALT or END) to prevent this fall-through.
 `;
 }
 
@@ -168,6 +170,7 @@ Implements conditional logic (IF/ELSE statements) to control program flow based 
 - The conditional check happens instantly (1 cycle)
 - Code on both branches is generated, only one path executes at runtime
 - This block does not produce an output value - it only controls flow
+- **Always terminate each branch (T and F) with a Flow Control block**: The FALSE path falls through to the TRUE path in the generated assembly unless explicitly stopped. Without a terminator on the FALSE branch, both branches execute sequentially regardless of the condition result.
 
 ### Terminology
 - **Conditional branching**: Changing program flow based on a condition
@@ -292,7 +295,7 @@ exports = {
 		let ports = [];
 		for(let iterator = 1; iterator <= inst["numOfInputPorts"]; iterator++)
 		{
-			ports.push({ name: "input"+iterator.toString(), type: "input" })
+			ports.push({ name: "input"+iterator.toString(), type: "input32" })
 		}
 		ports.push({ name: "T",displayName: "t_next", type: "CONDITIONAL_NEXT"})
 		ports.push({ name: "F",displayName: "f_next", type: "CONDITIONAL_NEXT"})

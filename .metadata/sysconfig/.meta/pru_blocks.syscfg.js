@@ -39,6 +39,27 @@ exports = {
                 side: "right",
                 multipleConnections: true,
             },
+            // Typed data ports — width-enforced connections
+            {
+                type: "input32",
+                side: "left",
+                multipleConnections: false,
+            },
+            {
+                type: "output32",
+                side: "right",
+                multipleConnections: true,
+            },
+            {
+                type: "input64",
+                side: "left",
+                multipleConnections: false,
+            },
+            {
+                type: "output64",
+                side: "right",
+                multipleConnections: true,
+            },
             {
                 type: "CONDITIONAL_NEXT",
                 side: "right",
@@ -76,6 +97,19 @@ exports = {
                 end: "input",
                 type: "data",
                 displayName: "dataflow",
+            },
+            // Typed width-enforced data connections
+            {
+                start: "output32",
+                end: "input32",
+                type: "data",
+                displayName: "dataflow32",
+            },
+            {
+                start: "output64",
+                end: "input64",
+                type: "data",
+                displayName: "dataflow64",
             },
             {
                 start: "CONDITIONAL_NEXT",

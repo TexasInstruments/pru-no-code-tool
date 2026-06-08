@@ -352,11 +352,11 @@ exports = {
 		let ports = [];
 		for(let iterator = 1; iterator <= inst["numOfInputPorts"]; iterator++)
 		{
-			ports.push({ name: "input"+iterator.toString(), type: "input" })
+			ports.push({ name: "input"+iterator.toString(), type: "input32" })
 		}
 		for(let iterator = 1; iterator <= inst["numOfOutputPorts"]; iterator++)
 		{
-			ports.push({ name: "output"+iterator.toString(), type: "output"})
+			ports.push({ name: "output"+iterator.toString(), type: "output32"})
 		}
 		ports.push({ name: "prev", type: "IO_PREV" })
         ports.push({ name: "next", type: "IO_NEXT" })

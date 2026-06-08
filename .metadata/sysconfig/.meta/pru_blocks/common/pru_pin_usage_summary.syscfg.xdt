@@ -64,26 +64,23 @@
 %        pins.push({ pin: inst["SDO Signal"], func: "SDO", dir: `${PRU_USED}_GPO` });
 %        pins.push({ pin: inst["CS Signal"], func: "CS", dir: isCtrl ? `${PRU_USED}_GPO` : `${PRU_USED}_GPI` });
 %    }
-%    // UART TX block - uses ENDAT peripheral with fixed pins per channel
-%    else if (modulePath.includes("uart_tx")) {
-%        const ch = inst.channel;
-%        // Channel 0: GPO0 (clock), GPO1 (data out), GPO2 (out enable)
-%        // Channel 1: GPO3, GPO4, GPO5
-%        // Channel 2: GPO6, GPO7, GPO8
-%        const basePin = ch * 3;
-%        pins.push({ pin: basePin, func: "PERIF" + ch + "_CLK", dir: `${PRU_USED}_GPO` });
-%        pins.push({ pin: basePin + 1, func: "PERIF" + ch + "_DOUT", dir: `${PRU_USED}_GPO` });
-%        pins.push({ pin: basePin + 2, func: "PERIF" + ch + "_OE", dir: `${PRU_USED}_GPO` });
+%    // UART Config block - covers pins for all enabled TX/RX channels
+%    // TX op and RX op blocks share the same pins — only uart_config is the source of truth
+%    else if (modulePath.includes("uart_config")) {
+%        if (inst.enableTX) {
+%            const ch = inst.txChannel;
+%            const basePin = ch * 3;
+%            pins.push({ pin: basePin,     func: "PERIF" + ch + "_CLK",  dir: `${PRU_USED}_GPO` });
+%            pins.push({ pin: basePin + 1, func: "PERIF" + ch + "_DOUT", dir: `${PRU_USED}_GPO` });
+%            pins.push({ pin: basePin + 2, func: "PERIF" + ch + "_OE",   dir: `${PRU_USED}_GPO` });
+%        }
+%        if (inst.enableRX) {
+%            const ch = inst.rxChannel;
+%            const rxPin = 9 + ch;
+%            pins.push({ pin: rxPin, func: "PERIF" + ch + "_DIN", dir: `${PRU_USED}_GPI` });
+%        }
 %    }
-%    // UART RX block - uses ENDAT peripheral with fixed pins per channel
-%    else if (modulePath.includes("uart_rx")) {
-%        const ch = inst.channel;
-%        // Channel 0: GPI9 (perif_data_in)
-%        // Channel 1: GPI10
-%        // Channel 2: GPI11
-%        const rxPin = 9 + ch;
-%        pins.push({ pin: rxPin, func: "PERIF" + ch + "_DIN", dir: `${PRU_USED}_GPI` });
-%    }
+%    // UART TX Op / UART RX Op — pins already covered by the paired uart_config instance above
 %    return pins;
 %}
 %

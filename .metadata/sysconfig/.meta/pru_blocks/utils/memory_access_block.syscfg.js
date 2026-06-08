@@ -72,8 +72,8 @@ function validate(inst, report) {
 	}
 
 	// Validate data size
-	if (inst["dataSize"] < 1 || inst["dataSize"] > 4) {
-		report.logError("Data size must be between 1 and 4 bytes", inst, "dataSize");
+	if (inst["dataSize"] < 1 || inst["dataSize"] > 8) {
+		report.logError("Data size must be between 1 and 8 bytes", inst, "dataSize");
 	}
 
 	// Validate offset against memory reserve size
@@ -98,11 +98,25 @@ function getMacro(pruInstructionMacro, opCode) {
 	const isWrite = opCode.includes("store") || opCode.includes("write");
 
 	// Generate macro DEFINITION when called with empty pruInstructionMacro
+	const is64 = opCode.includes("_64");
 	if (pruInstructionMacro === "") {
 		if (isWrite) {
-			// Store macro: dataReg, baseAddress, offset, count
-			macroBody = opCode + "\t.macro dataReg, baseAddress, offset, count\n";
-			macroBody += `\t; Memory Store (SBBO)
+			if (is64) {
+				// 64-bit store: dataRegLo, dataRegHi, baseAddress, offset, count
+				macroBody = opCode + "\t.macro dataRegLo, dataRegHi, baseAddress, offset, count\n";
+				macroBody += `\t; Memory Store 64-bit (SBBO burst)
+\t;   dataRegLo   - Starting register (lower 32 bits); SBBO bursts consecutive regs
+\t;   dataRegHi   - Upper register (passed for consistency, SBBO handles automatically)
+\t;   baseAddress - Base address (symbol or hex address)
+\t;   offset      - Byte offset from base address
+\t;   count       - Number of bytes to store
+\tLDI32   TEMP_REG1, baseAddress + offset
+\tSBBO    &dataRegLo, TEMP_REG1, 0, count
+`;
+			} else {
+				// 32-bit store: dataReg, baseAddress, offset, count
+				macroBody = opCode + "\t.macro dataReg, baseAddress, offset, count\n";
+				macroBody += `\t; Memory Store (SBBO)
 \t;   dataReg     - Source register containing data to store
 \t;   baseAddress - Base address (symbol or hex address)
 \t;   offset      - Byte offset from base address
@@ -110,10 +124,24 @@ function getMacro(pruInstructionMacro, opCode) {
 \tLDI32   TEMP_REG1, baseAddress + offset
 \tSBBO    &dataReg, TEMP_REG1, 0, count
 `;
+			}
 		} else {
-			// Load macro: dataReg, baseAddress, offset, count
-			macroBody = opCode + "\t.macro dataReg, baseAddress, offset, count\n";
-			macroBody += `\t; Memory Load (LBBO)
+			if (is64) {
+				// 64-bit load: dataRegLo, dataRegHi, baseAddress, offset, count
+				macroBody = opCode + "\t.macro dataRegLo, dataRegHi, baseAddress, offset, count\n";
+				macroBody += `\t; Memory Load 64-bit (LBBO burst)
+\t;   dataRegLo   - Starting register (lower 32 bits); LBBO bursts into consecutive regs
+\t;   dataRegHi   - Upper register (passed for consistency, LBBO handles automatically)
+\t;   baseAddress - Base address (symbol or hex address)
+\t;   offset      - Byte offset from base address
+\t;   count       - Number of bytes to load
+\tLDI32   TEMP_REG1, baseAddress + offset
+\tLBBO    &dataRegLo, TEMP_REG1, 0, count
+`;
+			} else {
+				// 32-bit load: dataReg, baseAddress, offset, count
+				macroBody = opCode + "\t.macro dataReg, baseAddress, offset, count\n";
+				macroBody += `\t; Memory Load (LBBO)
 \t;   dataReg     - Destination register to store loaded data
 \t;   baseAddress - Base address (symbol or hex address)
 \t;   offset      - Byte offset from base address
@@ -121,6 +149,7 @@ function getMacro(pruInstructionMacro, opCode) {
 \tLDI32   TEMP_REG1, baseAddress + offset
 \tLBBO    &dataReg, TEMP_REG1, 0, count
 `;
+			}
 		}
 		macroBody += " .endm";
 		return macroBody;
@@ -436,7 +465,11 @@ exports = {
 			default: "m_memory_load",
 			hidden: true,
 			getValue: (inst) => {
-				return (inst["operationMode"] === "write") ? "m_memory_store" : "m_memory_load";
+				const is64 = inst["dataSize"] > 4;
+				if (inst["operationMode"] === "write") {
+					return is64 ? "m_memory_store_64" : "m_memory_store";
+				}
+				return is64 ? "m_memory_load_64" : "m_memory_load";
 			}
 		},
 		{
@@ -505,7 +538,9 @@ exports = {
 			getValue: (inst) => {
 				// Only return size for read mode (which has output)
 				// Write mode has no output, return 0
-				return (inst["operationMode"] === "read") ? inst["dataSize"] : 0;
+				if (inst["operationMode"] !== "read") return 0;
+				// Round up to 8 for any dataSize > 4 to ensure two full registers are reserved
+				return inst["dataSize"] > 4 ? 8 : inst["dataSize"];
 			}
 		},
 		{
@@ -514,23 +549,25 @@ exports = {
 			hidden: true,
 			getValue: (inst) => {
 				// For write mode, input1 is the data to store
-				// For read mode with register offset, input1 is the offset (small value)
 				if (inst["operationMode"] === "write") {
-					return inst["dataSize"];
+					return inst["dataSize"] > 4 ? 8 : inst["dataSize"];
 				}
 				return 0;
 			}
 		}
 	],
 	ports: (inst) => {
-		let ports = [];
+		const dataSize = inst["dataSize"] || 4;
+		const ports = [];
 
 		if (inst["operationMode"] === "write") {
 			// Write mode: input for data to store
-			ports.push({ name: "input1", displayName: "data", type: "input" });
+			const inputType = dataSize > 4 ? "input64" : "input32";
+			ports.push({ name: "input1", displayName: "data", type: inputType });
 		} else {
 			// Read mode: output for loaded data
-			ports.push({ name: "output1", displayName: "data", type: "output" });
+			const outputType = dataSize > 4 ? "output64" : "output32";
+			ports.push({ name: "output1", displayName: "data", type: outputType });
 		}
 
 		// Control flow ports

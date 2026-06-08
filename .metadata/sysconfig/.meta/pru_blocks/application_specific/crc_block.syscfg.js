@@ -603,14 +603,14 @@ exports = {
 	ports: (inst) => { 
 		let ports = [];
 		
-		ports.push({ name: "input1", displayName:"init", type: "input" })
-        ports.push({ name: "input2", displayName:"data", type: "input" })
+		ports.push({ name: "input1", displayName:"init", type: "input32" })
+        ports.push({ name: "input2", displayName:"data", type: "input32" })
 		ports.push({ name: "prev", type: "PREV" })
 		ports.push({ name: "next", type: "NEXT"})
 
 		for(let iterator = 1; iterator <= inst["numOfOutputPorts"]; iterator++)
 		{
-			ports.push({ name: "output"+iterator.toString(), type: "output"})
+			ports.push({ name: "output"+iterator.toString(), type: "output32"})
 		}
 
         return ports

@@ -2,8 +2,7 @@ let copyCmd = "cp";
 let copyArgs = ["$browsedFile", "$comFile"];
 
 if (system.getOS() == "win") {
-    copyCmd = "cmd.exe";
-    copyArgs = ["/c", "copy", "$browsedFile", "$comFile"];
+    copyCmd = "copy";
 }
 
 function getLookUptable(instance) {
@@ -824,7 +823,7 @@ Then click "Browse For JSON File" button above to select it.`;
         ports.push({ name: "next", type: "NEXT" })
 
         for (let iterator = 1; iterator <= inst["numOfOutputPorts"]; iterator++) {
-            ports.push({ name: "output" + iterator.toString(), type: "output" })
+            ports.push({ name: "output" + iterator.toString(), type: "output32" })
         }
 
         return ports
