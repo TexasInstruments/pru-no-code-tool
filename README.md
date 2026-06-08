@@ -162,10 +162,9 @@ Blocks for GPIO, SPI, UART, and memory operations.
 | SPI Read | Read data via SPI | Variable | Up to 28.57 MHz |
 | SPI Write | Write data via SPI | Variable | Up to 28.57 MHz |
 | SPI Transfer | Full-duplex SPI | Variable | Up to 25.00 MHz |
-| UART TX | Transmit UART frame (up to 62 data bits) | Variable | Up to 192 Mbaud |
-| UART RX | Receive UART frame | Variable | Up to 192 Mbaud |
-
-**Note**: SPI maximum frequencies vary by mode. See [PRU I/O Blocks README](pru_io_blocks/README.md) for detailed frequency tables by SPI mode and block type.
+| UART config | configure 3 channel interface for UART transmission | Variable | N/A |
+| UART TX op | Transmit UART frame (up to 62 data bits) | Variable | Up to 32 Mbaud |
+| UART RX op | Receive UART frame (up to 64 bits) | Variable | Up to 32 Mbaud |
 
 
 ### Utility Blocks

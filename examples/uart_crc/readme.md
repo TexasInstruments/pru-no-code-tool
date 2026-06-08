@@ -7,7 +7,7 @@ This example demonstrates the use of pru-no-code-tool for sending a data byte an
 The data and its CRC are transmitted in a single UART frame whose snapshot from the logic analyzer is attached below :
 
 <figure>
-<img src="images/uart_crc_ss.png" alt="uart_crc" width="900">
+<img src="images/uart_crc.png" alt="uart_crc" width="900">
 <figcaption>The data and its CRC is transmitted in a single frame (start bit 1 and stop bit 0) , white signal -> data+CRC, brown -> tx enable, red -> clock</figcaption>
 </figure>
 

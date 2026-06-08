@@ -11,7 +11,7 @@ Reads from or writes to a named memory buffer defined by a Memory Variable block
 - Read (LBBO) and Write (SBBO) modes
 - Accesses named symbols defined by Memory Variable blocks
 - Byte offset from symbol base address
-- Data sizes 1–112 bytes
+- Data sizes 1-8 bytes
 - Compile-time bounds checking (offset + size ≤ buffer size)
 - 3-cycle execution
 
@@ -23,7 +23,7 @@ Reads from or writes to a named memory buffer defined by a Memory Variable block
 | Memory Variable Selected | Shows which Memory Variable is currently bound to this block | — |
 | Memory Variable (nested) | Configure the auto-created buffer's label, size, and location directly below this block | — |
 | Offset (bytes) | Byte offset from symbol base | 0 to (buffer size - data size) |
-| Data Size (bytes) | Number of bytes to access | 1–112 |
+| Data Size (bytes) | Number of bytes to access | 1–8 |
 
 When the Memory Access block is added to the design, a Memory Variable block is automatically
 created and nested under it. Configure the buffer through the nested block. If multiple

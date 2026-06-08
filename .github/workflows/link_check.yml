@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (C) 2026 Texas Instruments Incorporated - http://www.ti.com/
+#
+# Link Check CI — checks for broken relative links and image references in all
+# markdown files across the repository. Catches missing images, wrong paths, and
+# stale cross-references before they land in main.
+
+name: Link Check
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - '**/*.md'
+      - '**/images/**'
+  pull_request:
+    branches: [ "**" ]
+    paths:
+      - '**/*.md'
+      - '**/images/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  link-check:
+    name: Check Links in Markdown Files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run lychee link checker
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # Check all markdown files in the repo
+          args: >-
+            --verbose
+            --no-progress
+            --include-fragments
+            --accept 200..=429
+            --root-dir ${{ github.workspace }}
+            './**/*.md'
+          # Fail the workflow if any broken links are found
+          fail: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
