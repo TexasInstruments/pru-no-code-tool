@@ -600,8 +600,9 @@ exports = {
     ports: (inst) => {
         const dataBits = inst.rxFrameSize - 2;
         const outputType = dataBits >= 31 ? "output64" : "output32";
+        const portName = outputType === "output64" ? "out64" : "output1" 
         return [
-            { name: "output1", type: outputType },
+            { name: "output1", type: outputType, displayName: portName },
             { name: "prev",    type: "PREV"     },
             { name: "next",    type: "NEXT"     },
         ];

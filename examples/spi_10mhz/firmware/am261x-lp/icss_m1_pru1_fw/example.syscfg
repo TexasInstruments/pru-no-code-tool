@@ -1,0 +1,49 @@
+/**
+ * These arguments were used when this file was generated. They will be automatically applied on subsequent loads
+ * via the GUI or CLI. Run CLI with '--help' for additional information on how to override these arguments.
+ * @cliArgs --device "AM261x_ZFG" --part "AM2612" --package "ZFG" --context "icss_m1_pru1" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @v2CliArgs --device "AM2612" --package "NFBGA (ZFG)" --variant "500MHz" --context "icss_m1_pru1" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @versions {"tool":"1.27.0+4565"}
+ */
+
+/**
+ * Import the modules used in this configuration.
+ */
+const pru_blocks_static_module = scripting.addModule("/pru_blocks/common/pru_blocks_static_module");
+const load_constant_block      = scripting.addModule("/pru_blocks/data_handling/load_constant_block", {}, false);
+const load_constant_block1     = load_constant_block.addInstance();
+const flow_control_block       = scripting.addModule("/pru_blocks/program_control/flow_control_block", {}, false);
+const flow_control_block1      = flow_control_block.addInstance();
+const pru_spi_write            = scripting.addModule("/pru_blocks/pru_io_blocks/pru_spi_write", {}, false);
+const pru_spi_write1           = pru_spi_write.addInstance();
+
+/**
+ * Write custom configuration values to the imported modules.
+ */
+pru_blocks_static_module.pruClkFreq = 225;
+
+load_constant_block1.$name     = "Load_Constant_0";
+load_constant_block1.constant1 = 3735936685;
+
+flow_control_block1.$name = "Flow_Control_0";
+
+pru_spi_write1.$name          = "PRU1_SPI_Write_0";
+pru_spi_write1["Device Mode"] = "peripheral";
+pru_spi_write1["SCLK Signal"] = "4";
+pru_spi_write1["SDO Signal"]  = "5";
+pru_spi_write1["CS Signal"]   = "6";
+pru_spi_write1.packetSize     = 32;
+pru_spi_write1.Endiness       = "most significant bit first";
+
+/**
+ * Connections between modules.
+ */
+scripting.connect(load_constant_block1, "output1", pru_spi_write1, "input1");
+scripting.connect(flow_control_block1, "prev", pru_spi_write1, "next");
+
+/**
+ * (x,y) coordinates for modules that are displayed in a graph.
+ */
+load_constant_block1.$position = [-150,140];
+flow_control_block1.$position  = [110,130];
+pru_spi_write1.$position       = [-15,130];

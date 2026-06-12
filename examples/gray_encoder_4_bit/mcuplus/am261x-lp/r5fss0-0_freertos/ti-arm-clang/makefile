@@ -29,15 +29,15 @@ OUTNAME:=gray_encoder_4_bit.$(PROFILE).out
 COREOUTNAME:=gray_encoder_4_bit.$(PROFILE).optishare.out
 
 BOOTIMAGE_PATH=$(abspath .)
-BOOTIMAGE_NAME:=gray_encoder_4_bit.$(PROFILE).appimage
-BOOTIMAGE_NAME_XIP:=gray_encoder_4_bit.$(PROFILE).appimage_xip
-BOOTIMAGE_NAME_SIGNED:=gray_encoder_4_bit.$(PROFILE).appimage.signed
-BOOTIMAGE_RPRC_NAME:=gray_encoder_4_bit.$(PROFILE).rprc
-BOOTIMAGE_RPRC_NAME_XIP:=gray_encoder_4_bit.$(PROFILE).rprc_xip
-BOOTIMAGE_RPRC_NAME_TMP:=gray_encoder_4_bit.$(PROFILE).rprc_tmp
-BOOTIMAGE_NAME_HS:=gray_encoder_4_bit.$(PROFILE).appimage.hs
-BOOTIMAGE_NAME_HS_FS:=gray_encoder_4_bit.$(PROFILE).appimage.hs_fs
-TARGETS := $(BOOTIMAGE_NAME)
+oeconfig?=None
+
+BOOTIMAGE_NAME_MCELF:=gray_encoder_4_bit.$(PROFILE).mcelf
+BOOTIMAGE_NAME_MCELF_HS:=gray_encoder_4_bit.$(PROFILE).mcelf.hs
+TARGETS := $(BOOTIMAGE_NAME_MCELF)
+
+ifeq ($(DEVICE_TYPE), HS)
+   TARGETS += $(BOOTIMAGE_NAME_MCELF_HS)
+endif
 
 
 FILES_common := \
@@ -112,8 +112,8 @@ LIBS_PATH_common = \
 
 LIBS_common = \
 	-lfreertos.am261x.r5f.ti-arm-clang.${ConfigName}.lib \
-	-ldrivers.am261x.r5f.ti-arm-clang.${ConfigName}.lib \
-	-lboard.am261x.r5f.ti-arm-clang.${ConfigName}.lib \
+	-ldrivers.am261x.r5f.ti-arm-clang.freertos.${ConfigName}.lib \
+	-lboard.am261x.r5f.ti-arm-clang.freertos.${ConfigName}.lib \
 	-llibc.a \
 	-llibsysbm.a \
 
@@ -126,8 +126,8 @@ LFLAGS_common = \
 
 LIBS_NAME = \
 	freertos.am261x.r5f.ti-arm-clang.${ConfigName}.lib \
-	drivers.am261x.r5f.ti-arm-clang.${ConfigName}.lib \
-	board.am261x.r5f.ti-arm-clang.${ConfigName}.lib \
+	drivers.am261x.r5f.ti-arm-clang.freertos.${ConfigName}.lib \
+	board.am261x.r5f.ti-arm-clang.freertos.${ConfigName}.lib \
 	libc.a \
 	libsysbm.a \
 
@@ -208,13 +208,8 @@ clean:
 	@echo  Cleaning: am261x:r5fss0-0:freertos:ti-arm-clang $(OUTNAME) ...
 	$(RMDIR) $(OBJDIR)
 	$(RM) $(OUTNAME)
-	$(RM) $(BOOTIMAGE_NAME)
-	$(RM) $(BOOTIMAGE_NAME_XIP)
-	$(RM) $(BOOTIMAGE_NAME_SIGNED)
-	$(RM) $(BOOTIMAGE_NAME_HS)
-	$(RM) $(BOOTIMAGE_NAME_HS_FS)
-	$(RM) $(BOOTIMAGE_RPRC_NAME)
-	$(RM) $(BOOTIMAGE_RPRC_NAME_XIP)
+	$(RM) $(BOOTIMAGE_NAME_MCELF)
+	$(RM) $(BOOTIMAGE_NAME_MCELF_HS)
 	$(RMDIR) generated/
 
 scrub:
@@ -229,6 +224,10 @@ ifeq ($(OS),Windows_NT)
 	$(RM) \*.bin
 	$(RM) \*.lnkxml
 	$(RM) \*.ossr
+	$(RM) \*.mcelf
+	$(RM) \*.mcelf_xip
+	$(RM) \*.mcelf-enc
+	$(RM) \*.mcelf.hs
 else
 	$(RM) *.out
 	$(RM) *.map
@@ -238,6 +237,10 @@ else
 	$(RM) *.bin
 	$(RM) *.lnkxml
 	$(RM) *.ossr
+	$(RM) *.mcelf
+	$(RM) *.mcelf_xip
+	$(RM) *.mcelf-enc
+	$(RM) *.mcelf.hs
 endif
 	$(RMDIR) generated
 
@@ -276,66 +279,45 @@ BOOTIMAGE_TEMP_OUT_FILE=temp_stdout_$(PROFILE).txt
 
 BOOTIMAGE_CERT_KEY=$(APP_SIGNING_KEY)
 
-BOOTIMAGE_CORE_ID_r5fss0-0 = 4
-BOOTIMAGE_CORE_ID_r5fss0-1 = 5
-BOOTIMAGE_CORE_ID_r5fss1-0 = 6
-BOOTIMAGE_CORE_ID_r5fss1-1 = 7
-BOOTIMAGE_CORE_ID_m4fss0-0 = 14
-SBL_RUN_ADDRESS=0x70000000
+BOOTIMAGE_CORE_ID_r5fss0-0 = 0
+BOOTIMAGE_CORE_ID_r5fss0-1 = 1
+BOOTIMAGE_CORE_ID_r5fss1-0 = 2
+BOOTIMAGE_CORE_ID_r5fss1-1 = 3
+SBL_RUN_ADDRESS=0x70002000
 SBL_DEV_ID=55
 
-MULTI_CORE_IMAGE_GEN = $(SYSCFG_NODE) $(MCU_PLUS_SDK_PATH)/tools/boot/multicoreImageGen/multicoreImageGen.js
-OUTRPRC_CMD = $(SYSCFG_NODE) $(MCU_PLUS_SDK_PATH)/tools/boot/out2rprc/elf2rprc.js
-APP_IMAGE_SIGN_CMD = $(MCU_PLUS_SDK_PATH)/source/security/security_common/tools/boot/signing/appimage_x509_cert_gen.py
+APP_IMAGE_SIGN_CMD = $(MCU_PLUS_SDK_PATH)/source/security/security_common/tools/boot/signing/mcu_appimage_x509_cert_gen.py
+MCELF_IMAGE_GEN = $(MCU_PLUS_SDK_PATH)/tools/boot/multicore-elf/genimage.py
 
-ifeq ($(OS),Windows_NT)
-  XIPGEN_CMD=$(MCU_PLUS_SDK_PATH)/tools/boot/xipGen/xipGen.exe
-else
-  UNAME_S = $(shell uname -s)
-  ifeq ($(UNAME_S), Darwin)
-    XIPGEN_CMD=$(MCU_PLUS_SDK_PATH)/tools/boot/xipGen/xipGen.out.mac
-  else
-    XIPGEN_CMD=$(MCU_PLUS_SDK_PATH)/tools/boot/xipGen/xipGen.out
-endif
-endif
+$(BOOTIMAGE_NAME_MCELF): $(OUTNAME)
+	@echo  Boot MulticoreELF image: $(BOOTIMAGE_PATH)/$(BOOTIMAGE_NAME_MCELF) ...
+	$(PYTHON) $(MCELF_IMAGE_GEN) --core-img=$(BOOTIMAGE_CORE_ID_r5fss0-0):$(OUTNAME) --output=$(BOOTIMAGE_NAME_MCELF) --merge-segments=$(MCELF_MERGE_SEGMENTS_FLAG) --tolerance-limit=$(MCELF_MERGE_SEGMENTS_TOLERANCE_LIMIT) --ignore-context=$(MCELF_IGNORE_CONTEXT_FLAG) --xip=$(MCELF_XIP_RANGE) --xlat=$(MCELF_ADDR_TRANSLATION_PATH) --max-segment-size=$(MCELF_MAX_SEGMENT_SIZE) --otfaConfigFile=$(oeconfig)
+	@echo  Boot MulticoreELF image: $(BOOTIMAGE_PATH)/$(BOOTIMAGE_NAME_MCELF) Done !!!
+	@echo  .
 
-MULTI_CORE_IMAGE_PARAMS = \
-	$(BOOTIMAGE_RPRC_NAME)@$(BOOTIMAGE_CORE_ID_r5fss0-0) \
-
-MULTI_CORE_IMAGE_PARAMS_XIP = \
-	$(BOOTIMAGE_RPRC_NAME_XIP)@$(BOOTIMAGE_CORE_ID_r5fss0-0) \
-
-$(BOOTIMAGE_NAME): $(OUTNAME)
-	@echo  Boot image: am261x:r5fss0-0:freertos:ti-arm-clang $(BOOTIMAGE_PATH)/$@ ...
-ifneq ($(OS),Windows_NT)
-	$(CHMOD) a+x $(XIPGEN_CMD)
-endif
-	$(OUTRPRC_CMD) $(OUTNAME) >> $(BOOTIMAGE_TEMP_OUT_FILE)
-	$(COPY) $(BOOTIMAGE_RPRC_NAME) $(BOOTIMAGE_RPRC_NAME_TMP)
-	$(RM) $(BOOTIMAGE_RPRC_NAME)
-	$(XIPGEN_CMD) -i $(BOOTIMAGE_RPRC_NAME_TMP) -o $(BOOTIMAGE_RPRC_NAME) -x $(BOOTIMAGE_RPRC_NAME_XIP) --flash-start-addr 0x60000000 -v > $(BOOTIMAGE_TEMP_OUT_FILE)
-	$(MULTI_CORE_IMAGE_GEN) --devID $(SBL_DEV_ID) --out $(BOOTIMAGE_NAME) $(MULTI_CORE_IMAGE_PARAMS) >> $(BOOTIMAGE_TEMP_OUT_FILE)
-	$(MULTI_CORE_IMAGE_GEN) --devID $(SBL_DEV_ID) --out $(BOOTIMAGE_NAME_XIP) $(MULTI_CORE_IMAGE_PARAMS_XIP) >> $(BOOTIMAGE_TEMP_OUT_FILE)
-	$(RM) $(BOOTIMAGE_RPRC_NAME_TMP)
-	$(RM) $(BOOTIMAGE_TEMP_OUT_FILE)
+$(BOOTIMAGE_NAME_MCELF_HS): $(BOOTIMAGE_NAME_MCELF)
 ifeq ($(DEVICE_TYPE), HS)
 # Sign the appimage using appimage signing script
 ifeq ($(ENC_ENABLED),no)
+ifeq ($(RSASSAPSS_ENABLED),no)
 	@echo Boot image signing: Encryption is disabled.
-	$(PYTHON) $(APP_IMAGE_SIGN_CMD) --bin $(BOOTIMAGE_NAME) --authtype 1 --key $(APP_SIGNING_KEY) --output $(BOOTIMAGE_NAME_HS)
+	$(PYTHON) $(APP_IMAGE_SIGN_CMD) --bin $(BOOTIMAGE_NAME_MCELF) --key $(APP_SIGNING_KEY) --sign_key_id $(APP_SIGNING_KEY_KEYRING_ID) --hash_algo $(APP_SIGNING_HASH_ALGO) --output $(BOOTIMAGE_NAME_MCELF_HS)
 else
-	@echo Boot image signing: Encryption is enabled.
-	$(PYTHON) $(APP_IMAGE_SIGN_CMD) --bin $(BOOTIMAGE_NAME) --authtype 1 --key $(APP_SIGNING_KEY) --enc y --enckey $(APP_ENCRYPTION_KEY) --output $(BOOTIMAGE_NAME_HS)
-	$(RM) $(BOOTIMAGE_NAME)-enc
+	@echo Boot image signing: Encryption is disabled. RSASSAPSS is enabled.
+	$(PYTHON) $(APP_IMAGE_SIGN_CMD) --bin $(BOOTIMAGE_NAME_MCELF) --key $(APP_SIGNING_KEY) --sign_key_id $(APP_SIGNING_KEY_KEYRING_ID) --hash_algo $(APP_SIGNING_HASH_ALGO) --pss_saltlen $(APP_SIGNING_SALT_LENGTH) --output $(BOOTIMAGE_NAME_MCELF_HS) --rsassa_pss
 endif
-	$(RM) $(BOOTIMAGE_NAME)
-	@echo  Boot image: am261x:r5fss0-0:freertos:ti-arm-clang $(BOOTIMAGE_PATH)/$(BOOTIMAGE_NAME_HS) Done !!!
-	@echo  .
 else
-# Sign the appimage for HS-FS using appimage signing script
-	$(PYTHON) $(APP_IMAGE_SIGN_CMD) --bin $(BOOTIMAGE_NAME) --authtype 1 --key $(APP_SIGNING_KEY) --output $(BOOTIMAGE_NAME_HS_FS)
-	$(RM) $(BOOTIMAGE_NAME)
-	@echo  Boot image: am261x:r5fss0-0:freertos:ti-arm-clang $(BOOTIMAGE_PATH)/$(BOOTIMAGE_NAME_HS_FS) Done !!!
+ifeq ($(RSASSAPSS_ENABLED),no)
+	@echo Boot image signing: Encryption is enabled.
+	$(PYTHON) $(APP_IMAGE_SIGN_CMD) --bin $(BOOTIMAGE_NAME_MCELF) --key $(APP_SIGNING_KEY) --enc y --enckey $(APP_ENCRYPTION_KEY) --kd-salt $(KD_SALT) --sign_key_id $(APP_SIGNING_KEY_KEYRING_ID) --enc_key_id $(APP_ENCRYPTION_KEY_KEYRING_ID) --hash_algo $(APP_SIGNING_HASH_ALGO) --output $(BOOTIMAGE_NAME_MCELF_HS)
+	$(RM) $(BOOTIMAGE_NAME_MCELF)-enc
+else
+	@echo Boot image signing: Encryption is enabled. RSASSAPSS is enabled.
+	$(PYTHON) $(APP_IMAGE_SIGN_CMD) --bin $(BOOTIMAGE_NAME_MCELF) --key $(APP_SIGNING_KEY) --enc y --enckey $(APP_ENCRYPTION_KEY) --kd-salt $(KD_SALT) --sign_key_id $(APP_SIGNING_KEY_KEYRING_ID) --enc_key_id $(APP_ENCRYPTION_KEY_KEYRING_ID) --hash_algo $(APP_SIGNING_HASH_ALGO) --pss_saltlen $(APP_SIGNING_SALT_LENGTH) --output $(BOOTIMAGE_NAME_MCELF_HS) --rsassa_pss
+	$(RM) $(BOOTIMAGE_NAME_MCELF)-enc
+endif
+endif
+	@echo  Boot image: am261x:r5fss0-0:freertos:ti-arm-clang $(BOOTIMAGE_PATH)/$(BOOTIMAGE_NAME_MCELF_HS) Done !!!
 	@echo  .
 endif
 
