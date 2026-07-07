@@ -3,6 +3,85 @@
 ## Introduction
 
 This example demonstrates the use of pru-no-code-tool for SPI loopback, the code sends 32 bits of data from PRU0 to PRU1 through SPI protocol, PRU0 acts as controller (master) and PRU1 acts as preipheral (slave) in this example 
+---
+
+## No-Code Tool Block Design
+
+This is one of the simplest no-code designs: PRU0 needs just three blocks to drive a full 32-bit SPI transaction, and PRU1 needs only two. No memory buffers, no CRC, no branching.
+
+### PRU0 — SPI Controller Block Flow
+
+```
+[Load Constant: Load_Constant_0]   value = 0xABCD1234 (32-bit data to transmit)
+        │
+        ▼
+[SPI Write: PRU_SPI_Write_0]       transmit 32 bits, controller mode
+        │                          SCLK high = 12 PRU cycles, low = 10 PRU cycles
+        │                          SDO → GPO3, SCLK → GPO4, CS → GPO5
+        ▼
+[Flow Control: Flow_Control_0]     HALT
+```
+
+### PRU1 — SPI Peripheral Block Flow
+
+```
+[SPI Read: PRU_SPI_Read_0]         receive 32 bits, peripheral mode
+        │                          waits for CS assert from PRU0, then clocks in data
+        │                          CS ← GPI6, SCLK ← GPI11
+        ▼
+[Flow Control: Flow_Control_0]     HALT  (received word available in output register)
+```
+
+### Block Configuration Details
+
+**PRU0 Blocks**
+
+**Load Constant (`Load_Constant_0`)**
+- Value: 2882382797 (0xABCD1234) — the 32-bit test pattern to send over SPI
+
+**SPI Write (`PRU_SPI_Write_0`)**
+- Packet size: 32 bits
+- Device mode: controller (drives SCLK and CS)
+- SCLK high pulse width: 12 PRU cycles (60 ns at 200 MHz)
+- SCLK low pulse width: 10 PRU cycles (50 ns at 200 MHz)
+- SDO signal: GPO3 (`PRG0_PRU0_GPO3`) — data out to peripheral
+- SCLK signal: GPO4 (`PRG0_PRU0_GPO4`) — clock to peripheral
+- CS signal: GPO5 (`PRG0_PRU0_GPO5`) — chip select to peripheral
+
+**Flow Control (`Flow_Control_0`)**
+- Operation: HALT — stops PRU0 after the single SPI transaction
+
+---
+
+**PRU1 Blocks**
+
+**SPI Read (`PRU_SPI_Read_0`)**
+- Packet size: 32 bits
+- Device mode: peripheral (waits for CS and SCLK from controller)
+- SCLK high pulse width: 12 PRU cycles, low: 10 PRU cycles (must match PRU0)
+- CS signal: GPI6 (`PRG0_PRU1_GPO6`) — chip select from controller
+- SCLK signal: GPI11 (`PRG0_PRU1_GPO11`) — clock from controller
+- Received word is left in the output register for the R5F to read from SMEM
+
+**Flow Control (`Flow_Control_0`)**
+- Operation: HALT — stops PRU1 after the single SPI receive
+
+---
+
+### Pin Connections Summary
+
+PRU0 (controller) drives three signals; PRU1 (peripheral) receives them. The wires that must be connected on the board are:
+
+| Signal | PRU0 pin (controller) | PRU1 pin (peripheral) |
+|--------|-----------------------|----------------------|
+| SDO→SDI | GPO3 / J2.2 | GPO1 / J7.7 |
+| CS | GPO5 / J2.8 | GPO6 / J7.9 |
+| SCLK | GPO4 / J2.4 | GPO11 / J7.10 |
+
+The PRU1 SDO→PRU0 SDI path exists in hardware but is unused here since this is a write-only loopback test.
+
+---
+
 # Supported Combinations
 
  Parameter      | Value

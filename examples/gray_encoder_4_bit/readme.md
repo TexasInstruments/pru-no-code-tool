@@ -8,6 +8,102 @@ A 16-entry Lookup Table is pre-loaded into PRU DMEM by the R5F before the PRU st
 
 The R5F reads the result from PRU ICSSG0 Shared RAM (SMEM at `0x30010000`) and prints the binary input and its Gray code output over the UART console.
 
+---
+
+## No-Code Tool Block Design
+
+This example introduces two concepts working together: the **Lookup Table + Access Lookup Table** pair for O(1) data conversion, and the **Group block** for packaging that logic into a named callable subroutine.
+
+### The Group Block's Role
+
+All blocks in this design live inside a Group block named `gray_encoder`. A Group generates a standalone assembly subroutine — `gray_encoder_start` — rather than inline code. The PRU does not execute the group automatically; `main.asm` calls it explicitly with `CALL gray_encoder_start`, execution runs through the two blocks inside, and control returns to `main.asm` automatically (the tool appends `JMP RET_ADDR0`).
+
+This is the key difference from previous examples: the no-code blocks here define a **reusable function**, not a linear program.
+
+### Block Flow
+
+```
+main.asm:
+    CALL gray_encoder_start
+        │
+        ▼
+┌─── [Group: gray_encoder] ──────────────────────────────┐
+│                                                         │
+│   [Load Constant: binary_index]   value = 5             │
+│           │  (index)                                    │
+│           ▼                                             │
+│   [Access Lookup Table: gray_encode]                    │
+│       table: gray_encoder_lut                           │
+│       input: binary_index output (5)                    │
+│       output: Gray code at index 5 → 7 (0b0111)        │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+        │
+        ▼  (automatic return to main.asm)
+    result register holds Gray code value
+```
+
+### Block Configuration Details
+
+**Load Constant (`binary_index`)**
+- Value: 5 — the 4-bit binary input to encode (range 0–15)
+- Acts as the index into the lookup table
+- Rename from the default `Load_Constant_0` to `binary_index` — makes the data flow self-documenting
+
+**Access Lookup Table (`gray_encode`)**
+- Table: `gray_encoder_lut`
+- input1: `binary_index` output (value 5)
+- Performs a 5-cycle table lookup (LDI32 base address + LBBO byte read)
+- Output: the Gray code byte at index 5 → **7** (0x07, binary `0111`)
+
+**Lookup Table (`gray_encoder_lut`)**
+- Init pattern: manual
+- 16 entries covering all 4-bit inputs (0–15):
+
+```
+Binary │  0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
+Gray   │  0   1   3   2   6   7   5   4  12  13  15  14  10  11   9   8
+```
+
+This is the standard binary-to-Gray conversion (`Gray = N XOR (N >> 1)`). The table is pre-loaded into PRU DMEM by the R5F before the PRU starts.
+
+**Group (`gray_encoder`)**
+- `$name`: `gray_encoder` (SysConfig instance ID)
+- `groupName`: `gray_encoder` (generates assembly label `gray_encoder_start`)
+- Contains: `binary_index`, `gray_encode`
+- No Flow Control block needed — the tool automatically appends the return instruction
+- Has no prev/next ports; called exclusively via `CALL` from `main.asm`
+
+### Generated Assembly Structure
+
+```asm
+; sysconfig_generated_start section is empty (no ungrouped blocks)
+
+; Group subroutine — only executes when called
+gray_encoder_start:
+    LDI    Rx.b0, 5                     ; binary_index = 5
+    LDI32  Ry, <gray_encoder_lut_addr>  ; load LUT base address
+    LBBO   &Rx.b0, Ry, Rx.b0, 1        ; Rx.b0 = lut[5] = 7
+    JMP    RET_ADDR0                    ; return to caller
+```
+
+### main.asm Integration
+
+```asm
+    .include "pru_syscfg.inc"       ; required — defines CALL macro and RET_ADDR0
+    .ref    sysconfig_generated_start
+    .ref    gray_encoder_start      ; reference the group's generated label
+
+main:
+    zero    &r0, 120
+    CALL    gray_encoder_start      ; execute the encoder, result in output register
+    ; result (Gray code = 7) now available in register
+    ; main.asm stores it to SMEM for R5F to read
+    HALT
+```
+
+---
+
 # Supported Combinations
 
  Parameter      | Value

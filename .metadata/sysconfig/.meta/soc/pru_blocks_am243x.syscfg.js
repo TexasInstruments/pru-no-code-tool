@@ -24,6 +24,7 @@ const topModules_pru = [
                     "/pru_blocks/utils/label",
                     "/pru_blocks/utils/look_up_table",
                     "/pru_blocks/utils/access_look_up_table",
+                    "/pru_blocks/utils/data_splitter",
                 ],
                 categories: [
                     {
@@ -68,8 +69,9 @@ const topModules_pru = [
                     {
                         displayName: "SERIAL PROTOCOL EMULATION",
                         modules: [
-                            "/pru_blocks/pru_io_blocks/uart_tx",
-                            "/pru_blocks/pru_io_blocks/uart_rx",
+                            "/pru_blocks/pru_io_blocks/uart_rx_op",
+                            "/pru_blocks/pru_io_blocks/uart_tx_op",
+                            "/pru_blocks/pru_io_blocks/uart_config",
                             "/pru_blocks/pru_io_blocks/pru_spi_write",
                             "/pru_blocks/pru_io_blocks/pru_spi_read",
                             "/pru_blocks/pru_io_blocks/pru_spi_transfer",

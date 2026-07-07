@@ -549,10 +549,16 @@ function pushInstruction(instance, parentInstance) {
             maxBytesUsed = noOfBytesUsedByInput > maxBytesUsed ? noOfBytesUsedByInput : maxBytesUsed;
             
             // Get register notation for this input's output
-            inputValues = inputValues + getPruRegister(
-                moduleInstanceRegisterMap[inputInstanceName].byteOffsetOfOutput1,
-                moduleInstanceRegisterMap[inputInstanceName].numOfBytesReqByOutput1
-            ) + " , ";
+            const _srcByteOffset = moduleInstanceRegisterMap[inputInstanceName].byteOffsetOfOutput1;
+            const _srcNumBytes   = moduleInstanceRegisterMap[inputInstanceName].numOfBytesReqByOutput1;
+            if (_srcNumBytes > 4) {
+                // 64-bit source: emit two consecutive registers (lo, hi)
+                const _loReg = getPruRegister(_srcByteOffset, 4);
+                const _hiReg = getPruRegister(_srcByteOffset + 4, 4);
+                inputValues = inputValues + _loReg + " , " + _hiReg + " , ";
+            } else {
+                inputValues = inputValues + getPruRegister(_srcByteOffset, _srcNumBytes) + " , ";
+            }
         }
     }
 
@@ -728,7 +734,15 @@ function pushInstruction(instance, parentInstance) {
             moduleInstanceRegisterMap[instanceName].numOfBytesReqByOutput1 = maxBytesUsed;
             
             // Get output register notation
-            const outputRegister = getPruRegister(byteOffset, maxBytesUsed);
+            // For 64-bit outputs (>4 bytes), emit two consecutive registers (lo, hi)
+            let outputRegister;
+            if (maxBytesUsed > 4) {
+                const _outLoReg = getPruRegister(byteOffset, 4);
+                const _outHiReg = getPruRegister(byteOffset + 4, 4);
+                outputRegister = `${_outLoReg}, ${_outHiReg}`;
+            } else {
+                outputRegister = getPruRegister(byteOffset, maxBytesUsed);
+            }
 
             // Clean up input values string (remove trailing comma and space)
             if (inputValues.endsWith(" , ")) {

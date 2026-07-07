@@ -1,54 +1,32 @@
 ---
 
-## UART RX Block (Hardware-Accelerated via ENDAT)
+## UART RX Op Block
 
 ### Purpose
 
-Configures the PRU-ICSS ENDAT peripheral hardware for UART reception and receives one complete UART frame. The block handles peripheral initialization, start-bit detection, oversampled bit collection, frame extraction, and outputs the received data.
+Receives one UART frame using the ENDAT peripheral. Handles only the per-reception work: assert rx_en, poll and accumulate all frame bits, extract data, de-assert rx_en. **The `UART Config` block (with RX Config enabled) must appear earlier in the control flow** to set up the peripheral registers before this block is called.
 
 ### Features
 
 - Hardware-accelerated reception using the ICSSG ENDAT peripheral
-- Up to 12 Mbaud at 192 MHz clock with 8x oversample
 - Three independent channels (CH0, CH1, CH2)
-- Configurable oversampling (1x, 2x, 4x, 8x)
-- LSB-first or MSB-first bit order
-- Configurable start bit polarity
-- Frame sizes 3–32 bits (1–30 data bits)
+- Supports frame sizes 3–64 bits (1–62 data bits)
+- LSB-first or MSB-first bit order (from UART Config block)
+- Configurable oversampling (1x, 2x, 4x, 8x) (from UART Config block)
+- No peripheral register writes — fast, suitable for repeated calls in a loop
+- 32-bit output for ≤30 data bits; 64-bit output for 31–62 data bits (extended mode)
+
+### Prerequisites
+
+A `UART Config` block with **RX Config enabled** must be placed earlier in the control flow. All RX parameters (channel, baud rate, oversample size, bit order, start bit polarity) are read automatically from that block.
 
 ### Configuration
 
-| Parameter | Description | Options / Range |
-|-----------|-------------|-----------------|
-| PRU Selection | PRU core (auto-detected, read-only) | PRU0, PRU1 |
-| Channel Selection | ENDAT channel | CH0, CH1, CH2 |
-| Clock Source | RX oversample clock source | 192 MHz (UART_CLK), 200 MHz (CORE_CLK) |
-| Baud Rate (MHz) | Desired baud rate | Must divide evenly into (clock / oversample) |
-| Oversample Size | Samples per bit | 1x, 2x, 4x, 8x |
-| Start Bit Polarity | Edge that triggers frame start | Falling Edge (0), Rising Edge (1) |
-| Frame Size (bits) | Total bits including start + stop | 3–32 |
-| Bit Swap (LSB First) | Bit order | true (LSB first), false (MSB first) |
+| Parameter | Description | Range |
+|-----------|-------------|-------|
+| RX Frame Size (bits) | Total bits per frame = data bits + 2 (start + stop) | 3–64 |
 
-### Clock Divider Calculation
-
-```
-clockDivider = (clockSource / (baudRate × oversample)) - 1
-```
-
-Example: 192 MHz clock, 12 MHz baud, 8x oversample → divider = (192 / 96) - 1 = 1
-
-### Valid Baud Rates (for 192 MHz, 8x oversample)
-
-| Baud Rate | Clock Divider |
-|-----------|---------------|
-| 24 MHz | 0 |
-| 12 MHz | 1 |
-| 8 MHz | 2 |
-| 6 MHz | 3 |
-| 4 MHz | 5 |
-| 3 MHz | 7 |
-| 2 MHz | 11 |
-| 1 MHz | 23 |
+All other parameters are inherited from the paired `UART Config` block.
 
 ### Frame Size
 
@@ -56,29 +34,35 @@ Example: 192 MHz clock, 12 MHz baud, 8x oversample → divider = (192 / 96) - 1 
 frameSize = dataBits + 2   (1 start bit + N data bits + 1 stop bit)
 ```
 
-Standard UART 8-bit: frameSize = 10
+| Protocol | Data Bits | RX Frame Size |
+|----------|-----------|---------------|
+| Standard UART 8-bit | 8 | 10 |
+| UART 16-bit payload | 16 | 18 |
+| UART 24-bit payload | 24 | 26 |
+| UART 30-bit payload | 30 | 32 |
+| UART 31-bit payload (extended) | 31 | 33 |
 
-### How It Works
+### Generated Sequence
 
-1. **Global Reinit** (R31 bit 19) — assert reinit first to clear TX/RX state machines
-2. **Delay** — 20 NOP cycles to let reinit settle
-3. **De-assert rx_en** — clear R30[26:24] after reinit has settled (TRM sequence)
-4. **Configure GPCFG** — set peripheral interface mode for the selected PRU
-5. **Configure RXCFG** — set clock divider, clock source, oversample size, start bit polarity
-6. **Configure CHx_CFG0** — set frame size and bit order
-7. **Assert rx_en** — enable the selected channel (R30 bit 24/25/26)
-8. **Bit accumulation loop** — poll valid flag (R31[26:24]), read oversampled byte, extract middle sample, accumulate bits
-9. **Data extraction** — remove start and stop bits, align data to bit 0
-10. **Disable rx_en** — clear R30[26:24] after reception (TRM step 7 — resets all counters/flags)
+1. Assert rx_en for the configured channel (R30[24/25/26] for CH0/CH1/CH2)
+2. Loop frameSize times: poll valid flag (R31[24/25/26]), read middle oversample bit from R31 byte, clear flag, accumulate into output register
+3. Extract data — shift to align, remove start and stop bits, mask to data width
+4. De-assert rx_en (R30.b3 = 0x00)
 
 ### Output Port
 
-- **output1**: Received data (4 bytes for ≤30 data bits)
+| RX Frame Size | Data Bits | Output Port | Register(s) |
+|---------------|-----------|-------------|-------------|
+| 3–32 bits | 1–30 bits | 32-bit (output32) | 1 register |
+| 33–64 bits | 31–62 bits | 64-bit (output64) | 2 consecutive registers |
 
-### Oversample and Middle Bit Selection
+- **output1** (32-bit mode): received data word in a single register
+- **output1** (64-bit mode): lower 32 bits in the allocated register, upper bits in the next consecutive register
+
+### Oversample Middle Bit Selection
 
 | Oversample | Middle Sample Bit |
-|-----------|-----------------|
+|-----------|-------------------|
 | 1x | Bit 0 |
 | 2x | Bit 0 |
 | 4x | Bit 2 |
@@ -86,16 +70,15 @@ Standard UART 8-bit: frameSize = 10
 
 ### Performance
 
-- ~25–30 cycles for peripheral configuration
-- Variable reception time depending on baud rate and frame size
-- Each bit: poll valid flag + read + clear + accumulate (~5–10 cycles per bit)
-- Typical 10-bit frame: ~50–100 cycles total
+- ~10 + (frameSize × 5) cycles per reception
+- No peripheral register writes overhead — only rx_en assert/de-assert and the bit polling loop
 
 ### Important Notes
 
-- The ENDAT peripheral is half-duplex — TX and RX cannot operate concurrently on the same channel
-- Global reinit clears all pending RX data — any frame in progress is lost
-- The valid flag (R31[26/25/24]) must be cleared after each bit read to prevent overflow
-- rx_en is cleared at end of reception to reset counters cleanly for the next frame
+- **UART Config must appear before UART RX Op** in the control flow
+- **All UART RX Op instances must use the same RX Frame Size** — uart_config uses the first instance's value; mismatched instances generate incorrect assembly
+- The valid flag (R31[24/25/26]) must be cleared after each bit read to prevent overflow
+- rx_en is de-asserted at end of reception to reset counters cleanly for the next frame
+- frameSize > 32 activates extended mode — output port becomes 64-bit; downstream blocks must accept 64-bit input
 
 ---

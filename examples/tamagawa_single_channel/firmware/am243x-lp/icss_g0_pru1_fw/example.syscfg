@@ -1,0 +1,130 @@
+/**
+ * These arguments were used when this file was generated. They will be automatically applied on subsequent loads
+ * via the GUI or CLI. Run CLI with '--help' for additional information on how to override these arguments.
+ * @cliArgs --device "AM243x_ALX_beta" --part "ALX" --package "ALX" --context "icss_g0_pru1" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @v2CliArgs --device "AM2434" --package "FCCSP (ALX)" --variant "AM2434-E" --context "icss_g0_pru1" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @versions {"tool":"1.27.0+4565"}
+ */
+
+/**
+ * Import the modules used in this configuration.
+ */
+const load_constant_block    = scripting.addModule("/pru_blocks/data_handling/load_constant_block", {}, false);
+const load_constant_block1   = load_constant_block.addInstance();
+const load_constant_block3   = load_constant_block.addInstance();
+const conditional_block      = scripting.addModule("/pru_blocks/program_control/conditional_block", {}, false);
+const conditional_block1     = conditional_block.addInstance();
+const loop_block             = scripting.addModule("/pru_blocks/program_control/loop_block", {}, false);
+const loop_block1            = loop_block.addInstance();
+const uart_config            = scripting.addModule("/pru_blocks/pru_io_blocks/uart_config", {}, false);
+const uart_config1           = uart_config.addInstance();
+const uart_rx_op             = scripting.addModule("/pru_blocks/pru_io_blocks/uart_rx_op", {}, false);
+const uart_rx_op1            = uart_rx_op.addInstance();
+const uart_tx_op             = scripting.addModule("/pru_blocks/pru_io_blocks/uart_tx_op", {}, false);
+const uart_tx_op1            = uart_tx_op.addInstance();
+const delay_block            = scripting.addModule("/pru_blocks/utils/delay_block", {}, false);
+const delay_block1           = delay_block.addInstance();
+const memory_access_block    = scripting.addModule("/pru_blocks/utils/memory_access_block", {}, false);
+const memory_access_block1   = memory_access_block.addInstance();
+const memory_access_block2   = memory_access_block.addInstance();
+const memory_access_block3   = memory_access_block.addInstance();
+const memory_variable_block  = scripting.addModule("/pru_blocks/utils/memory_variable_block", {}, false);
+const memory_variable_block1 = memory_variable_block.addInstance();
+
+/**
+ * Write custom configuration values to the imported modules.
+ */
+load_constant_block1.constant1 = 1;
+load_constant_block1.$name     = "trigger_true";
+
+load_constant_block3.$name = "trigger_clear_value";
+
+conditional_block1.$name            = "If_Else_0";
+conditional_block1.conditionToCheck = "equalToInput2";
+
+loop_block1.infiniteLoop = true;
+loop_block1.$name        = "repeat_always";
+loop_block1.$size        = [1000,515];
+
+uart_rx_op1.$name       = "rx_encoder";
+uart_rx_op1.rxFrameSize = 62;
+
+uart_tx_op1.$name = "tx";
+
+uart_rx_op1.uartConfig          = uart_config1;
+uart_tx_op1.uartConfig          = uart_config1;
+uart_config1.txClockSource      = 1;
+uart_config1.txBaudRate         = 2.5;
+uart_config1.txStartBitPolarity = 0;
+uart_config1.txStopBitPolarity  = 1;
+uart_config1.rxChannel          = 0;
+uart_config1.rxClockSource      = 1;
+uart_config1.rxBaudRate         = 2.5;
+uart_config1.rxStartBitPolarity = 0;
+uart_config1.$name              = "config";
+
+delay_block1.$name = "Delay_0";
+
+memory_access_block1.$name    = "trigger";
+memory_access_block1.dataSize = 1;
+
+memory_access_block2.operationMode = "write";
+memory_access_block2.offsetValue   = 0x4;
+memory_access_block2.$name         = "write_response";
+memory_access_block2.dataSize      = 8;
+
+memory_access_block3.operationMode = "write";
+memory_access_block3.$name         = "clear_trigger";
+memory_access_block3.dataSize      = 1;
+
+const memory_access_block4   = memory_access_block.addInstance();
+memory_access_block4.$name        = "read_command";
+memory_access_block4.offsetValue  = 0x1;
+memory_access_block4.dataSize     = 1;
+
+memory_variable_block1.$name          = "Memory_Variable_0";
+memory_variable_block1.sizeInBytes    = 16;
+memory_variable_block1.memoryLocation = "smem";
+memory_access_block1.memVar           = memory_variable_block1;
+memory_access_block2.memVar           = memory_variable_block1;
+memory_access_block3.memVar           = memory_variable_block1;
+memory_access_block4.memVar           = memory_variable_block1;
+
+/**
+ * References between modules.
+ */
+loop_block1.$groupContents = [memory_access_block1, conditional_block1, load_constant_block1, uart_config1, memory_access_block4, uart_tx_op1, uart_rx_op1, memory_access_block2, memory_access_block3, load_constant_block3, delay_block1];
+
+/**
+ * Connections between modules.
+ */
+scripting.connect(load_constant_block1, "output1", conditional_block1, "input2");
+scripting.connect(memory_access_block4, "output1", uart_tx_op1, "input1");
+scripting.connect(memory_access_block4, "prev", uart_config1, "next");
+scripting.connect(memory_access_block4, "next", uart_tx_op1, "prev");
+scripting.connect(load_constant_block3, "output1", memory_access_block3, "input1");
+scripting.connect(load_constant_block3, "prev", memory_access_block2, "next");
+scripting.connect(load_constant_block3, "next", memory_access_block3, "prev");
+scripting.connect(conditional_block1, "input1", memory_access_block1, "output1");
+scripting.connect(conditional_block1, "T", uart_config1, "prev");
+scripting.connect(conditional_block1, "F", delay_block1, "prev");
+scripting.connect(uart_rx_op1, "prev", uart_tx_op1, "next");
+scripting.connect(uart_rx_op1, "next", memory_access_block2, "prev");
+scripting.connect(uart_rx_op1, "output1", memory_access_block2, "input1");
+
+/**
+ * (x,y) coordinates for modules that are displayed in a graph.
+ */
+load_constant_block1.$position   = [30,240];
+load_constant_block3.$position   = [825,190];
+memory_access_block4.$position   = [405,305];
+conditional_block1.$position     = [150,180];
+loop_block1.$position            = [-510,-40];
+uart_rx_op1.$position            = [655,320];
+uart_tx_op1.$position            = [540,310];
+uart_config1.$position           = [300,280];
+delay_block1.$position           = [385,185];
+memory_access_block1.$position   = [35,165];
+memory_access_block2.$position   = [790,355];
+memory_access_block3.$position   = [905,145];
+memory_variable_block1.$position = [-805,-60];

@@ -323,12 +323,12 @@ exports = {
     ports: (inst) => {
         let ports = [];
 
-        ports.push({ name: "input1", displayName: "index", type: "input" })
+        ports.push({ name: "input1", displayName: "index", type: "input32" })
 
         ports.push({ name: "prev", type: "PREV" })
         ports.push({ name: "next", type: "NEXT" })
 
-        ports.push({ name: "output1", displayName: "dout", type: "output" })
+        ports.push({ name: "output1", displayName: "dout", type: "output32" })
 
         return ports
     },

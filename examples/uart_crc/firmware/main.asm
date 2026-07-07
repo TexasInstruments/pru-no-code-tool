@@ -43,7 +43,7 @@ sysconfig_generated_end:
     LDI32  R2, 0x48010000
     .endif
     ; Store TX data sent at SMEM[4] using SBBO
-    SBBO   &R0.b2, R2, 4, 1     ; Store R0.b0 at [smem + 0]
+    SBBO   &R0.b1, R2, 4, 1     ; Store R0.b1 at [smem + 0]
     halt
     .elseif	$isdefed("PRU1")
     zero   &r0, 120 ; Clear the register space
