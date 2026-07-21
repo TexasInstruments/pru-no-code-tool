@@ -12,7 +12,7 @@
 # - CCS_IDE_MODE
 
 CCS_PATH=$(CCS_INSTALL_DIR)
-include $(MCU_PLUS_SDK_PATH)/imports.mak
+include $(PRU_NO_CODE_TOOL_PATH)/imports.mak
 include $(MCU_PLUS_SDK_PATH)/devconfig/devconfig.mak
 
 STRIP=$(CG_TOOL_ROOT)/bin/tiarmstrip

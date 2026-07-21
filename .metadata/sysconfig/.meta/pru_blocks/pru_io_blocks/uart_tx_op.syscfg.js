@@ -960,7 +960,7 @@ exports = {
     ports: (inst) => {
         const dataBits = inst.dataBits;
         const inputType = dataBits > 32 ? "input64" : "input32";
-        const portName = inputType === "input64" ? "in64" : "output1" 
+        const portName = inputType === "input64" ? "in64" : "input1";
         return [
             { name: "input1", type: inputType, displayName: portName },
             { name: "prev",   type: "PREV" },

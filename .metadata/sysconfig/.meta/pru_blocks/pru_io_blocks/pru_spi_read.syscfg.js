@@ -1230,8 +1230,8 @@ exports = {
 				// HIGH half overhead: SET SCLK + sub (1) + dataSetup = 2 + dataSetup
 				else if (mode === "MODE1") value = high - 2 - dataSetup;
 
-				// MODE2: DATA_SETUP_TIME is in the HIGH half (before CLR SCLK sampling edge)
-				// HIGH half overhead: sub(1) + dataSetup + DELAY_COMPEN_1 → delay_component1 = low - 1 - dataSetup (using low as HIGH pulse base)
+				// MODE2: DATA_SETUP_TIME is not in this half (accounted for in delay_component2)
+				// LOW half overhead: overhead compensation of 4 = low - 4
 				else if (mode === "MODE2") value = low - 4 ;
 
 				// MODE3: DATA_SETUP_TIME is now in the LOW half (before SET SCLK sampling edge)
@@ -1273,8 +1273,8 @@ exports = {
 				// LOW half overhead: CLR SCLK + bit handling (4) + qbne (1) = 6
 				else if (mode === "MODE1") value = low - 5;
 
-				// MODE2: DATA_SETUP_TIME is in the HIGH half (not here — DELAY_COMPEN_2 is in LOW half)
-				// LOW half overhead: read SDI(4) + SET SCLK(1) + add/sub(1) + qbne(1) = 7... using base of 3
+				// MODE2: DATA_SETUP_TIME is in the HIGH half (before CLR SCLK sampling edge)
+				// HIGH half overhead: overhead compensation of 3 + dataSetup = high - 3 - dataSetup
 				else if (mode === "MODE2") value = high - 3 - dataSetup;
 
 				// MODE3: DATA_SETUP_TIME is in the LOW half (not here)

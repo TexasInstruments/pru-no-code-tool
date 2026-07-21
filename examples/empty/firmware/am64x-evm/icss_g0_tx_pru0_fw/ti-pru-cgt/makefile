@@ -35,6 +35,7 @@ include $(PRU_NO_CODE_TOOL_PATH)/pru_rules.mak
 # Append values to INCLUDE, CFLAGS, or LFLAGS here.
 # Values can be appended like this:
 # INCLUDE += --include_path=<value>
+INCLUDE += --include_path=syscfg
 
 # Defines (pass instance specific definitions to the program)
 # see --define or -D in 'PRU Optimizing C/C++ Compiler User's Guide'
