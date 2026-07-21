@@ -47,12 +47,14 @@ Implements full-duplex SPI (Serial Peripheral Interface) in both Controller and 
 
 ### Minimum SCLK Widths (Controller, at 200 MHz PRU clock)
 
-| Mode | Min High | Min Low | Max Frequency |
-|------|----------|---------|---------------|
-| MODE0 | 4 | 6 | 20.00 MHz |
-| MODE1 | 2 | 6 | 25.00 MHz |
-| MODE2 | 6 | 4 | 20.00 MHz |
-| MODE3 | 6 | 2 | 25.00 MHz |
+| Mode | Min High | Min Low | Theoretical Max Frequency (zero delay compensation) | Practical Max Frequency |
+|------|----------|---------|---------------|---------------|
+| MODE0 | 4 | 6 | 20.00 MHz | 7.69 MHz |
+| MODE1 | 2 | 6 | 25.00 MHz | 7.69 MHz |
+| MODE2 | 6 | 4 | 20.00 MHz | 7.69 MHz |
+| MODE3 | 6 | 2 | 25.00 MHz | 7.69 MHz |
+
+**Note**: The theoretical column assumes zero delay compensation (d1=0, d2=0) and ideal peripheral response — not achievable in practice. The practical column uses d1=9, d2=7 (26 cycles/bit total) for PRU-to-PRU loopback. See "Maximum Achievable Frequency" in the block's `getAIContext()`/long description for the full breakdown.
 
 ### How It Works
 
