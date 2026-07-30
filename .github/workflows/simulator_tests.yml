@@ -1,0 +1,30 @@
+name: Simulator Tests
+
+on:
+  pull_request:
+    paths:
+      - ".metadata/sysconfig/.meta/pru_blocks/common/simulation/**"
+      - ".metadata/sysconfig/.meta/pru_blocks/common/register_allocation/**"
+      - "scripts/test_headless_sim.js"
+      - ".github/workflows/simulator_tests.yml"
+  push:
+    branches: [main, master]
+    paths:
+      - ".metadata/sysconfig/.meta/pru_blocks/common/simulation/**"
+      - ".metadata/sysconfig/.meta/pru_blocks/common/register_allocation/**"
+      - "scripts/test_headless_sim.js"
+      - ".github/workflows/simulator_tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  headless:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/test_headless_sim.js
