@@ -23,6 +23,8 @@ let cycleBudgetMap = new Map();
 let groupMetadata;
 let loopCounterRegisters = {};  // Track loop counters: {instanceName: {byteOffset, numBytes}}
 let groupReturnAddrByteOffset = -1;  // Single allocated return address register for all group blocks
+let pushInstructionDepth = 0;
+let pendingConditionalMergeLabels = [];
 
 /**
  * Returns PRU registers allocation summary
@@ -463,6 +465,23 @@ function collectInputPredecessors(instance) {
  * @returns {number|string} Number of bytes allocated to output port 1 if available, label for conditional blocks, or -1 if allocation failed
  */
 function pushInstruction(instance, parentInstance) {
+    pushInstructionDepth++;
+    try {
+        return pushInstructionImpl(instance, parentInstance);
+    } finally {
+        pushInstructionDepth--;
+        if (pushInstructionDepth === 0) {
+            for (const pending of pendingConditionalMergeLabels) {
+                addToPruRegisterAllocationSummary(
+                    pending.label, "0", pending.instance, pending.instance.$name, 0
+                );
+            }
+            pendingConditionalMergeLabels = [];
+        }
+    }
+}
+
+function pushInstructionImpl(instance, parentInstance) {
     // Early return if instance is null
     if (instance === null) {
         return;
@@ -496,6 +515,17 @@ function pushInstruction(instance, parentInstance) {
         // label line now — before any input processing — so that all inputs
         // for this branch are emitted AFTER the label, not before it.
         if (typeof label === "string" && label !== "") {
+            const conditionalState = moduleInstanceRegisterMap[prevPortInstanceName];
+            if (conditionalState?.mergeLabel && !conditionalState.mergeScheduled) {
+                addToPruRegisterAllocationSummary(
+                    "", `QBA ${conditionalState.mergeLabel}`, instance, instanceName, 1
+                );
+                pendingConditionalMergeLabels.push({
+                    label: conditionalState.mergeLabel,
+                    instance: instance["prev"][0]["inst"]
+                });
+                conditionalState.mergeScheduled = true;
+            }
             addToPruRegisterAllocationSummary(label, "0", instance, instanceName, 0);
             label = 0;
         }
@@ -793,6 +823,8 @@ function allocatePruRegisters() {
     pruByteArray = new Array(totalBytes).fill(0);
     loopCounterRegisters = {};  // Reset loop counter tracking
     groupReturnAddrByteOffset = -1;  // Reset group return address register
+    pushInstructionDepth = 0;
+    pendingConditionalMergeLabels = [];
     let loopBlockInstanceNames = [];
     let groupBlockInstanceNames = [];
     groupMetadata = [];
@@ -843,6 +875,8 @@ function allocatePruRegisters() {
                 moduleInstanceRegisterMap[instanceName] = {
                     "conditionCalculated": 0,
                     "label": instanceName,
+                    "mergeLabel": `${instanceName}_END`,
+                    "mergeScheduled": false,
                     "numOfBytesReqByOutput1": 0,
                     "peakCycles": 0,
                     "moduleName": moduleName,

@@ -99,7 +99,7 @@ scripting.connect(prev_block, "next", if_else1, "prev");
 
 5. **Port Names**: True path uses "T" port, False path uses "F" port (displayed as t_next/f_next).
 
-6. **Terminate Each Branch with a Flow Control Block**: The code generator places the FALSE path immediately after the branch instruction, with the TRUE path at the branch target label. If the FALSE path has no explicit terminator, execution falls through into the TRUE path — causing both branches to execute regardless of the condition. Always end each branch (T and F) with a Flow Control block (HALT or END) to prevent this fall-through.
+6. **Exclusive Branches**: The code generator inserts a merge jump between the fall-through and target branches, so exactly one connected branch executes. Flow Control blocks are only needed when a branch should halt or end the program.
 `;
 }
 
@@ -170,7 +170,7 @@ Implements conditional logic (IF/ELSE statements) to control program flow based 
 - The conditional check happens instantly (1 cycle)
 - Code on both branches is generated, only one path executes at runtime
 - This block does not produce an output value - it only controls flow
-- **Always terminate each branch (T and F) with a Flow Control block**: The FALSE path falls through to the TRUE path in the generated assembly unless explicitly stopped. Without a terminator on the FALSE branch, both branches execute sequentially regardless of the condition result.
+- The generator emits an unconditional jump to a merge label after the fall-through branch, preventing execution from continuing into the other branch.
 
 ### Terminology
 - **Conditional branching**: Changing program flow based on a condition
