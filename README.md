@@ -159,9 +159,9 @@ Blocks for GPIO, SPI, UART, and memory operations.
 |-------|---------|--------|---------------------------|
 | PRU GPI | Read GPIO input pins (R31) | 1 | N/A |
 | PRU GPO | Write GPIO output pins (R30) | 1 | N/A |
-| SPI Read | Read data via SPI | Variable | Up to 28.57 MHz |
-| SPI Write | Write data via SPI | Variable | Up to 28.57 MHz |
-| SPI Transfer | Full-duplex SPI | Variable | Up to 25.00 MHz |
+| SPI Read | Read data via SPI | Variable | Up to 8.33 MHz |
+| SPI Write | Write data via SPI | Variable | Up to 25.00 MHz |
+| SPI Transfer | Full-duplex SPI | Variable | Up to 7.69 MHz |
 | UART config | configure 3 channel interface for UART transmission | Variable | N/A |
 | UART TX op | Transmit UART frame (up to 62 data bits) | Variable | Up to 32 Mbaud |
 | UART RX op | Receive UART frame (up to 64 bits) | Variable | Up to 32 Mbaud |
