@@ -484,6 +484,7 @@ function pushInstruction(instance, parentInstance) {
     if (moduleInstanceRegisterMap[instanceName]?.conditionCalculated === 1) {
         return moduleInstanceRegisterMap[instanceName].label;
     }
+
     // Process prev port if it exists and is connected
     let label;
     if (instance?.["prev"] && instance?.["prev"][0]?.["inst"]) {
@@ -619,6 +620,10 @@ function pushInstruction(instance, parentInstance) {
                 };
                 instruction = `LDI ${getPruRegister(byteOffset, instance.loopCountRegSize)}, ${instance.loopCount}`;
                 addToPruRegisterAllocationSummary(label, instruction, instance, instanceName, 0);
+                //push <LoopName>_start label between LDI and LOOP so a Flow Control
+                //jump back here resumes with the current counter value instead of
+                //resetting it (jumping to before the LDI would reset the count)
+                addToPruRegisterAllocationSummary(`${instanceName}_start`, "0", instance, instanceName, 0);
                 //push loop instruction
                 instruction = `LOOP endloop_${moduleInstanceRegisterMap[instanceName].instanceNum}, ${getPruRegister(byteOffset, instance.loopCountRegSize)}`;
                 label = 0;
@@ -770,8 +775,40 @@ function pushInstruction(instance, parentInstance) {
     {
         moduleInstanceRegisterMap[instanceName]["peakCycles"] += cycleBudgetMap[instanceName];
     }
+    // Emit a universal <InstanceName>_start label immediately before this
+    // block's own instruction, as its addressable entry point for Flow
+    // Control jumps. Placed here (not at function entry) so it lands right
+    // above this instruction rather than above the whole prev-chain that
+    // was just recursively processed. Loop and group blocks are excluded —
+    // they emit their own specific start labels elsewhere (loop: between
+    // LDI and LOOP / startloop_N; group: <groupName>_start).
+    if (!instance.$groupContents) {
+        addToPruRegisterAllocationSummary(`${instanceName}_start`, "0", instance, instanceName, 0);
+    }
     addToPruRegisterAllocationSummary(label, instruction, instance, instanceName, moduleInstanceRegisterMap[instanceName]["peakCycles"]);
-    
+
+    // Emit a universal <InstanceName>_end label immediately after this
+    // block's own instruction, as an addressable "done with this block"
+    // target for Flow Control jumps (e.g. bailing out of a loop from
+    // inside a nested branch). Excluded for conditional (If/Else) blocks —
+    // a conditional has two forward addresses (_TRUE/_FALSE), not one, so
+    // a single _end here would be meaningless.
+    if (!instance.$groupContents && !(instance.T && instance.F)) {
+        addToPruRegisterAllocationSummary(`${instanceName}_end`, "0", instance, instanceName, 0);
+    }
+
+    // Loop blocks get their own <LoopName>_end at the loop's actual exit
+    // point — right after endloop_N (finite loops) or right after the
+    // infinite QBA back-edge (infinite loops, i.e. the plain fallthrough
+    // point past the whole loop subtree). This is a NEW, exposed label
+    // distinct from the internal endloop_N/startloop_N hardware labels,
+    // so it can be selected in Flow Control's dropdown as an early-exit
+    // target (e.g. jump here from inside the loop body to bail out before
+    // the counter/condition naturally ends the loop).
+    if (instance.$groupContents && 'infiniteLoop' in instance) {
+        addToPruRegisterAllocationSummary(`${instanceName}_end`, "0", instance, instanceName, 0);
+    }
+
     return maxBytesUsed;
 }
 

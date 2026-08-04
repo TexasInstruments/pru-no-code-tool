@@ -113,5 +113,6 @@ Example: 100 iterations, body = 11 cycles → 3 + (100 × 11) = 1103 cycles = 5.
 - Infinite loops **never exit** — the `next` port is hidden and no code after the loop is reachable
 - Loop counter occupies a register during loop execution
 - Pre-init blocks are still visually inside the container but their instructions are hoisted out
+- A **Flow Control** block elsewhere in the design can jump directly to this loop's generated label (`endloop_label` for a fixed loop, `startloop_label` for an infinite loop) by selecting this Loop block as its "Loop Block" target — see [flow_control_block.md](flow_control_block.md)
 
 ---
