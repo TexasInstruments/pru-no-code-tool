@@ -1,0 +1,85 @@
+/**
+ * These arguments were used when this file was generated. They will be automatically applied on subsequent loads
+ * via the GUI or CLI. Run CLI with '--help' for additional information on how to override these arguments.
+ * @cliArgs --device "AM261x_ZFG" --part "AM2612" --package "ZFG" --context "icss_m1_pru1" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @v2CliArgs --device "AM2612" --package "NFBGA (ZFG)" --variant "500MHz" --context "icss_m1_pru1" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @versions {"tool":"1.27.0+4565"}
+ */
+
+/**
+ * Import the modules used in this configuration.
+ */
+const loop_block     = scripting.addModule("/pru_blocks/program_control/loop_block", {}, false);
+const loop_block1    = loop_block.addInstance();
+const pru_gpo_block  = scripting.addModule("/pru_blocks/pru_io_blocks/pru_gpo_block", {}, false);
+const pru_gpo_block1 = pru_gpo_block.addInstance();
+const pru_gpo_block2 = pru_gpo_block.addInstance();
+const pru_gpo_block3 = pru_gpo_block.addInstance();
+const pru_gpo_block4 = pru_gpo_block.addInstance();
+const delay_block    = scripting.addModule("/pru_blocks/utils/delay_block", {}, false);
+const delay_block1   = delay_block.addInstance();
+const delay_block2   = delay_block.addInstance();
+const delay_block3   = delay_block.addInstance();
+const delay_block4   = delay_block.addInstance();
+
+/**
+ * Write custom configuration values to the imported modules.
+ */
+loop_block1.$name        = "Loop_0";
+loop_block1.infiniteLoop = true;
+loop_block1.$size        = [1105,415];
+
+pru_gpo_block1.$name     = "PRU1_GPO_INSTANCE_0";
+pru_gpo_block1.constant1 = "R30, 4";
+
+pru_gpo_block2.$name     = "PRU1_GPO_INSTANCE_1";
+pru_gpo_block2.constant1 = "R30, 4";
+pru_gpo_block2.opCode    = "CLR";
+
+pru_gpo_block3.$name     = "PRU1_GPO_INSTANCE_2";
+pru_gpo_block3.constant1 = "R30, 4";
+
+pru_gpo_block4.$name     = "PRU1_GPO_INSTANCE_3";
+pru_gpo_block4.opCode    = "CLR";
+pru_gpo_block4.constant1 = "R30, 4";
+
+delay_block1.$name      = "Delay_0";
+delay_block1.delayCount = 40;
+
+delay_block2.$name      = "Delay_1";
+delay_block2.delayCount = 20;
+
+delay_block3.$name      = "Delay_2";
+delay_block3.delayCount = 40;
+
+delay_block4.$name      = "Delay_3";
+delay_block4.delayCount = 20;
+
+/**
+ * References between modules.
+ */
+loop_block1.$groupContents = [pru_gpo_block1, delay_block1, pru_gpo_block2, delay_block2, pru_gpo_block3, delay_block3, pru_gpo_block4, delay_block4];
+
+/**
+ * Connections between modules.
+ */
+scripting.connect(pru_gpo_block1, "next", delay_block1, "prev");
+scripting.connect(pru_gpo_block2, "prev", delay_block1, "next");
+scripting.connect(pru_gpo_block2, "next", delay_block2, "prev");
+scripting.connect(pru_gpo_block3, "prev", delay_block2, "next");
+scripting.connect(pru_gpo_block3, "next", delay_block3, "prev");
+scripting.connect(pru_gpo_block4, "prev", delay_block3, "next");
+scripting.connect(pru_gpo_block4, "next", delay_block4, "prev");
+
+/**
+ * (x,y) coordinates for modules that are displayed in a graph.
+ */
+loop_block1.$position    = [0,0];
+pru_gpo_block1.$position = [140,180];
+pru_gpo_block2.$position = [370,180];
+pru_gpo_block3.$position = [575,180];
+pru_gpo_block4.$position = [810,185];
+delay_block1.$position   = [250,165];
+delay_block2.$position   = [465,165];
+delay_block3.$position   = [695,170];
+delay_block4.$position   = [935,180];

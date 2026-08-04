@@ -26,7 +26,7 @@ load_constant_block1.$name     = "Load_Constant_0";
 load_constant_block1.constant1 = 2882382797;
 
 flow_control_block1.$name  = "Flow_Control_0";
-flow_control_block1.opCode = "HALT";
+
 
 pru_spi_write1.$name                                    = "PRU_SPI_Write_0";
 pru_spi_write1.packetSize                               = 32;

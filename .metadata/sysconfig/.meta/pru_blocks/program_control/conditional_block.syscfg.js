@@ -1,11 +1,84 @@
+const FLOW_CONTROL_MODULE = "/pru_blocks/program_control/flow_control_block";
+const CONDITIONAL_MODULE = "/pru_blocks/program_control/conditional_block";
+
+/**
+ * Walks forward from a T/F branch head via BOTH "next" (control flow) and
+ * "output1" (data flow fanout) connections — matching the reachability
+ * model already used elsewhere for branch chains (collectBranchChain in
+ * pru_register_allocator.js) and cycle detection (detectControlFlowCycle
+ * in pru_blocks_static_module.syscfg.js). A branch head with no outgoing
+ * "next" of its own can still be "handled" if a data consumer of its
+ * output eventually reaches a Flow Control block via ITS OWN "next" chain
+ * (e.g. Memory_Access -> Arithmetic.input1 (data) -> Arithmetic.next ->
+ * Flow Control). Only a genuine dead end (no next, no output1 consumers,
+ * and not a Flow Control block itself) on every reachable path is an error.
+ * If the chain reaches a nested conditional block, both of ITS T and F
+ * branches must recursively terminate the same way.
+ * Returns an error message, or null if the branch terminates correctly.
+ */
+function branchTerminates(headInst, ownerName, branchLabel) {
+	const visited = new Set();
+
+	function walk(current) {
+		if (!current || !current.$name || visited.has(current.$name)) {
+			return true; // Already visited (or a cycle, reported separately) — treat as handled
+		}
+		visited.add(current.$name);
+
+		// $module is a live object reference on the instance; round-trip
+		// through JSON to get the plain module path string for comparison
+		// (matches the pattern used elsewhere in this codebase, e.g.
+		// crc_block.syscfg.js).
+		const currentModulePath = JSON.parse(JSON.stringify(current)).$module;
+
+		if (currentModulePath === FLOW_CONTROL_MODULE) {
+			return true; // This path terminates correctly
+		}
+
+		if (currentModulePath === CONDITIONAL_MODULE) {
+			const trueHead = current.T?.[0]?.inst;
+			const falseHead = current.F?.[0]?.inst;
+			if (!trueHead || !falseHead) {
+				// Nested conditional with an unconnected branch is caught by
+				// its own validate() call; don't double-report here.
+				return true;
+			}
+			// Both of the nested conditional's own branches must terminate.
+			return walk(trueHead) && walk(falseHead);
+		}
+
+		const nextInst = current.next?.[0]?.inst;
+		const outputConsumers = current.output1 ? current.output1.map(c => c?.inst).filter(Boolean) : [];
+
+		if (!nextInst && outputConsumers.length === 0) {
+			return false; // Genuine dead end, never reached a Flow Control block
+		}
+
+		let handled = false;
+		if (nextInst) {
+			handled = walk(nextInst) || handled;
+		}
+		for (const consumer of outputConsumers) {
+			handled = walk(consumer) || handled;
+		}
+		return handled;
+	}
+
+	const terminatesOk = walk(headInst);
+	if (terminatesOk) {
+		return null;
+	}
+	return `${ownerName}'s ${branchLabel} branch does not reach a Flow Control block on any path. Without one, execution falls through into the other branch. Add a Flow Control block at the end of this branch (directly, or via a data-consuming block's own control-flow chain).`;
+}
+
 function validate(inst, report) {
 	for(let iterator = 1; iterator <= inst["numOfInputPorts"]; iterator++)
 	{
 		if(inst["input"+iterator.toString()].length == 0)
 		{
-			report.logWarning("input"+iterator.toString()+" port not connected to output port",inst)	
+			report.logWarning("input"+iterator.toString()+" port not connected to output port",inst)
 		}
-	}	
+	}
 	//verifying if true port is connected true/false port(conditional input) are not
 	if((inst["T"].length == 0))
 	{
@@ -15,6 +88,23 @@ function validate(inst, report) {
 	if((inst["F"].length == 0))
 	{
 		report.logWarning("f_next port is not connected",inst);
+	}
+
+	// Any branch that IS connected must terminate in a Flow Control block,
+	// otherwise it falls through into the other branch's code.
+	const trueHead = inst.T?.[0]?.inst;
+	if (trueHead) {
+		const err = branchTerminates(trueHead, inst.$name, "T");
+		if (err) {
+			report.logError(err, inst, "T");
+		}
+	}
+	const falseHead = inst.F?.[0]?.inst;
+	if (falseHead) {
+		const err = branchTerminates(falseHead, inst.$name, "F");
+		if (err) {
+			report.logError(err, inst, "F");
+		}
 	}
 }
 
@@ -85,7 +175,39 @@ scripting.connect(if_else1, "F", false_path_block, "prev");
 
 // Connect control flow input
 scripting.connect(prev_block, "next", if_else1, "prev");
+
+// REQUIRED: both true_path_block's and false_path_block's chains must each
+// end in a Flow Control block, or validation fails. Example (standalone
+// If/Else, NOT inside a Loop block):
+const flow_control_block = scripting.addModule("/pru_blocks/program_control/flow_control_block", {}, false);
+const flow_true = flow_control_block.addInstance();
+flow_true.$name = "Flow_Control_True_End";
+flow_true.jumpTarget = "JMP"; // or "HALT", or any real "<blockName>_start"/"_end" target to jump elsewhere
+scripting.connect(true_path_block, "next", flow_true, "prev");
+
+const flow_false = flow_control_block.addInstance();
+flow_false.$name = "Flow_Control_False_End";
+flow_false.jumpTarget = "JMP";
+scripting.connect(false_path_block, "next", flow_false, "prev");
 \\\`\\\`\\\`
+
+**If the If/Else block is inside a Loop block's \\\`$groupContents\\\`**, "JMP"/"HALT" would exit the loop
+entirely (or halt the PRU) instead of continuing the loop — jump to the loop's own \\\`_start\\\`
+target instead so the loop keeps iterating:
+\\\`\\\`\\\`javascript
+// if_else1 is one of the instances inside loop_block1.$groupContents
+const flow_true = flow_control_block.addInstance();
+flow_true.$name = "Flow_Control_True_End";
+flow_true.jumpTarget = "Loop_0_start"; // matches loop_block1.$name + "_start" — continues the loop
+scripting.connect(true_path_block, "next", flow_true, "prev");
+
+const flow_false = flow_control_block.addInstance();
+flow_false.$name = "Flow_Control_False_End";
+flow_false.jumpTarget = "Loop_0_start";
+scripting.connect(false_path_block, "next", flow_false, "prev");
+\\\`\\\`\\\`
+Jumping to the loop's \\\`_start\\\` (not the loop's \\\`_end\\\`) is what resumes normal looping — \\\`_end\\\`
+is the dedicated early-exit/break target, for when you want to abandon the loop instead of continuing it.
 
 ### Important Notes
 
@@ -99,7 +221,11 @@ scripting.connect(prev_block, "next", if_else1, "prev");
 
 5. **Port Names**: True path uses "T" port, False path uses "F" port (displayed as t_next/f_next).
 
-6. **Terminate Each Branch with a Flow Control Block**: The code generator places the FALSE path immediately after the branch instruction, with the TRUE path at the branch target label. If the FALSE path has no explicit terminator, execution falls through into the TRUE path — causing both branches to execute regardless of the condition. Always end each branch (T and F) with a Flow Control block (HALT or END) to prevent this fall-through.
+6. **Every Connected Branch MUST Terminate in a Flow Control Block**: The code generator places the FALSE path immediately after the branch instruction, with the TRUE path at the branch target label. If a connected branch (T or F) has no explicit terminator, execution falls through into the other branch — causing both to execute regardless of the condition. This is now enforced by SysConfig validation (an error, not a warning) — any connected T or F branch that doesn't end in a Flow Control block will fail validation. A branch left entirely unconnected is still fine (nothing happens on that path).
+
+7. **Where the Flow Control Block Should Jump To Depends On Context**:
+   - **Standalone If/Else** (not inside a Loop block): jump to \\\`JMP\\\` (SysConfig Generated End), \\\`HALT\\\`, or any other block's \\\`_start\\\`/\\\`_end\\\` target.
+   - **If/Else nested inside a Loop block**: jump to that Loop's own \\\`<LoopName>_start\\\` target, so execution resumes the loop instead of exiting it. Using \\\`JMP\\\`/\\\`HALT\\\` here ends the whole program early instead of continuing the loop — only do that if that's actually the intent (e.g. an early-exit condition that should stop everything, not just this iteration). To break out of the loop early without ending the whole program, jump to the Loop's \\\`<LoopName>_end\\\` target instead.
 `;
 }
 
@@ -132,12 +258,14 @@ Implements conditional logic (IF/ELSE statements) to control program flow based 
 
 **Generated Assembly**:
 - ; Example: Greater Than Input2 (QBGT)
-- QBGT TRUE_LABEL, input1_reg, input2_reg   ; Branch if input1 > input2 (1 cycle)
+- FalseBranchHead_start:
+- QBGT If_Else_0_TRUE, input1_reg, input2_reg   ; Branch if input1 > input2 (1 cycle)
 - ; FALSE path code here
-- QBA  END_LABEL                             ; Jump to end
-- TRUE_LABEL:
+- ; FALSE branch MUST end in a Flow Control block (e.g. JMP sysconfig_generated_end)
+- If_Else_0_TRUE:
+- TrueBranchHead_start:
 - ; TRUE path code here
-- END_LABEL:
+- ; TRUE branch MUST end in a Flow Control block
 
 **PRU Branch Instructions**:
 - **QBGT**: Quick Branch if Greater Than (unsigned comparison)
@@ -170,7 +298,11 @@ Implements conditional logic (IF/ELSE statements) to control program flow based 
 - The conditional check happens instantly (1 cycle)
 - Code on both branches is generated, only one path executes at runtime
 - This block does not produce an output value - it only controls flow
-- **Always terminate each branch (T and F) with a Flow Control block**: The FALSE path falls through to the TRUE path in the generated assembly unless explicitly stopped. Without a terminator on the FALSE branch, both branches execute sequentially regardless of the condition result.
+- **Any connected branch (T or F) MUST terminate in a Flow Control block**: The FALSE path falls through to the TRUE path in the generated assembly unless explicitly stopped, and vice versa. SysConfig validation now enforces this as an error — connect a Flow Control block at the end of every connected branch. Leaving a branch entirely unconnected is fine; only connected-but-unterminated branches are rejected.
+- **What that Flow Control block should jump to depends on where the If/Else block lives**:
+  - **Standalone If/Else** (not inside a Loop block): jump to Sysconfig Generated End, Halt, or any other block's \`_start\`/\`_end\` target.
+  - **If/Else nested inside a Loop block**: jump to that Loop's \`<LoopName>_start\` target so execution resumes the loop instead of exiting the whole program. Jumping to Sysconfig Generated End or Halt from inside a loop's branch ends the entire program early rather than just this iteration — only intentional if that's really the goal. To break out of the loop early (without ending the whole program), jump to the Loop's \`<LoopName>_end\` target instead.
+- Every block, including this one and every block on either branch, has an addressable \`<blockName>_start\` entry point that a Flow Control block elsewhere in the design can jump to (e.g. to re-run this comparison, or to re-enter a Loop block from inside a branch).
 
 ### Terminology
 - **Conditional branching**: Changing program flow based on a condition
