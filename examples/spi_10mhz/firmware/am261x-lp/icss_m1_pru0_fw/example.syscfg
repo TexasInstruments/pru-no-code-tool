@@ -1,0 +1,50 @@
+/**
+ * These arguments were used when this file was generated. They will be automatically applied on subsequent loads
+ * via the GUI or CLI. Run CLI with '--help' for additional information on how to override these arguments.
+ * @cliArgs --device "AM261x_ZFG" --part "AM2612" --package "ZFG" --context "icss_m1_pru0" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @v2CliArgs --device "AM2612" --package "NFBGA (ZFG)" --variant "500MHz" --context "icss_m1_pru0" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @versions {"tool":"1.27.0+4565"}
+ */
+
+/**
+ * Import the modules used in this configuration.
+ */
+const pru_blocks_static_module = scripting.addModule("/pru_blocks/common/pru_blocks_static_module");
+const load_constant_block      = scripting.addModule("/pru_blocks/data_handling/load_constant_block", {}, false);
+const load_constant_block1     = load_constant_block.addInstance();
+const flow_control_block       = scripting.addModule("/pru_blocks/program_control/flow_control_block", {}, false);
+const flow_control_block1      = flow_control_block.addInstance();
+const pru_spi_transfer         = scripting.addModule("/pru_blocks/pru_io_blocks/pru_spi_transfer", {}, false);
+const pru_spi_transfer1        = pru_spi_transfer.addInstance();
+
+/**
+ * Write custom configuration values to the imported modules.
+ */
+load_constant_block1.$name     = "Load_Constant_0";
+load_constant_block1.constant1 = 2882400171;
+
+flow_control_block1.$name = "Flow_Control_0";
+
+pru_spi_transfer1.$name                                    = "PRU0_SPI_Transfer_0";
+pru_spi_transfer1["SPI Mode"]                              = "MODE1";
+pru_spi_transfer1["CS Signal"]                             = "2";
+pru_spi_transfer1["SDO Signal"]                            = "1";
+pru_spi_transfer1["SDI Signal"]                            = "6";
+pru_spi_transfer1["Data Setup Time"]                       = 50;
+pru_spi_transfer1["CS Setup Time"]                         = 500;
+pru_spi_transfer1["CS Hold Time"]                          = 500;
+pru_spi_transfer1["sclk high pulse width (in PRU cycles)"] = 16;
+pru_spi_transfer1["sclk low pulse width (in PRU cycles)"]  = 6;
+
+/**
+ * Connections between modules.
+ */
+scripting.connect(load_constant_block1, "output1", pru_spi_transfer1, "input1");
+scripting.connect(flow_control_block1, "prev", pru_spi_transfer1, "next");
+
+/**
+ * (x,y) coordinates for modules that are displayed in a graph.
+ */
+load_constant_block1.$position = [-145,155];
+flow_control_block1.$position  = [150,150];
+pru_spi_transfer1.$position    = [0,160];

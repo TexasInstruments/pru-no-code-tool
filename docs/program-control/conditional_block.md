@@ -51,12 +51,12 @@ Implements conditional logic to control program flow based on comparing two inpu
 ### Generated Assembly
 
 ```assembly
-QBGT  TRUE_LABEL, input1_reg, input2_reg   ; Branch if input1 > input2 (1 cycle)
+QBGT  If_Else_0_TRUE, input1_reg, input2_reg   ; Branch if input1 > input2 (1 cycle)
 ; FALSE path blocks here
-QBA   END_LABEL                             ; Jump past true path
-TRUE_LABEL:
+; FALSE branch MUST end in a Flow Control block (see "Flow Control Requirement" below)
+If_Else_0_TRUE:
 ; TRUE path blocks here
-END_LABEL:
+; TRUE branch MUST end in a Flow Control block
 ```
 
 ### Technical Details
@@ -64,6 +64,16 @@ END_LABEL:
 - **Performance**: 1 PRU cycle for the comparison and branch
 - **Comparison type**: All comparisons are **unsigned** — values treated as positive integers
 - Both `t_next` and `f_next` ports should be connected (warnings issued if not)
+- Every block, including this one, has an addressable `<blockName>_start` entry point that a [Flow Control block](flow_control_block.md) elsewhere in the design can jump to (e.g. to re-run this comparison)
+
+### Flow Control Requirement
+
+The FALSE path is placed immediately after the branch instruction, with the TRUE path at the branch target label. **Any connected branch (t_next or f_next) that has no explicit terminator falls through into the other branch — causing both to execute regardless of the condition.** SysConfig validation enforces this as an error: every connected branch must end in a [Flow Control block](flow_control_block.md). Leaving a branch entirely unconnected is fine; only connected-but-unterminated branches are rejected.
+
+**Where that Flow Control block should jump to depends on where the If/Else block lives:**
+
+- **Standalone If/Else** (not inside a Loop block): jump to Sysconfig Generated End, Halt, or any other block's `_start`/`_end` target.
+- **If/Else nested inside a Loop block**: jump to that Loop's own `<LoopName>_start` target so execution resumes the loop instead of exiting the whole program. Jumping to Sysconfig Generated End or Halt from inside a loop's branch ends the entire program early rather than just this iteration — only do that if that's genuinely the intent. To break out of the loop early without ending the whole program, jump to the Loop's `<LoopName>_end` target instead.
 
 ### Common Use Cases
 
@@ -71,5 +81,6 @@ END_LABEL:
 - Zero detection (`notEqualToInput2` with input2 = 0)
 - Range validation
 - State machine transitions
+- Loop early-exit / break (nested inside a Loop block, jumping to `<LoopName>_end` on some exit condition)
 
 ---

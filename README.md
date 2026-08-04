@@ -159,9 +159,9 @@ Blocks for GPIO, SPI, UART, and memory operations.
 |-------|---------|--------|---------------------------|
 | PRU GPI | Read GPIO input pins (R31) | 1 | N/A |
 | PRU GPO | Write GPIO output pins (R30) | 1 | N/A |
-| SPI Read | Read data via SPI | Variable | Up to 28.57 MHz |
-| SPI Write | Write data via SPI | Variable | Up to 28.57 MHz |
-| SPI Transfer | Full-duplex SPI | Variable | Up to 25.00 MHz |
+| SPI Read | Read data via SPI | Variable | Up to 8.33 MHz |
+| SPI Write | Write data via SPI | Variable | Up to 25.00 MHz |
+| SPI Transfer | Full-duplex SPI | Variable | Up to 7.69 MHz |
 | UART config | configure 3 channel interface for UART transmission | Variable | N/A |
 | UART TX op | Transmit UART frame (up to 62 data bits) | Variable | Up to 32 Mbaud |
 | UART RX op | Receive UART frame (up to 64 bits) | Variable | Up to 32 Mbaud |
@@ -304,6 +304,11 @@ done:
 | sysconfig_generated_start | Entry point for ungrouped blocks |
 | sysconfig_generated_end | Exit point for ungrouped blocks |
 | <groupName>_start | Entry point for a Group block |
+| <blockName>_start | Entry point for any individual block — addressable by a [Flow Control block](docs/program-control/flow_control_block.md) to (re-)run that block |
+| <blockName>_end | Exit point for any ordinary block (position right after that block's own instruction) |
+| <LoopName>_end | Dedicated early-exit target for a Loop block — jump here from inside the loop's body to break out before its counter/condition finishes naturally |
+
+If/Else (Conditional) blocks only expose `<blockName>_start` — they have two forward addresses (`_TRUE`/`_FALSE`), not a single "end". Every one of these labels appears directly in a [Flow Control block](docs/program-control/flow_control_block.md)'s "Jump To" dropdown — no manual label-name entry required.
 
 ---
 

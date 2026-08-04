@@ -34,3 +34,4 @@
 
 main:
     JMP sysconfig_generated_start
+sysconfig_generated_end:
