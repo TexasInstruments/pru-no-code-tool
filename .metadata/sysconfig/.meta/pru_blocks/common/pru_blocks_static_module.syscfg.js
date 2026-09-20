@@ -930,10 +930,8 @@ function validate(inst, report)
 	validateR31SimulationInput(inst, report);
 
 	// Check for UART blocks and warn about unsupported simulation
-	const uartTxModule = system.modules["/pru_blocks/pru_io_blocks/uart_tx"];
-	const uartRxModule = system.modules["/pru_blocks/pru_io_blocks/uart_rx"];
-	const hasUartBlock = (uartTxModule && uartTxModule.$instances && uartTxModule.$instances.length > 0) ||
-	                     (uartRxModule && uartRxModule.$instances && uartRxModule.$instances.length > 0);
+	const uartModule = system.modules["/pru_blocks/pru_io_blocks/uart_config"];
+	const hasUartBlock = (uartModule && uartModule.$instances && uartModule.$instances.length > 0)
 
 	if (hasUartBlock) {
 		report.logWarning(

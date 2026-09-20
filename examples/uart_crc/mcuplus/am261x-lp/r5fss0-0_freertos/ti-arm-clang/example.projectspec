@@ -12,7 +12,7 @@
     <project
         title="Empty Pru"
         name = "uart_crc_am261x-lp_r5fss0-0_freertos_ti-arm-clang"
-        products="sysconfig;com.ti.PRU_NO_CODE_TOOL;MCU-PLUS-SDK-AM261X"
+        products="sysconfig;MCU-PLUS-SDK-AM261X"
         configurations="
                 Debug,
                 Release,
@@ -82,8 +82,8 @@
             "
             linkerBuildOptions="
                 -lfreertos.am261x.r5f.ti-arm-clang.debug.lib
-                -ldrivers.am261x.r5f.ti-arm-clang.debug.lib
-                -lboard.am261x.r5f.ti-arm-clang.debug.lib
+                -ldrivers.am261x.r5f.ti-arm-clang.freertos.debug.lib
+                -lboard.am261x.r5f.ti-arm-clang.freertos.debug.lib
                 -llibc.a
                 -llibsysbm.a
             "
@@ -94,8 +94,8 @@
             "
             linkerBuildOptions="
                 -lfreertos.am261x.r5f.ti-arm-clang.release.lib
-                -ldrivers.am261x.r5f.ti-arm-clang.release.lib
-                -lboard.am261x.r5f.ti-arm-clang.release.lib
+                -ldrivers.am261x.r5f.ti-arm-clang.freertos.release.lib
+                -lboard.am261x.r5f.ti-arm-clang.freertos.release.lib
                 -llibc.a
                 -llibsysbm.a
             "
