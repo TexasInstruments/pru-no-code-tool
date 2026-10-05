@@ -68,37 +68,44 @@ function validate(inst, report) {
 		const high = inst["sclk high pulse width (in PRU cycles)"];
 		const low = inst["sclk low pulse width (in PRU cycles)"];
 
+		let pruFreqMHz = 200;
+		const staticMod = system.modules["/pru_blocks/common/pru_blocks_static_module"];
+		if (staticMod && staticMod.$static && staticMod.$static.pruClkFreq) {
+			pruFreqMHz = staticMod.$static.pruClkFreq;
+		}
+		const dataSetup = Math.ceil(inst["Data Setup Time"] * pruFreqMHz / 1000);
+
 		if (mode === "MODE0") {
-			// delay_component1 = high - 2, delay_component2 = low - 6
-			if (high < 2) {
-				report.logError("MODE0: SCLK High Width must be at least 2 cycles (overhead compensation for delay_component1)", inst, "sclk high pulse width (in PRU cycles)");
+			// delay_component1 = high - 1, delay_component2 = low - 6 - dataSetup
+			if (high < 1) {
+				report.logError("MODE0: SCLK High Width must be at least 1 cycle (overhead compensation for delay_component1)", inst, "sclk high pulse width (in PRU cycles)");
 			}
-			if (low < 6) {
-				report.logError("MODE0: SCLK Low Width must be at least 6 cycles (overhead compensation for delay_component2)", inst, "sclk low pulse width (in PRU cycles)");
+			if (low < 6 + dataSetup) {
+				report.logError(`MODE0: SCLK Low Width must be at least ${6 + dataSetup} cycles (6 cycles overhead + ${dataSetup} cycles Data Setup Time)`, inst, "sclk low pulse width (in PRU cycles)");
 			}
 		}
 		else if (mode === "MODE1") {
-			// delay_component1 = high - 4, delay_component2 = low - 3
-			if (high < 4) {
-				report.logError("MODE1: SCLK High Width must be at least 4 cycles (overhead compensation for delay_component1)", inst, "sclk high pulse width (in PRU cycles)");
+			// delay_component1 = high - 4 - dataSetup, delay_component2 = low - 3
+			if (high < 4 + dataSetup) {
+				report.logError(`MODE1: SCLK High Width must be at least ${4 + dataSetup} cycles (4 cycles overhead + ${dataSetup} cycles Data Setup Time)`, inst, "sclk high pulse width (in PRU cycles)");
 			}
 			if (low < 3) {
 				report.logError("MODE1: SCLK Low Width must be at least 3 cycles (overhead compensation for delay_component2)", inst, "sclk low pulse width (in PRU cycles)");
 			}
 		}
 		else if (mode === "MODE2") {
-			// delay_component1 = low - 1, delay_component2 = high - 6
+			// delay_component1 = low - 1, delay_component2 = high - 6 - dataSetup
 			if (low < 1) {
 				report.logError("MODE2: SCLK Low Width must be at least 1 cycle (overhead compensation for delay_component1)", inst, "sclk low pulse width (in PRU cycles)");
 			}
-			if (high < 6) {
-				report.logError("MODE2: SCLK High Width must be at least 6 cycles (overhead compensation for delay_component2)", inst, "sclk high pulse width (in PRU cycles)");
+			if (high < 6 + dataSetup) {
+				report.logError(`MODE2: SCLK High Width must be at least ${6 + dataSetup} cycles (6 cycles overhead + ${dataSetup} cycles Data Setup Time)`, inst, "sclk high pulse width (in PRU cycles)");
 			}
 		}
 		else if (mode === "MODE3") {
-			// delay_component1 = low - 4, delay_component2 = high - 3
-			if (low < 4) {
-				report.logError("MODE3: SCLK Low Width must be at least 4 cycles (overhead compensation for delay_component1)", inst, "sclk low pulse width (in PRU cycles)");
+			// delay_component1 = low - 4 - dataSetup, delay_component2 = high - 3
+			if (low < 4 + dataSetup) {
+				report.logError(`MODE3: SCLK Low Width must be at least ${4 + dataSetup} cycles (4 cycles overhead + ${dataSetup} cycles Data Setup Time)`, inst, "sclk low pulse width (in PRU cycles)");
 			}
 			if (high < 3) {
 				report.logError("MODE3: SCLK High Width must be at least 3 cycles (overhead compensation for delay_component2)", inst, "sclk high pulse width (in PRU cycles)");
@@ -788,7 +795,7 @@ const spi_write1 = pru_spi_write.addInstance();
 | sclk low pulse width (in PRU cycles) | Integer | 1-0xFFFFFFFF | 7 | Clock low time (Controller only) |
 | CS Setup Time | Integer | 0-10000 | 10 | CS setup time in nanoseconds (Controller only) |
 | CS Hold Time | Integer | 0-10000 | 10 | CS hold time in nanoseconds (Controller only) |
-| Data Setup Time | Integer | 0-100 | 0 | Data setup time in PRU cycles (Controller only) |
+| Data Setup Time | Integer | 0-10000 | 0 | Data setup time in nanoseconds, converted to PRU cycles internally (Controller only) |
 | CS Filter Cycles | Integer | 1-0xFFFFFFFF | 2 | CS glitch filter cycles (Peripheral only) |
 
 ### Example Configurations
@@ -916,14 +923,20 @@ SPI is a synchronous serial communication protocol with:
 - The **SPI Clock Frequency** field below automatically calculates the actual frequency based on your configured PRU clock
 - Peripheral mode follows controller's clock timing
 
-### Maximum Achievable Frequency (at 200 MHz PRU Clock)
-Different SPI modes have different minimum SCLK width requirements due to timing overhead:
-- **MODE0**: Min High=2, Min Low=6 → Max Frequency = 25.00 MHz (Total: 8 cycles)
-- **MODE1**: Min High=4, Min Low=3 → Max Frequency = 28.57 MHz (Total: 7 cycles)
-- **MODE2**: Min High=6, Min Low=1 → Max Frequency = 28.57 MHz (Total: 7 cycles)
-- **MODE3**: Min High=3, Min Low=4 → Max Frequency = 28.57 MHz (Total: 7 cycles)
+### Maximum Achievable Frequency
+Different SPI modes have different minimum SCLK width requirements due to timing overhead.
+Cycles per bit: **(4+d1) + (3+d2)**
 
-**Note**: These are theoretical maximums at 200 MHz PRU clock. Actual maximum frequency depends on peripheral device specifications, signal integrity, and PCB layout. Always verify with oscilloscope and increase pulse widths if data corruption occurs.
+**Theoretical Maximum (d1=0, d2=0 — controller overhead only):**
+- **MODE0**: Min High=2, Min Low=6 → 200 MHz = 25.00 MHz | 333 MHz = 41.63 MHz (Total: 8 cycles)
+- **MODE1**: Min High=4, Min Low=3 → 200 MHz = 28.57 MHz | 333 MHz = 47.57 MHz (Total: 7 cycles)
+- **MODE2**: Min High=6, Min Low=1 → 200 MHz = 28.57 MHz | 333 MHz = 47.57 MHz (Total: 7 cycles)
+- **MODE3**: Min High=3, Min Low=4 → 200 MHz = 28.57 MHz | 333 MHz = 47.57 MHz (Total: 7 cycles)
+
+**Practical Maximum (d1=0, d2=1 — recommended for reliable operation):**
+- All modes: Min High+Low = 8 cycles → **200 MHz = 25.00 MHz** | **333 MHz = 41.63 MHz**
+
+**Note**: Theoretical maximums assume ideal peripheral response. Practical values (d1=0, d2=1) are recommended for reliable operation and are validated against the open-pru SPI slave macros. Actual maximum frequency depends on peripheral device specifications, signal integrity, and PCB layout. Always verify with oscilloscope and increase pulse widths if data corruption occurs.
 
 ### Setup and Hold Times (Controller Mode Only)
 
@@ -931,9 +944,9 @@ Different SPI modes have different minimum SCLK width requirements due to timing
 
 - **CS Setup Time**: Time delay (in nanoseconds) after CS assertion before starting SPI transaction. This ensures the peripheral device is ready before data transfer begins.
 - **CS Hold Time**: Time delay (in nanoseconds) after the last bit is transferred before CS deassertion. This ensures the peripheral device has latched the data properly.
-- **Data Setup Time**: Time delay (in PRU cycles) to hold data stable after clock edge. This provides additional hold time for data stability on slow devices.
+- **Data Setup Time**: Minimum time (in nanoseconds) data must be stable before the sampling clock edge. Automatically converted to PRU cycles internally using Math.ceil.
 
-**Note**: CS Setup Time and CS Hold Time are specified in **nanoseconds** and automatically converted to PRU cycles based on the PRU Clock Frequency configured in **Simulation Settings**. Ensure the PRU Clock Frequency matches your hardware configuration for accurate timing.
+**Note**: CS Setup Time, CS Hold Time, and Data Setup Time are all specified in **nanoseconds** and automatically converted to PRU cycles based on the PRU Clock Frequency configured in **Simulation Settings**. Ensure the PRU Clock Frequency matches your hardware configuration for accurate timing.
 
 ### Peripheral Mode Parameters
 - **CS Filter Cycles**: Number of consecutive cycles CS must be stable to be considered valid. This provides glitch rejection for noisy CS signals.
@@ -1035,10 +1048,18 @@ exports = {
             default : "TEMP_REG1",
             getValue: (inst) => {
 				if (inst["Device Mode"] === "controller") {
+					let pruFreqMHz = 200;
+					const staticMod = system.modules["/pru_blocks/common/pru_blocks_static_module"];
+					if (staticMod && staticMod.$static && staticMod.$static.pruClkFreq) {
+						pruFreqMHz = staticMod.$static.pruClkFreq;
+					}
+					const csSetupCycles   = Math.ceil(inst["CS Setup Time"]   * pruFreqMHz / 1000);
+					const csHoldCycles    = Math.ceil(inst["CS Hold Time"]    * pruFreqMHz / 1000);
+					const dataSetupCycles = Math.ceil(inst["Data Setup Time"] * pruFreqMHz / 1000);
 					// Controller mode: dataReg, PACKETSIZE, bitId, SCLK_PIN, SDO_PIN, DELAY_COMPEN_1, DELAY_COMPEN_2, CS_PIN, CS_SETUP_TIME, CS_HOLD_TIME, DATA_SETUP_TIME
 					return inst["packetSize"] + ", TEMP_REG1.b0, " + inst["SCLK Signal"]
 						+", " + inst["SDO Signal"] + ", " + inst["delay_component1"] + ", " + inst["delay_component2"] + ", " + inst["CS Signal"]
-						+ ", " + inst["CS Setup Time"] + ", " + inst["CS Hold Time"] + ", " + inst["Data Setup Time"];
+						+ ", " + csSetupCycles + ", " + csHoldCycles + ", " + dataSetupCycles;
 				} else {
 					// Peripheral mode: dataReg, PACKETSIZE, bitId, SCLK_PIN, SDO_PIN, CS_PIN, CS_FILTER_CYCLES (MODE removed - now in macro name)
 					return inst["packetSize"] + ", TEMP_REG1.b0, " + inst["SCLK Signal"]
@@ -1175,15 +1196,15 @@ exports = {
         },
 		{
 			name: "Data Setup Time",
-			displayName: "Data Setup Time",
-			description: "Time delay to hold data stable after clock edge (hold time for data stability)",
+			displayName: "Data Setup Time (ns)",
+			description: "Time data must be stable before the sampling clock edge (nanoseconds). Converted to PRU cycles internally using Math.ceil.",
 			default: 0,
-			range: [0, 100],
+			range: [0, 10000],
 			hidden: false
 		},
 		{
 			name: "CS Setup Time",
-			displayName: "CS Setup Time (nanoseconds)",
+			displayName: "CS Setup Time (ns)",
 			description: "Time delay after CS assertion before starting SPI transaction",
 			default: 10,
 			range: [0, 10000],
@@ -1191,7 +1212,7 @@ exports = {
 		},
 		{
 			name: "CS Hold Time",
-			displayName: "CS Hold Time (nanoseconds)",
+			displayName: "CS Hold Time (ns)",
 			description: "Time delay after SPI transaction before CS deassertion",
 			default: 10,
 			range: [0, 10000],
@@ -1213,29 +1234,34 @@ exports = {
 				const high = inst["sclk high pulse width (in PRU cycles)"];
 				const low = inst["sclk low pulse width (in PRU cycles)"];
 
+				let pruFreqMHz = 200;
+				const staticMod = system.modules["/pru_blocks/common/pru_blocks_static_module"];
+				if (staticMod && staticMod.$static && staticMod.$static.pruClkFreq) {
+					pruFreqMHz = staticMod.$static.pruClkFreq;
+				}
+				const dataSetup = Math.ceil(inst["Data Setup Time"] * pruFreqMHz / 1000);
+
 				let value = 0;
 
-				// MODE0 (CPHA=0, CPOL=0): SHIFTING_EDGE = SET SCLK (HIGH pulse starts)
-				// Overhead: SET SCLK = 1 cycle
+				// MODE0 (CPHA=0, CPOL=0): DATA_SETUP_TIME nops sit inside the LOW half (before SET SCLK sampling edge)
+				// HIGH half overhead: SET SCLK (1) only — dataSetup is in the LOW half
 				if (mode === "MODE0") {
 					value = high - 1;
 				}
-				// MODE1 (CPHA=1, CPOL=0): SHIFTING_EDGE = SET SCLK (HIGH pulse starts)
-				// Overhead: SET SCLK + data setup (3) = 4 cycles
+				// MODE1 (CPHA=1, CPOL=0): DATA_SETUP_TIME nops sit inside the HIGH half (after SET SCLK, before CLR SCLK)
+				// Overhead: SET SCLK + fixed overhead (3) + dataSetup = 4 + dataSetup
 				else if (mode === "MODE1") {
-					value = high - 4;
+					value = high - 4 - dataSetup;
 				}
-				// MODE2 (CPHA=0, CPOL=1): SHIFTING_EDGE = CLR SCLK (LOW pulse starts)
-				// Overhead: CLR SCLK = 1 cycle
-				// DELAY_COMPEN_1 extends LOW pulse, so use low_width
+				// MODE2 (CPHA=0, CPOL=1): DATA_SETUP_TIME nops sit inside the HIGH half (before CLR SCLK sampling edge)
+				// LOW half overhead: CLR SCLK (1) only — dataSetup is NOT here
 				else if (mode === "MODE2") {
 					value = low - 1;
 				}
-				// MODE3 (CPHA=1, CPOL=1): SHIFTING_EDGE = CLR SCLK (LOW pulse starts)
-				// Overhead: CLR SCLK + data setup (3) = 4 cycles
-				// DELAY_COMPEN_1 extends LOW pulse, so use low_width
+				// MODE3 (CPHA=1, CPOL=1): DATA_SETUP_TIME nops sit inside the LOW half (after CLR SCLK, before SET SCLK)
+				// Overhead: CLR SCLK + fixed overhead (3) + dataSetup = 4 + dataSetup
 				else {  // MODE3
-					value = low - 4;
+					value = low - 4 - dataSetup;
 				}
 
 				// Ensure delay component is not negative
@@ -1251,28 +1277,30 @@ exports = {
 				const high = inst["sclk high pulse width (in PRU cycles)"];
 				const low = inst["sclk low pulse width (in PRU cycles)"];
 
+				let pruFreqMHz = 200;
+				const staticMod = system.modules["/pru_blocks/common/pru_blocks_static_module"];
+				if (staticMod && staticMod.$static && staticMod.$static.pruClkFreq) {
+					pruFreqMHz = staticMod.$static.pruClkFreq;
+				}
+				const dataSetup = Math.ceil(inst["Data Setup Time"] * pruFreqMHz / 1000);
+
 				let value = 0;
 
-				// MODE0 (CPHA=0, CPOL=0): CLR SCLK starts LOW pulse
-				// LOW overhead: CLR SCLK + loop control (2) + data setup (3) = 6 cycles
-				// DELAY_COMPEN_2 extends LOW pulse, so use low_width
+				// MODE0: DATA_SETUP_TIME is in the LOW half (before SET SCLK sampling edge)
+				// LOW half overhead: data output (3) + dataSetup + CLR SCLK (1) + sub+qbne (2) = 6 + dataSetup
 				if (mode === "MODE0") {
-					value = low - 6;
+					value = low - 6 - dataSetup;
 				}
-				// MODE1 (CPHA=1, CPOL=0): SAMPLING_EDGE = CLR SCLK (LOW pulse starts)
-				// Overhead: CLR SCLK + loop control (2) = 3 cycles
+				// MODE1: DATA_SETUP_TIME is in HIGH half — not here (DELAY_COMPEN_2 is in LOW half)
 				else if (mode === "MODE1") {
 					value = low - 3;
 				}
-				// MODE2 (CPHA=0, CPOL=1): SET SCLK starts HIGH pulse
-				// HIGH overhead: SET SCLK + loop control (2) + data setup (3) = 6 cycles
-				// DELAY_COMPEN_2 extends HIGH pulse, so use high_width
+				// MODE2: DATA_SETUP_TIME is in HIGH half (before CLR SCLK sampling edge) — DELAY_COMPEN_2 also in HIGH half
+				// HIGH half overhead: SET SCLK (1) + data output (3) + dataSetup + sub+qbne (2) = 6 + dataSetup
 				else if (mode === "MODE2") {
-					value = high - 6;
+					value = high - 6 - dataSetup;
 				}
-				// MODE3 (CPHA=1, CPOL=1): SAMPLING_EDGE = SET SCLK (HIGH pulse starts)
-				// Overhead: SET SCLK + loop control (2) = 3 cycles
-				// DELAY_COMPEN_2 extends HIGH pulse, so use high_width
+				// MODE3: DATA_SETUP_TIME is in LOW half — not here (DELAY_COMPEN_2 is in HIGH half)
 				else {  // MODE3
 					value = high - 3;
 				}
@@ -1400,16 +1428,21 @@ exports = {
 				// Controller mode: includes CS setup, bit loop, and CS hold time
 				// Peripheral mode: includes CS filter, bit loop (no CS setup/hold)
 				if (inst["Device Mode"] === "controller") {
-					const csSetupTime = inst["CS Setup Time"];
-					const csHoldTime = inst["CS Hold Time"];
-					const dataSetupTime = inst["Data Setup Time"];
+					let pruFreqMHz = 200;
+					const staticMod = system.modules["/pru_blocks/common/pru_blocks_static_module"];
+					if (staticMod && staticMod.$static && staticMod.$static.pruClkFreq) {
+						pruFreqMHz = staticMod.$static.pruClkFreq;
+					}
+					const csSetupCycles  = Math.ceil(inst["CS Setup Time"]   * pruFreqMHz / 1000);
+					const csHoldCycles   = Math.ceil(inst["CS Hold Time"]    * pruFreqMHz / 1000);
+					const dataSetupCycles = Math.ceil(inst["Data Setup Time"] * pruFreqMHz / 1000);
 
 					// Cycles per bit: 7 fixed + DATA_SETUP_TIME + delay_component1 + delay_component2
-					const cyclesPerBit = 7 + dataSetupTime + inst["delay_component1"] + inst["delay_component2"];
+					const cyclesPerBit = 7 + dataSetupCycles + inst["delay_component1"] + inst["delay_component2"];
 
-					return 1 + csSetupTime + 1 +
+					return 1 + csSetupCycles + 1 +
 					       (inst["packetSize"] * cyclesPerBit) +
-					       csHoldTime + 1;
+					       csHoldCycles + 1;
 				} else {
 					return 6 + inst["delay_component1"] + (inst["packetSize"] - 1) * (6 + inst["delay_component1"] + inst["delay_component2"]);
 				}

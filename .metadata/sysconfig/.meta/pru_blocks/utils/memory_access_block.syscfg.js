@@ -563,11 +563,13 @@ exports = {
 		if (inst["operationMode"] === "write") {
 			// Write mode: input for data to store
 			const inputType = dataSize > 4 ? "input64" : "input32";
-			ports.push({ name: "input1", displayName: "data", type: inputType });
+			const portType = inputType === "input64" ? "in64" : "input1"
+			ports.push({ name: "input1", displayName: portType, type: inputType });
 		} else {
 			// Read mode: output for loaded data
 			const outputType = dataSize > 4 ? "output64" : "output32";
-			ports.push({ name: "output1", displayName: "data", type: outputType });
+			const portType = outputType === "output64" ? "out64" : "output1"
+			ports.push({ name: "output1", displayName: portType, type: outputType });
 		}
 
 		// Control flow ports

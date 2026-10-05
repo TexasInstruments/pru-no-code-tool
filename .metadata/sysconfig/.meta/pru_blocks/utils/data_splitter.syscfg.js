@@ -131,7 +131,7 @@ exports = {
         },
     ],
     ports: (_inst) => [
-        { name: "input1",  type: "input64"  },
+        { name: "input1",  type: "input64", displayName: "in64"  },
         { name: "output1", type: "output32" },
         { name: "prev",    type: "PREV"     },
         { name: "next",    type: "NEXT"     },
