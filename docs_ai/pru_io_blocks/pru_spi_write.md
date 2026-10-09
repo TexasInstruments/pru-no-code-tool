@@ -78,8 +78,6 @@ Cycles per bit: **(4+d1) + (3+d2)**
 
 ### Setup and Hold Times (Controller Mode Only)
 
-![](../.metadata/sysconfig/.meta/images/setup_and_hold_time.png)
-
 - **CS Setup Time**: Time delay (in nanoseconds) after CS assertion before starting SPI transaction. This ensures the peripheral device is ready before data transfer begins.
 - **CS Hold Time**: Time delay (in nanoseconds) after the last bit is transferred before CS deassertion. This ensures the peripheral device has latched the data properly.
 - **Data Setup Time**: Minimum time (in nanoseconds) data must be stable before the sampling clock edge. Automatically converted to PRU cycles internally using Math.ceil.
