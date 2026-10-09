@@ -3,6 +3,10 @@ const pruDMEM0 = system.getScript("/pru_blocks/common/simulation/pru_dmem0.js");
 const pruSMEM = system.getScript("/pru_blocks/common/simulation/pru_smem.js");
 const pruSimulator =  system.getScript("/pru_blocks/common/simulation/pru_core.js");
 const simulationData = {cycleCount : [], r30Bits : [], r31Bits : []};
+function createWarnedLabelsGlobal() {
+    return new Set();
+}
+let warnedLabelsGlobal = createWarnedLabelsGlobal();
 
 // ============================================================================
 // R31 Simulation Input Functions
@@ -917,6 +921,183 @@ function detectControlFlowCycle() {
     return null;
 }
 
+/**
+ * Checks that every disconnected subgraph (chunks with no incoming prev link)
+ * terminates at a Flow Control block, preventing fallthrough between chunks.
+ */
+function checkDisconnectedChunks(inst, report) {
+    const modules = system.modules;
+    const flowModuleName = "/pru_blocks/program_control/flow_control_block";
+
+    // Build instance name -> instance map for all PRU blocks
+    const instanceMap = {};
+    for (const modName in modules) {
+        if (!modName.startsWith("/pru_blocks/")) continue;
+        const mod = modules[modName];
+        if (!mod || !mod.$instances) continue;
+        for (const instObj of mod.$instances) {
+            if (instObj && instObj.$name) {
+                instanceMap[instObj.$name] = instObj;
+            }
+        }
+    }
+
+    // Find all disconnected heads (no incoming prev connection)
+    const hasIncomingPrev = {};
+    for (const name in instanceMap) {
+        hasIncomingPrev[name] = false;
+    }
+    for (const name in instanceMap) {
+        const instObj = instanceMap[name];
+        const prevConnections = (instObj.prev && instObj.prev.length > 0) ? instObj.prev : [];
+        // If this block has any prev connections, it has incoming control flow
+        if (prevConnections.length > 0) {
+            hasIncomingPrev[name] = true;
+        }
+        // Also, the source blocks of prev connections feed INTO this block,
+        // but the block WITH prev is the one that continues the chain.
+        for (const conn of prevConnections) {
+            if (conn && conn.inst && conn.inst.$name) {
+                // The source of prev connection provides flow to this block,
+                // but does NOT mean the source itself has incoming prev.
+                // No action needed on source here.
+            }
+        }
+    }
+
+    // Build a set of all block names that live inside any group container
+    const groupMemberNames = new Set();
+    for (const modName in modules) {
+        if (!modName.startsWith("/pru_blocks/")) continue;
+        const mod = modules[modName];
+        if (!mod || !mod.$instances) continue;
+        for (const instObj of mod.$instances) {
+            if (instObj && instObj.$groupContents && Array.isArray(instObj.$groupContents)) {
+                for (const child of instObj.$groupContents) {
+                    if (child && child.$name) {
+                        groupMemberNames.add(child.$name);
+                    }
+                }
+            }
+        }
+    }
+
+    // Find heads: blocks with no incoming prev, excluding group containers and infinite loops
+    const heads = [];
+    for (const name in instanceMap) {
+        const instObj = instanceMap[name];
+        const prevConnections = (instObj.prev && instObj.prev.length > 0) ? instObj.prev : [];
+        if (prevConnections.length === 0 && !hasIncomingPrev[name]) {
+            const modulePath = JSON.parse(JSON.stringify(instObj)).$module || '';
+            // Skip memory variable, lookup table, group containers, conditional blocks,
+            // load constants (pure data sources), and infinite loops
+            if (modulePath.includes('memory_variable_block') ||
+                modulePath.includes('look_up_table') ||
+                modulePath.includes('access_look_up_table') ||
+                modulePath.includes('group_block') ||
+                modulePath.includes('conditional_block') ||
+                modulePath.includes('load_constant_block') ||
+                (instObj.$groupContents && ('infiniteLoop' in instObj && instObj.infiniteLoop === true))) {
+                continue;
+            }
+            // Skip any block inside a group container (group members have their own flow)
+            if (groupMemberNames.has(name)) {
+                continue;
+            }
+            // Check if this block's output1 feeds into another block's input
+            // (i.e., it's a data source for a connected chunk, not a standalone chunk head)
+            let feedsIntoChain = false;
+            for (const conn of (instObj.output1 || [])) {
+                if (conn && conn.inst && conn.inst.$name) {
+                    const targetName = conn.inst.$name;
+                    const targetObj = instanceMap[targetName];
+                    if (targetObj && (targetObj.prev && targetObj.prev.length > 0 || hasIncomingPrev[targetName])) {
+                        // Skip only if target receives this as DATA INPUT (not as prev control flow)
+                        // A block feeding data into arithmetic should NOT be excluded,
+                        // since arithmetic's chain must still terminate.
+                        const targetPrevConnections = (targetObj.prev && targetObj.prev.length > 0) ? targetObj.prev : [];
+                        const receivesAsPrev = targetPrevConnections.some(p => p && p.inst && p.inst.$name === name);
+                        if (!receivesAsPrev) {
+                            feedsIntoChain = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!feedsIntoChain) {
+                heads.push(name);
+            }
+        }
+    }
+
+    const visitedAll = new Set();
+    const flowModule = modules[flowModuleName];
+
+    function chunkTerminates(startName) {
+        const visited = new Set();
+        const stack = [startName];
+        let reachesFlow = false;
+
+        while (stack.length > 0) {
+            const currentName = stack.pop();
+            if (!currentName || visited.has(currentName)) continue;
+            visited.add(currentName);
+            visitedAll.add(currentName);
+
+            const current = instanceMap[currentName];
+            if (!current) continue;
+
+            const currentModulePath = JSON.parse(JSON.stringify(current)).$module;
+            // Flow Control block terminates this chunk (control flow reached)
+            if (currentModulePath === flowModuleName) {
+                reachesFlow = true;
+                return true;
+            }
+
+            // Also consider data-flow termination: if any output1 consumer is Flow Control,
+            // this chunk effectively terminates (data reaches termination point)
+            const outputConsumers = current.output1 ? current.output1.map(c => c?.inst).filter(Boolean) : [];
+            for (const consumer of outputConsumers) {
+                if (consumer && consumer.$name) {
+                    const consumerModulePath = JSON.parse(JSON.stringify(instanceMap[consumer.$name])).$module || '';
+                    if (consumerModulePath === flowModuleName) {
+                        reachesFlow = true;
+                        return true;
+                    }
+                    // Also follow data-flow chain further
+                    stack.push(consumer.$name);
+                }
+            }
+
+            // Follow control-flow next port
+            const nextConnections = (current.next && current.next.length > 0) ? current.next : [];
+            for (const conn of nextConnections) {
+                if (conn && conn.inst && conn.inst.$name) {
+                    stack.push(conn.inst.$name);
+                }
+            }
+        }
+        return reachesFlow;
+    }
+
+    const failingChunks = [];
+    for (const head of heads) {
+        if (!chunkTerminates(head)) {
+            failingChunks.push(head);
+        }
+    }
+    if (failingChunks.length > 0) {
+        // Report once per failing chunk, using only the head block instance
+        // so the error appears on the graph at one point, not for every member.
+        for (const head of failingChunks) {
+            report.logError(
+                `Disconnected chunk '${head}' missing Flow Control termination. Add Flow Control at end of this subgraph.`,
+                instanceMap[head], ""
+            );
+        }
+    }
+}
+
 function validate(inst, report)
 {
 	// Check for cycles in the control flow graph before anything else
@@ -940,6 +1121,12 @@ function validate(inst, report)
 			inst
 		);
 	}
+
+	// Check disconnected chunks: each disconnected subgraph must terminate in Flow Control
+	checkDisconnectedChunks(inst, report);
+
+	// Reset unreachable-chunk tracking for fresh validation (e.g. after changing flow targets)
+	warnedLabelsGlobal = createWarnedLabelsGlobal();
 
 	//allocating pru registers for all blocks at system level
 	pruRegisterAllocator.allocatePruRegisters();
@@ -1028,18 +1215,50 @@ function validate(inst, report)
         // Then replace SMEM symbols
         pruInstructions = pruSMEM.replaceSymbolReferences(pruInstructions);
         const r31HistoryMap = collectR31History();
-        let {pruState, r30ValueHistory, r31ValueHistory} = pruSimulator.simulatePruInstructions(pruInstructions, pruInstructionsLabels, inst["pruCyclesToSimulate"], r31HistoryMap);
+        // Post-simulation unreachable-chunk warning (not error)
+        const simResult = pruSimulator.simulatePruInstructions(pruInstructions, pruInstructionsLabels, inst["pruCyclesToSimulate"], r31HistoryMap);
+        const visitedLabels = simResult.visitedLabels || new Set();
+        const emittedLabels = new Set();
+        for (let i = 0; i < pruInstructionsLabels.length; i++) {
+            const lbl = pruInstructionsLabels[i];
+            if (lbl !== 0 && typeof lbl === 'string' && lbl.length > 0) {
+                emittedLabels.add(lbl);
+            }
+        }
+        // Unreachable-chunk warnings: only for block start labels, once globally
+        for (const lbl of emittedLabels) {
+            if (!visitedLabels.has(lbl)) {
+                const isBlockStart = lbl.endsWith('_start') || lbl.startsWith('startloop_') || lbl.startsWith('endloop_');
+                if (isBlockStart && !warnedLabelsGlobal.has(lbl)) {
+                    warnedLabelsGlobal.add(lbl);
+                    // Look up block instance by stripping label suffix
+                    const blockName = lbl.replace(/_start$/, '').replace(/^startloop_/, '').replace(/^endloop_/, '');
+                    // Build instance map from system modules for lookup
+                    const lookupMap = {};
+                    for (const modName in system.modules) {
+                        if (!modName.startsWith("/pru_blocks/")) continue;
+                        const mod = system.modules[modName];
+                        if (!mod || !mod.$instances) continue;
+                        for (const obj of mod.$instances) {
+                            if (obj && obj.$name) lookupMap[obj.$name] = obj;
+                        }
+                    }
+                    const blockInst = lookupMap[blockName] || inst;
+                    report.logWarning(
+                        `Unreachable chunk: label '${lbl}' was emitted but never executed during simulation.`,
+                        blockInst, ""
+                    );
+                }
+            }
+        }
 
-        prepareR30DataForPlotting(r30ValueHistory);
-        prepareR31DataForPlotting(r31ValueHistory);
-        // return pruState, r30ValueHistory, and r31ValueHistory
-        return {pruState, r30ValueHistory, r31ValueHistory}
+        prepareR30DataForPlotting(simResult.r30ValueHistory);
+        prepareR31DataForPlotting(simResult.r31ValueHistory);
+        return {pruState: simResult.pruState, r30ValueHistory: simResult.r30ValueHistory, r31ValueHistory: simResult.r31ValueHistory};
 	}
 }
 
-function getAIContext() {
-    return getLongDescription();
-}
+
 
 function getLongDescription() {
     return `
@@ -1158,7 +1377,6 @@ exports  = {
 	//this module is not visible to user but error is thrown when it is out of registers
 	displayName: "Simulation Settings",
     longDescription: getLongDescription(),
-    getAIContext: getAIContext,
 	moduleStatic: {
         validate,
         config: [

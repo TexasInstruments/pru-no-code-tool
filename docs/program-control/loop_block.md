@@ -30,6 +30,32 @@ Repeats a sequence of blocks a fixed number of times or infinitely. This is a co
 3. **Optionally** mark blocks as Pre-Initialization to run them once before the loop
 4. On each iteration, all non-pre-init blocks execute in connection order
 
+### Continue and Break implementation using Flow Control Blocks
+
+#### Continue 
+We can use Flow control to select the start label of the loop block (e.g. `loop_0_start`). For a finite loop, this reloads the counter (restarts the loop with the original count), not a true continue. Only for an infinite loop does jumping back to `_start` behave like a clean continue, as shown below with the `tamagawa_single_channel` example.
+
+<figure>
+<img src="../images/continue_using_flow_control_loop.png" alt="continue" width="900">
+<figcaption>Implement continue in infinite loop</figcaption>
+</figure>
+
+#### Break
+We can use Flow control to select the start label of the block connected outside the loop block and then jump to its start label using the flow control, check out the below image in which we implement break when a condition is satisfied 
+
+<figure>
+<img src="../images/break_using_flow_control_0.png" alt="continue" width="900">
+<figcaption>SPI block is connected next to loop block</figcaption>
+</figure>
+
+<figure>
+<img src="../images/break_using_flow_control_1.png" alt="continue" width="900">
+<figcaption>In the true branch of if/else SPI read block's start label is selected to jump to using the flow control</figcaption>
+</figure>
+
+
+
+
 ### Pre-Initialization Blocks
 
 Pre-init blocks are physically inside the loop container but their generated code is placed **before** the loop instruction. This is useful for:
@@ -84,13 +110,14 @@ QBA     startloop_label              ; Unconditional jump back
 
 | Scenario | Overhead |
 |----------|---------|
-| Fixed loop setup | 2–3 cycles (counter load + LOOP instruction) |
-| Per iteration (fixed) | 2 cycles (hardware decrement + branch) |
+| Fixed loop setup (for finite loop) | 2 cycle (counter load + LOOP instruction) |
 | Per iteration (infinite) | 1 cycle (unconditional jump) |
 
-**Total cycles** = setup_overhead + (loop_count × body_cycles)
+**Total cycles**
+for finite loop : 2 + (loop_body)*iterations 
+for infinite loop : (1 + loop_body) per iteration 
 
-Example: 100 iterations, body = 11 cycles → 3 + (100 × 11) = 1103 cycles = 5.515 µs at 200 MHz
+Example: 100 iterations, body = 11 cycles → 2 + (100 × 11) = 1102 cycles = 5.510 µs at 200 MHz
 
 ### Loop Counter Register Sizing
 
@@ -113,5 +140,6 @@ Example: 100 iterations, body = 11 cycles → 3 + (100 × 11) = 1103 cycles = 5.
 - Infinite loops **never exit** — the `next` port is hidden and no code after the loop is reachable
 - Loop counter occupies a register during loop execution
 - Pre-init blocks are still visually inside the container but their instructions are hoisted out
+- A **Flow Control** block elsewhere can jump to this loop's label (`startloop_label` for infinite). Note: for finite loops, jumping to `_start` re-arms `LOOP` (counter reloads), not a true continue; only infinite loops continue cleanly.
 
 ---

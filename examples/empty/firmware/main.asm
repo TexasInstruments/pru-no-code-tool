@@ -25,6 +25,7 @@
 
     .global     main
     .ref        sysconfig_generated_start
+    .global     sysconfig_generated_end
     .sect       ".text:main"
 
 ;********
@@ -34,3 +35,4 @@
 main:
     ; halt the program after jumping to sysconfig generated start
     JMP     sysconfig_generated_start
+sysconfig_generated_end:

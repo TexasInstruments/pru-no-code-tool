@@ -8,98 +8,11 @@ function validate(inst, report) {
 	}
 }
 
-function getAIContext(){
-	return getLongDescription() + `
 
-## How to Configure (For AI/Scripting)
-
-This section describes how to programmatically configure the Arithmetic block in a .syscfg file.
-
-### Adding an Arithmetic Instance
-
-\\\`\\\`\\\`javascript
-const arithmetic_block = scripting.addModule("/pru_blocks/data_handling/arithmetic_block", {}, false);
-const arith1 = arithmetic_block.addInstance();
-\\\`\\\`\\\`
-
-### Configuration Parameters
-
-| Parameter | Type | Valid Values | Default | Description |
-|-----------|------|--------------|---------|-------------|
-| opCode | String | "ADD", "ADC", "SUB", "SUC" | "ADC" | Math operation to perform |
-| output1Size | String | "maxOfInputs", "1", "2", "4" | "maxOfInputs" | Output size in bytes |
-
-### Valid Values for opCode
-
-| Value | Display Name | Description |
-|-------|--------------|-------------|
-| "ADD" | Addition | result = input1 + input2 |
-| "ADC" | Addition With Carry | result = input1 + input2 + carry |
-| "SUB" | Subtract | result = input1 - input2 |
-| "SUC" | Subtract With Borrow | result = input1 - input2 - borrow |
-
-### Valid Values for output1Size
-
-| Value | Display Name | Description |
-|-------|--------------|-------------|
-| "maxOfInputs" | Maximum of Inputs | Auto-size based on largest input |
-| "1" | One byte | Force 8-bit result |
-| "2" | two bytes | Force 16-bit result |
-| "4" | four bytes | Force 32-bit result |
-
-### Example Configurations
-
-**Simple Addition:**
-\\\`\\\`\\\`javascript
-arith1.$name = "Add_Values";
-arith1.opCode = "ADD";
-arith1.output1Size = "maxOfInputs";
-\\\`\\\`\\\`
-
-**Subtraction with 32-bit output:**
-\\\`\\\`\\\`javascript
-arith1.$name = "Subtract_32bit";
-arith1.opCode = "SUB";
-arith1.output1Size = "4";
-\\\`\\\`\\\`
-
-**Addition with carry (for multi-precision):**
-\\\`\\\`\\\`javascript
-arith1.$name = "Add_With_Carry";
-arith1.opCode = "ADC";
-arith1.output1Size = "4";
-\\\`\\\`\\\`
-
-### Connecting to Other Blocks
-
-\\\`\\\`\\\`javascript
-// Connect two data sources to inputs
-scripting.connect(load_constant1, "output1", arith1, "input1");
-scripting.connect(load_constant2, "output1", arith1, "input2");
-
-// Connect output to downstream block
-scripting.connect(arith1, "output1", next_block, "input1");
-
-// Connect control flow
-scripting.connect(prev_block, "next", arith1, "prev");
-scripting.connect(arith1, "next", next_block, "prev");
-\\\`\\\`\\\`
-
-### Important Notes
-
-1. **Two Inputs Required**: Both input1 and input2 must be connected.
-
-2. **Carry/Borrow Flag**: ADC and SUC use the carry/borrow flag from previous arithmetic operations.
-
-3. **Single Cycle**: All arithmetic operations complete in 1 PRU cycle.
-
-4. **Overflow**: Results wrap around - no overflow detection.
-`;
-
-}
 
 function getLongDescription() {
-		return `
+		return `NOTE: Before making any assumptions about this block's parameters, behavior, or configuration, always read the docs file at: docs_ai/data_handling/arithmetic_block.md 
+
 ## Arithmetic Block
 
 ### Purpose
@@ -269,5 +182,4 @@ exports = {
             }]
         },
     },
-	getAIContext
 }

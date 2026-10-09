@@ -45,85 +45,11 @@ function getUsectDirective(instance) {
     return `${labelName}\t.usect "${sectionName}", ${sizeInBytes}, 4`;
 }
 
-function getAIContext() {
-    return getLongDescription() + `
 
-## How to Configure (For AI/Scripting)
-
-This section describes how to programmatically configure the Memory Variable block in a .syscfg file.
-
-### Adding a Memory Variable Instance
-
-\\\`\\\`\\\`javascript
-const memory_variable = scripting.addModule("/pru_blocks/utils/memory_variable_block", {}, false);
-const mem_variable1 = memory_variable.addInstance();
-\\\`\\\`\\\`
-
-### Configuration Parameters
-
-| Parameter | Type | Valid Values | Default | Description |
-|-----------|------|--------------|---------|-------------|
-| labelName | String | Valid C identifier | "buffer" | Symbol name for the reserved memory |
-| sizeInBytes | Integer | 1-8192 | 64 | Number of bytes to reserve |
-| memoryLocation | String | "dmem" or "smem" | "dmem" | Memory location (DMEM=local, SMEM=shared) |
-
-### Example Configurations
-
-**Local buffer in DMEM:**
-\\\`\\\`\\\`javascript
-mem_variable1.$name = "Memory_Variable_0";
-mem_variable1.labelName = "rxBuffer";
-mem_variable1.sizeInBytes = 128;
-mem_variable1.memoryLocation = "dmem";
-\\\`\\\`\\\`
-
-**Shared buffer in SMEM:**
-\\\`\\\`\\\`javascript
-mem_variable1.$name = "Shared_Buffer";
-mem_variable1.labelName = "ipcBuffer";
-mem_variable1.sizeInBytes = 512;
-mem_variable1.memoryLocation = "smem";
-\\\`\\\`\\\`
-
-### Using with Memory Access Block
-
-\\\`\\\`\\\`javascript
-// Create Memory Reserve in DMEM
-const memory_variable = scripting.addModule("/pru_blocks/utils/memory_variable_block", {}, false);
-const mem_variable1 = memory_variable.addInstance();
-mem_variable1.$name = "Memory_Variable_0";
-mem_variable1.labelName = "my_buffer";
-mem_variable1.sizeInBytes = 64;
-mem_variable1.memoryLocation = "dmem";
-
-// Create Memory Access that references the symbol
-const memory_load_block = scripting.addModule("/pru_blocks/data_handling/memory_load_block", {}, false);
-const mem_access1 = memory_load_block.addInstance();
-mem_access1.$name = "Memory_Access_0";
-mem_access1.operationMode = "write";
-mem_access1.addressingMode = "symbol";
-mem_access1.symbolSelect = "my_buffer";    // References the labelName above
-mem_access1.dataSize = 4;
-\\\`\\\`\\\`
-
-### Important Notes
-
-1. **Label Name Rules**: Must start with a letter or underscore, and contain only letters, numbers, and underscores.
-
-2. **No Runtime Code**: This block only generates a .usect directive - no executable instructions.
-
-3. **Alignment**: Memory is always 4-byte (word) aligned for optimal PRU access.
-
-4. **Uninitialized**: Reserved memory has undefined contents at startup. Use Lookup Table block for initialized data.
-
-5. **Memory Location**:
-    - **DMEM (Local)**: 8 KB per PRU, fastest access, private to each PRU
-    - **SMEM (Shared)**: 64 KB total, accessible by all PRUs and ARM cores, use for inter-core communication
-`;
-}
 
 function getLongDescription() {
-    return `
+    return `NOTE: Before making any assumptions about this block's parameters, behavior, or configuration, always read the docs file at: docs_ai/utils/memory_variable_block.md 
+
 ## Memory Variable Block
 
 ### Purpose
@@ -248,7 +174,6 @@ exports = {
     displayName: "Memory Variable",
     defaultInstanceName: "Memory_Variable_",
     longDescription: getLongDescription(),
-    getAIContext: getAIContext,
     uiView: "graph",
     templates: {
         "/pru_blocks/common/pru_syscfg.asm.xdt": null

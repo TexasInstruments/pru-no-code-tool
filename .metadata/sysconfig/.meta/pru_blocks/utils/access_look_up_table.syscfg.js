@@ -100,72 +100,11 @@ function getMacro(pruInstructionMacro, opCode) {
     return macroBody;
 }
 
-function getAIContext() {
-    return getLongDescription() + `
-## How to Configure (For AI/Scripting)
 
-This section describes how to programmatically configure the Access Lookup Table block in a .syscfg file.
-
-### Adding an Access Lookup Table Instance
-
-\\\`\\\`\\\`javascript
-const access_look_up_table = scripting.addModule("/pru_blocks/utils/access_look_up_table", {}, false);
-const access_lut1 = access_look_up_table.addInstance();
-\\\`\\\`\\\`
-
-### Configuration Parameters
-
-| Parameter | Type | Valid Values | Default | Description |
-|-----------|------|--------------|---------|-------------|
-| lutReference | String | Name of a Lookup Table instance | "" | Which Lookup Table to read from |
-
-### Example Configurations
-
-**Read from a lookup table:**
-\\\`\\\`\\\`javascript
-// First create the Lookup Table
-const look_up_table = scripting.addModule("/pru_blocks/utils/look_up_table", {}, false);
-const lut1 = look_up_table.addInstance();
-lut1.$name = "Sine_Table";
-lut1.tableSize = 256;
-lut1.dataType = "ushort";
-lut1.initPattern = "sequential";
-
-// Then create Access Lookup Table to read from it
-access_lut1.$name = "Read_Sine";
-access_lut1.lutReference = "Sine_Table";
-\\\`\\\`\\\`
-
-### Connecting to Other Blocks
-
-\\\`\\\`\\\`javascript
-// Connect index source to input (index port)
-scripting.connect(load_constant1, "output1", access_lut1, "input1");
-
-// Connect output to downstream block
-scripting.connect(access_lut1, "output1", uart_tx1, "input1");
-
-// Connect control flow
-scripting.connect(prev_block, "next", access_lut1, "prev");
-scripting.connect(access_lut1, "next", next_block, "prev");
-\\\`\\\`\\\`
-
-### Important Notes
-
-1. **Requires Lookup Table**: A Lookup Table block must exist and be referenced by lutReference.
-
-2. **Index Input**: Connect a block that provides the index value (0 to tableSize-1) to input1.
-
-3. **Output Size**: Automatically matches the referenced Lookup Table's dataType (1, 2, or 4 bytes).
-
-4. **Bounds Checking**: Validation warns if constant index is out of bounds. Runtime bounds checking is not performed.
-
-5. **Performance**: 5 PRU cycles total (2 for LDI32 + 3 for LBBO).
-`;
-}
 
 function getLongDescription() {
-    return `
+    return `NOTE: Before making any assumptions about this block's parameters, behavior, or configuration, always read the docs file at: docs_ai/utils/access_look_up_table.md 
+
 ## Access Lookup Table Block
 
 ### Purpose
@@ -205,7 +144,6 @@ exports = {
     displayName: "Access Lookup Table",
     defaultInstanceName: "Access_Lookup_Table_",
     longDescription: getLongDescription(),
-    getAIContext: getAIContext,
     uiView: "graph",
     templates: {
         "/pru_blocks/common/pru_syscfg.asm.xdt": null
