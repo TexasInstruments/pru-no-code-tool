@@ -61,107 +61,11 @@ function getMacro(pruInstructionMacro, opCode) {
     // This block doesn't generate any runtime code, only data section
     return "0";
 }
-function getAIContext() {
-    return getLongDescription() + `
 
-## How to Configure (For AI/Scripting)
-
-This section describes how to programmatically configure the Lookup Table block in a .syscfg file.
-
-### Adding a Lookup Table Instance
-
-\\\`\\\`\\\`javascript
-const look_up_table = scripting.addModule("/pru_blocks/utils/look_up_table", {}, false);
-const lut1 = look_up_table.addInstance();
-\\\`\\\`\\\`
-
-### Configuration Parameters
-
-| Parameter | Type | Valid Values | Default | Description |
-|-----------|------|--------------|---------|-------------|
-| tableSize | Integer | 1-65536 | 16 | Number of entries in the table |
-| dataType | String | "byte", "ushort", "uint" | "byte" | Data type for each entry |
-| importMethod | String | "manual", "json_paste", "json_file" | "manual" | How to input data |
-| initPattern | String | "manual", "sequential", "zeros", "ones", "custom" | "sequential" | Pattern for auto-generating data |
-| customValue | Integer | Depends on dataType | 0 | Fill value when initPattern="custom" |
-| tableData | String | Comma-separated values | "0,1,2,..." | The actual table data |
-
-### Valid Values for dataType
-
-| Value | Display Name | Range | Bytes per Entry |
-|-------|--------------|-------|-----------------|
-| "byte" | 8-bit (0-255) | 0-255 | 1 |
-| "ushort" | 16-bit (0-65535) | 0-65535 | 2 |
-| "uint" | 32-bit | 0-4294967295 | 4 |
-
-### Valid Values for initPattern
-
-| Value | Display Name | Description |
-|-------|--------------|-------------|
-| "manual" | Manual Entry | Edit tableData directly |
-| "sequential" | Sequential (0, 1, 2, ...) | Auto-fill with 0, 1, 2, ... |
-| "zeros" | All Zeros | Fill with 0 |
-| "ones" | All Ones | Fill with 0xFF/0xFFFF/0xFFFFFFFF |
-| "custom" | Fill With Custom Value | Fill with customValue |
-
-### Example Configurations
-
-**Small sequential table (16 bytes):**
-\\\`\\\`\\\`javascript
-lut1.$name = "Lookup_Table_0";
-lut1.tableSize = 16;
-lut1.dataType = "byte";
-lut1.initPattern = "sequential";
-// tableData auto-generates: "0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15"
-\\\`\\\`\\\`
-
-**Sine wave lookup table (256 entries, 16-bit):**
-\\\`\\\`\\\`javascript
-lut1.$name = "Sine_Table";
-lut1.tableSize = 256;
-lut1.dataType = "ushort";
-lut1.initPattern = "manual";
-lut1.tableData = "32768, 33572, 34376, ...";  // Pre-computed sine values
-\\\`\\\`\\\`
-
-**Custom fill value:**
-\\\`\\\`\\\`javascript
-lut1.$name = "Init_Buffer";
-lut1.tableSize = 64;
-lut1.dataType = "uint";
-lut1.initPattern = "custom";
-lut1.customValue = 0xDEADBEEF;
-\\\`\\\`\\\`
-
-### Connecting to Other Blocks
-
-\\\`\\\`\\\`javascript
-// Lookup Table is data-only, connect Access Lookup Table to read from it
-const access_lut = scripting.addModule("/pru_blocks/utils/access_look_up_table", {}, false);
-const access1 = access_lut.addInstance();
-access1.lutReference = lut1.$name;  // Reference this lookup table
-
-// Connect index source to Access Lookup Table
-scripting.connect(index_block, "output1", access1, "input1");
-\\\`\\\`\\\`
-
-### Important Notes
-
-1. **Data Only**: Lookup Table block defines data storage - use Access Lookup Table to read values.
-
-2. **Memory Size**: Total memory = tableSize × bytes per entry. Maximum DMEM is 8KB per PRU.
-
-3. **R5F Initialization**: Data is written to PRU DMEM by the R5F core before PRU starts.
-
-4. **JSON Import**: For large tables, use importMethod="json_paste" or "json_file" with format:
-    \\\`\\\`\\\`json
-    { "values": [0, 1, 2, ...], "dataType": "byte" }
-    \\\`\\\`\\\`
-`;
-}
 
 function getLongDescription() {
-        return `
+        return `NOTE: Before making any assumptions about this block's parameters, behavior, or configuration, always read the docs file at: docs_ai/utils/look_up_table.md 
+
 ## Lookup Table Block
 
 ### Purpose
@@ -244,7 +148,6 @@ exports = {
     displayName: "Lookup Table",
     defaultInstanceName: "Lookup_Table_",
     longDescription: getLongDescription(),
-    getAIContext: getAIContext,
     uiView: "graph",
     templates: {
         "/pru_blocks/common/pru_syscfg.asm.xdt": null

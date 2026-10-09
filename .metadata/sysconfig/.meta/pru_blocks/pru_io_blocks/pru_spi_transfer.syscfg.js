@@ -992,104 +992,11 @@ SEND_BIT_LOOP_END?:`;
     return macroBody;
 }
 
-function getAIContext() {
-    return getLongDescription() + ` 
 
-## How to Configure (For AI/Scripting)
-
-This section describes how to programmatically configure the SPI Transfer block in a .syscfg file.
-
-### Adding a SPI Transfer Instance
-
-\`\`\`javascript
-const pru_spi_transfer = scripting.addModule("/pru_blocks/pru_io_blocks/pru_spi_transfer", {}, false);
-const spi1 = pru_spi_transfer.addInstance();
-\`\`\`
-
-### Configuration Parameters
-
-| Parameter | Type | Valid Values | Default | Description |
-|-----------|------|--------------|---------|-------------|
-| Device Mode | String | "controller", "peripheral" | "controller" | SPI role selection |
-| SPI Mode | String | "MODE0", "MODE1", "MODE2", "MODE3" | "MODE3" | Clock polarity and phase |
-| packetSize | Integer | 8-32 | 32 | Number of bits per transfer |
-| Endiness | String | "most significant bit first", "least significant bit first" | "most significant bit first" | Bit order |
-| SCLK Signal | String | "0"-"19" | "0" | GPIO pin for clock |
-| SDI Signal | String | "0"-"19" | "1" | GPIO pin for data input |
-| SDO Signal | String | "0"-"19" | "2" | GPIO pin for data output |
-| CS Signal | String | "0"-"19" | "3" | GPIO pin for chip select |
-| sclk high pulse width (in PRU cycles) | Integer | 1-0xFFFFFFFF | 9 | Clock high time (Controller only) |
-| sclk low pulse width (in PRU cycles) | Integer | 1-0xFFFFFFFF | 7 | Clock low time (Controller only) |
-| CS Setup Time | Integer | 0-10000 | 35 | CS setup time in nanoseconds (Controller only) |
-| CS Hold Time | Integer | 0-10000 | 10 | CS hold time in nanoseconds (Controller only) |
-| Data Setup Time | Integer | 0-10000 | 0 | Data setup time in nanoseconds, converted to PRU cycles internally (Controller only) |
-| CS Filter Cycles | Integer | 1-0xFFFFFFFF | 2 | CS glitch filter cycles (Peripheral only) |
-
-### Example Configurations
-
-**SPI Controller, MODE3, 8-bit, MSB first:**
-\`\`\`javascript
-spi1.$name = "SPI_Controller_0";
-spi1["Device Mode"] = "controller";
-spi1["SPI Mode"] = "MODE3";
-spi1.packetSize = 8;
-spi1["Endiness"] = "most significant bit first";
-spi1["SCLK Signal"] = "0";
-spi1["SDI Signal"] = "1";
-spi1["SDO Signal"] = "2";
-spi1["CS Signal"] = "3";
-spi1["sclk high pulse width (in PRU cycles)"] = 13;
-spi1["sclk low pulse width (in PRU cycles)"] = 11;
-spi1["CS Setup Time"] = 35;
-spi1["CS Hold Time"] = 10;
-\`\`\`
-
-**SPI Peripheral, MODE0, 32-bit, LSB first:**
-\`\`\`javascript
-spi1.$name = "SPI_Peripheral_0";
-spi1["Device Mode"] = "peripheral";
-spi1["SPI Mode"] = "MODE0";
-spi1.packetSize = 32;
-spi1["Endiness"] = "least significant bit first";
-spi1["SCLK Signal"] = "4";         // Input pin for clock
-spi1["SDI Signal"] = "5";
-spi1["SDO Signal"] = "6";
-spi1["CS Signal"] = "7";           // Input pin for CS
-spi1["CS Filter Cycles"] = 2;
-\`\`\`
-
-### Connecting to Other Blocks
-
-\`\`\`javascript
-// Connect data source to SPI input (data to transmit)
-scripting.connect(load_constant1, "output1", spi1, "input1");
-
-// Connect SPI output to downstream block (received data)
-scripting.connect(spi1, "output1", process_block, "input1");
-
-// Connect control flow
-scripting.connect(prev_block, "next", spi1, "prev");
-scripting.connect(spi1, "next", next_block, "prev");
-\`\`\`
-
-### Important Notes
-
-1. **Pin Assignment**: In Controller mode, SCLK and CS are outputs (GPO). In Peripheral mode, SCLK and CS are inputs (GPI).
-
-2. **Pin Uniqueness**: All four signals (CS, SCLK, SDI, SDO) must use different GPIO pins.
-
-3. **Minimum Pulse Widths** (Controller mode, per SPI mode):
-	- MODE0: Min High=4, Min Low=6
-	- MODE1: Min High=2, Min Low=6
-	- MODE2: Min High=6, Min Low=4
-	- MODE3: Min High=6, Min Low=2
-
-4. **Full-Duplex Operation**: This block simultaneously sends and receives data. Connect both input (transmit data) and use output (receive data) for full-duplex communication.
-`;
-}
 
 function getLongDescription() {
-		return `
+		return `NOTE: Before making any assumptions about this block's parameters, behavior, or configuration, always read the docs file at: docs_ai/pru_io_blocks/pru_spi_transfer.md 
+
 ## PRU SPI Transfer Block
 
 ### Purpose
@@ -1260,7 +1167,6 @@ exports = {
 	displayName: "PRU SPI Transfer",
 	defaultInstanceName: `${PRU_USED}_SPI_Transfer_`,
 	longDescription: getLongDescription(),
-    getAIContext: getAIContext,
 	uiView: "graph",
 	templates: {
         "/pru_blocks/common/pru_syscfg.asm.xdt": null

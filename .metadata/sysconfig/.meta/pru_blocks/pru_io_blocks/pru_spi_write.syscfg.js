@@ -767,99 +767,11 @@ SEND_BIT_LOOP_END?:`;
     return macroBody;
 }
 
-function getAIContext() {
-    return getLongDescription() + `
-## How to Configure (For AI/Scripting)
 
-This section describes how to programmatically configure the SPI Write block in a .syscfg file.
-
-### Adding a SPI Write Instance
-
-\\\`\\\`\\\`javascript
-const pru_spi_write = scripting.addModule("/pru_blocks/pru_io_blocks/pru_spi_write", {}, false);
-const spi_write1 = pru_spi_write.addInstance();
-\\\`\\\`\\\`
-
-### Configuration Parameters
-
-| Parameter | Type | Valid Values | Default | Description |
-|-----------|------|--------------|---------|-------------|
-| Device Mode | String | "controller", "peripheral" | "controller" | SPI role selection |
-| SPI Mode | String | "MODE0", "MODE1", "MODE2", "MODE3" | "MODE1" | Clock polarity and phase |
-| packetSize | Integer | 8-32 | 8 | Number of bits to write |
-| Endiness | String | "most significant bit first", "least significant bit first" | "least significant bit first" | Bit order |
-| SCLK Signal | String | "0"-"19" | "0" | GPIO pin for clock |
-| SDO Signal | String | "0"-"19" | "1" | GPIO pin for data output |
-| CS Signal | String | "0"-"19" | "2" | GPIO pin for chip select |
-| sclk high pulse width (in PRU cycles) | Integer | 1-0xFFFFFFFF | 7 | Clock high time (Controller only) |
-| sclk low pulse width (in PRU cycles) | Integer | 1-0xFFFFFFFF | 7 | Clock low time (Controller only) |
-| CS Setup Time | Integer | 0-10000 | 10 | CS setup time in nanoseconds (Controller only) |
-| CS Hold Time | Integer | 0-10000 | 10 | CS hold time in nanoseconds (Controller only) |
-| Data Setup Time | Integer | 0-10000 | 0 | Data setup time in nanoseconds, converted to PRU cycles internally (Controller only) |
-| CS Filter Cycles | Integer | 1-0xFFFFFFFF | 2 | CS glitch filter cycles (Peripheral only) |
-
-### Example Configurations
-
-**SPI Controller Write, MODE1, 8-bit, LSB first:**
-\\\`\\\`\\\`javascript
-spi_write1.$name = "SPI_Write_0";
-spi_write1["Device Mode"] = "controller";
-spi_write1["SPI Mode"] = "MODE1";
-spi_write1.packetSize = 8;
-spi_write1["Endiness"] = "least significant bit first";
-spi_write1["SCLK Signal"] = "0";
-spi_write1["SDO Signal"] = "1";
-spi_write1["CS Signal"] = "2";
-spi_write1["sclk high pulse width (in PRU cycles)"] = 7;
-spi_write1["sclk low pulse width (in PRU cycles)"] = 7;
-spi_write1["CS Setup Time"] = 10;
-spi_write1["CS Hold Time"] = 10;
-\\\`\\\`\\\`
-
-**SPI Peripheral Write, MODE0, 32-bit, MSB first:**
-\\\`\\\`\\\`javascript
-spi_write1.$name = "SPI_Peripheral_Write";
-spi_write1["Device Mode"] = "peripheral";
-spi_write1["SPI Mode"] = "MODE0";
-spi_write1.packetSize = 32;
-spi_write1["Endiness"] = "most significant bit first";
-spi_write1["SCLK Signal"] = "4";         // Input pin for clock
-spi_write1["SDO Signal"] = "5";          // Output pin for data
-spi_write1["CS Signal"] = "6";           // Input pin for CS
-spi_write1["CS Filter Cycles"] = 2;
-\\\`\\\`\\\`
-
-### Connecting to Other Blocks
-
-\\\`\\\`\\\`javascript
-// Connect data source to SPI Write input (data to transmit)
-scripting.connect(load_constant1, "output1", spi_write1, "input1");
-
-// Connect control flow
-scripting.connect(prev_block, "next", spi_write1, "prev");
-scripting.connect(spi_write1, "next", next_block, "prev");
-\\\`\\\`\\\`
-
-### Important Notes
-
-1. **Pin Assignment**: In Controller mode, SCLK and CS are outputs (GPO). In Peripheral mode, SCLK and CS are inputs (GPI). SDO is always output (GPO).
-
-2. **Pin Uniqueness**: All three signals (CS, SCLK, SDO) must use different GPIO pins.
-
-3. **Minimum Pulse Widths** (Controller mode, per SPI mode):
-	- MODE0: Min High=2, Min Low=6
-	- MODE1: Min High=4, Min Low=3
-	- MODE2: Min High=6, Min Low=1
-	- MODE3: Min High=3, Min Low=4
-
-4. **Input Required**: This block requires a data input connection. Connect a Load Constant block or other data source to input1.
-
-5. **Write-Only Operation**: This block only writes data to the SPI bus. Use SPI Read or SPI Transfer for receiving data.
-`;
-}
 
 function getLongDescription() {
-		return `
+		return `NOTE: Before making any assumptions about this block's parameters, behavior, or configuration, always read the docs file at: docs_ai/pru_io_blocks/pru_spi_write.md 
+
 ## PRU SPI Write Block
 
 ### Purpose
@@ -1025,7 +937,6 @@ exports = {
 	displayName: "PRU SPI Write",
 	defaultInstanceName: `${PRU_USED}_SPI_Write_`,
 	longDescription: getLongDescription(),
-    getAIContext: getAIContext,
 	uiView: "graph",
 	templates: {
 		//need to check what can be passed as argument to template file, right now no argument is required
