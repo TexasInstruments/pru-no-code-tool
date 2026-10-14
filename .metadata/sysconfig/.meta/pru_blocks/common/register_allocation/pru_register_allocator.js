@@ -797,6 +797,11 @@ function pushInstruction(instance, parentInstance) {
     if (!instance.$groupContents && !(instance.T && instance.F)) {
         addToPruRegisterAllocationSummary(`${instanceName}_end`, "0", instance, instanceName, 0);
     }
+    // NOP trampoline for loop blocks: separates loop exit (endloop_N) from
+    // the next block's start label, preventing hardware loop-back on break.
+    if (instance.$groupContents && 'infiniteLoop' in instance && instance.infiniteLoop === false) {
+        addToPruRegisterAllocationSummary(0, `NOP ; trampoline: separates loop exit from next block`, instance, instanceName, 0);
+    }
     return maxBytesUsed;
 }
 

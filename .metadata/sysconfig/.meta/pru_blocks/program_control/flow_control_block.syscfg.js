@@ -1,8 +1,7 @@
 /**
  * Enumerates every real, user-meaningful label in the current design that
  * a Flow Control block can validly jump to: every block's <name>_start
- * (entry point) and, for ordinary blocks, <name>_end (exit
- * point). Loop blocks do NOT expose `_end`. Conditional (If/Else) blocks only expose
+ * (entry point). Conditional (If/Else) blocks only expose
  * _start, since they have two forward addresses (_TRUE/_FALSE) rather
  * than one "end". Excludes internal hardware labels (endloop_N; the
  * startloop_N numeric suffix is kept since it's the only re-entry point
@@ -43,17 +42,18 @@ function getValidJumpTargets() {
 				if ('infiniteLoop' in inst) {
 					// Loop block
 					if (inst.infiniteLoop === true) {
+						// Infinite loop: dropdown shows startloop_N (matches allocator label)
 						targets.push({
 							name: `startloop_${i}`,
 							displayName: `${inst.$name} (loop start)`
 						});
 					} else {
+						// Finite loop: dropdown uses actual instance name label
 						targets.push({
 							name: `${inst.$name}_start`,
 							displayName: `${inst.$name} (loop start)`
 						});
 					}
-					// Note: Loop blocks do not expose an _end label. Break via Flow Control to the next block or sysconfig_generated_end.
 				} else {
 					// Group block
 					const groupName = inst.groupName || inst.$name;
@@ -81,7 +81,7 @@ function getValidJumpTargets() {
 		}
 	}
 
-	return targets.filter(t => emittedLabels.has(t.name));
+	return targets;
 }
 
 function validate(inst, report) {
@@ -125,7 +125,7 @@ Controls PRU program flow by jumping to the end of generated code, halting the P
 
 ### _start targets
 
-- Every block exposes \`<name>_start\` — jump here to (re-)run that block from its entry point.
+- Every block, except the finite loop block exposes \`<name>_start\` — jump here to (re-)run that block from its entry point.
 
 ### Technical Details (Additional Information)
 
@@ -141,7 +141,7 @@ HALT                            ; Halt immediately (1 cycle)
 
 **Generated Assembly** (block target):
 \`\`\`asm
-JMP  Loop_0_start                ; Jump to the selected block's entry/exit point (1 cycle)
+JMP  Loop_0_start                ; Jump to the selected block's entry/exit point (1 cycle) 
 \`\`\`
 
 **Performance**: Every jumpTarget option executes in 1 PRU cycle
@@ -166,7 +166,7 @@ JMP  Loop_0_start                ; Jump to the selected block's entry/exit point
 - **Terminating block**: Block with no output - ends execution path
 - **HALT**: PRU instruction that stops core execution
 - **JMP**: Jump instruction that transfers control to a label
-- **jumpTarget**: The single dropdown selecting where this block jumps to — Sysconfig Generated End, Halt, or any real \`_start\`/\`_end\` target in the design, validated against the current design, not free text
+- **jumpTarget**: The single dropdown selecting where this block jumps to — Sysconfig Generated End, Halt, or any real \`_start\` target in the design, validated against the current design, not free text
 
 --- `;
 }
@@ -210,31 +210,67 @@ exports = {
 		},
 		{
 			name: "opCode",
-			hidden: true,
+			displayName: "Jump To",
 			default: "JMP",
+			options: [
+				{
+					name: "JMP",
+					displayName: "SysConfig Generated End",
+				},
+				{
+					name: "HALT",
+					displayName: "Halt",
+				},
+			],
+			hidden: true,
 			getValue: (inst) => {
-				return (inst["jumpTarget"] === "HALT") ? "HALT" : "JMP";
-			}
+				// Derive opcode from dropdown selection; avoid reading opCode (read-only getter loop)
+				if (inst && inst["jumpTarget"] === "HALT") {
+					return "HALT";
+				}
+				return "JMP";
+			},
 		},
 		{
 			name: "constant1",
 			default: "sysconfig_generated_end",
 			getValue: (inst) => {
-				if(inst["jumpTarget"] == "JMP"){
+				if (inst["jumpTarget"] === "JMP") {
 					return "sysconfig_generated_end";
 				}
-				else if(inst["jumpTarget"] == "HALT"){
+				if (inst["jumpTarget"] === "HALT") {
 					return "";
 				}
-				else{
+				// Infinite loop re-entry: startloop_N — return as-is
+				if (String(inst["jumpTarget"]).startsWith("startloop_")) {
 					return inst["jumpTarget"];
 				}
+				// For loop block targets: map <name>_start -> endloop_N (natural loop exit)
+				// For all other targets (ordinary blocks, groups): return as-is
+				// Use modName (ends with /loop_block) to identify loop blocks —
+				// avoids JSON.stringify which causes recursive getValue calls
+				const jt = String(inst["jumpTarget"]);
+				if (jt.endsWith("_start")) {
+					for (const modName in system.modules) {
+						if (!modName.endsWith("/loop_block")) continue;
+						const mod = system.modules[modName];
+						if (!mod || !mod.$instances) continue;
+						for (let idx = 0; idx < mod.$instances.length; idx++) {
+							const obj = mod.$instances[idx];
+							if (obj && obj.$name && jt === obj.$name + "_start") {
+								return "endloop_" + idx;
+							}
+						}
+					}
+				}
+				// Not a loop block target — return label as-is
+				return inst["jumpTarget"];
 			},
 			hidden: true
 		},
 		{
 			name: "outputReg",
-            default: "None",
+			default: "None",
 			hidden: true
 		},
 		{

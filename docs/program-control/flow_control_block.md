@@ -4,7 +4,7 @@
 
 ### Purpose
 
-Controls PRU program flow by jumping to the end of SysConfig-generated code, halting the PRU immediately, or jumping to the entry (`_start`) or exit (`_end`) point of any other block in the design. This is a terminating block — it has no output port.
+Controls PRU program flow by jumping to the end of SysConfig-generated code, halting the PRU immediately, or jumping to the entry (`_start`) point of any other block in the design. This is a terminating block — it has no output port.
 
 ### Features
 
@@ -18,7 +18,7 @@ Controls PRU program flow by jumping to the end of SysConfig-generated code, hal
 
 | Parameter | Description | Options |
 |-----------|-------------|---------|
-| Jump To | Where to jump when this block is reached | Sysconfig Generated End, Halt, or any block's `_start`/`_end` target in the current design |
+| Jump To | Where to jump when this block is reached | Sysconfig Generated End, Halt, or any block's `_start` target in the current design |
 
 ### Options
 
@@ -37,11 +37,9 @@ Controls PRU program flow by jumping to the end of SysConfig-generated code, hal
 - Select the target directly from the same dropdown — no separate free-text field
 - If the referenced block is later renamed or deleted, SysConfig flags this block as invalid at validation time instead of silently generating a broken jump
 
-### `_start` vs `_end`
+### `_start` 
 
-- **`<name>_start`**: jump here to (re-)run that block from its entry point. For a Loop block, jumping here for a finite loop re-arms LOOP (counter reloads), not a clean continue; only for infinite loops (startloop_N with QBA) does it act like a true continue.
-- **`<name>_end`**: for ordinary blocks, the position immediately after that block's own instruction and not exposed as an option to jump to using flow control. For Loop blocks, for breaking out of the loop we can have a flow control which can jump to the block which comes next to the loop block, connected to next port of the loop block 
-- If/Else blocks only expose `_start` — no `_end` is offered for them.
+- **`<name>_start`**: jump here to (re-)run that block from its entry point. For a Loop block, jumping here would implement continue statement. For breaking out of the loop we can have a flow control which can jump to the block which comes next to the loop block, connected to next port of the loop block or sysconfig_generated_end/halt as per the requirement 
 
 ### Generated Assembly
 
@@ -87,7 +85,7 @@ If/Else (error != 0)
 Loop_0
   └── If/Else (check exit condition)
         ├── t_next → Flow Control (Jump To = "SPI_block_start")    ; break out of the loop and jump outside to the start of the next block connected 
-        └── f_next → Flow Control (Jump To = "Loop_0_start")  ; continue looping
+        └── f_next → Flow Control (Jump To = "Loop_0_start")  ; continue looping, start label is not exposed from the flow control for finite loops 
 ```
 
 ---
@@ -96,4 +94,4 @@ Loop_0
 Every disconnected chunk of blocks (subgraphs with no incoming `prev` connection) must terminate in a Flow Control block. Without this, execution from one chunk falls through into the next chunk, causing unexpected behavior. The tool validates this and reports an error (`Disconnected chunk 'X' missing Flow Control termination`) if any disconnected subgraph doesn't end with Flow Control.
 
 ### Unreachable Chunk Warnings
-After simulation, any emitted block label (`_start`, `_end`, `startloop_*`, `endloop_*`) that was never executed produces a visible warning (`Unreachable chunk: label 'X'...`). This helps identify dead or disconnected code that the simulation never reaches.
+After simulation, any emitted block label (`_start`, `startloop_*`) that was never executed produces a visible warning (`Unreachable chunk: label 'X'...`). This helps identify dead or disconnected code that the simulation never reaches.

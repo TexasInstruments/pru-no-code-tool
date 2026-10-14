@@ -10,17 +10,17 @@
  * Import the modules used in this configuration.
  */
 const pru_blocks_static_module = scripting.addModule("/pru_blocks/common/pru_blocks_static_module");
-const arithmetic_block     = scripting.addModule("/pru_blocks/data_handling/arithmetic_block", {}, false);
-const arithmetic_block1    = arithmetic_block.addInstance();
-const load_constant_block  = scripting.addModule("/pru_blocks/data_handling/load_constant_block", {}, false);
-const load_constant_block1 = load_constant_block.addInstance();
-const load_constant_block2 = load_constant_block.addInstance();
-const flow_control_block   = scripting.addModule("/pru_blocks/program_control/flow_control_block", {}, false);
-const flow_control_block1  = flow_control_block.addInstance();
-const loop_block           = scripting.addModule("/pru_blocks/program_control/loop_block", {}, false);
-const loop_block1          = loop_block.addInstance();
-const pru_spi_write        = scripting.addModule("/pru_blocks/pru_io_blocks/pru_spi_write", {}, false);
-const pru_spi_write1       = pru_spi_write.addInstance();
+const arithmetic_block         = scripting.addModule("/pru_blocks/data_handling/arithmetic_block", {}, false);
+const arithmetic_block1        = arithmetic_block.addInstance();
+const load_constant_block      = scripting.addModule("/pru_blocks/data_handling/load_constant_block", {}, false);
+const load_constant_block1     = load_constant_block.addInstance();
+const load_constant_block2     = load_constant_block.addInstance();
+const flow_control_block       = scripting.addModule("/pru_blocks/program_control/flow_control_block", {}, false);
+const flow_control_block1      = flow_control_block.addInstance();
+const loop_block               = scripting.addModule("/pru_blocks/program_control/loop_block", {}, false);
+const loop_block1              = loop_block.addInstance();
+const pru_spi_write            = scripting.addModule("/pru_blocks/pru_io_blocks/pru_spi_write", {}, false);
+const pru_spi_write1           = pru_spi_write.addInstance();
 
 /**
  * Write custom configuration values to the imported modules.
@@ -34,12 +34,13 @@ load_constant_block1.$name = "Load_Constant_0";
 load_constant_block2.$name     = "Load_Constant_1";
 load_constant_block2.constant1 = 1;
 
-flow_control_block1.$name = "Flow_Control_0";
+flow_control_block1.jumpTarget = "Loop_0_start";
+flow_control_block1.$name      = "continue";
 
 loop_block1.$name         = "Loop_0";
 loop_block1.loopCount     = 10;
 loop_block1.preInitBlocks = ["Load_Constant_0"];
-loop_block1.$size         = [500,315];
+loop_block1.$size         = [685,370];
 
 pru_spi_write1.$name          = "PRU0_SPI_Write_0";
 pru_spi_write1["SDO Signal"]  = "3";
@@ -49,7 +50,7 @@ pru_spi_write1["SCLK Signal"] = "4";
 /**
  * References between modules.
  */
-loop_block1.$groupContents = [load_constant_block1, load_constant_block2, arithmetic_block1, pru_spi_write1];
+loop_block1.$groupContents = [load_constant_block1, load_constant_block2, arithmetic_block1, pru_spi_write1, flow_control_block1];
 
 /**
  * Connections between modules.
@@ -57,14 +58,14 @@ loop_block1.$groupContents = [load_constant_block1, load_constant_block2, arithm
 scripting.connect(arithmetic_block1, "input1", load_constant_block1, "output1");
 scripting.connect(arithmetic_block1, "input2", load_constant_block2, "output1");
 scripting.connect(arithmetic_block1, "output1", pru_spi_write1, "input1");
-scripting.connect(flow_control_block1, "prev", loop_block1, "next");
+scripting.connect(flow_control_block1, "prev", pru_spi_write1, "next");
 
 /**
  * (x,y) coordinates for modules that are displayed in a graph.
  */
-arithmetic_block1.$position    = [185,75];
-load_constant_block1.$position = [60,45];
-load_constant_block2.$position = [60,130];
-flow_control_block1.$position  = [145,15];
+arithmetic_block1.$position    = [180,65];
+load_constant_block1.$position = [35,35];
+load_constant_block2.$position = [40,105];
+flow_control_block1.$position  = [430,65];
 loop_block1.$position          = [0,0];
-pru_spi_write1.$position       = [330,75];
+pru_spi_write1.$position       = [300,65];

@@ -36,3 +36,4 @@ main:
     ; halt the program after jumping to sysconfig generated start
     JMP     sysconfig_generated_start
 sysconfig_generated_end:
+    halt
