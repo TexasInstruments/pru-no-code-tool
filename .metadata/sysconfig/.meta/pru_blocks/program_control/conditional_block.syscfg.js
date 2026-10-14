@@ -180,8 +180,8 @@ Implements conditional logic (IF/ELSE statements) to control program flow based 
 - This block does not produce an output value - it only controls flow
 - **Any connected branch (T or F) MUST terminate in a Flow Control block**: The FALSE path falls through to the TRUE path in the generated assembly unless explicitly stopped, and vice versa. SysConfig validation now enforces this as an error — connect a Flow Control block at the end of every connected branch. Leaving a branch entirely unconnected is fine; only connected-but-unterminated branches are rejected.
 - **What that Flow Control block should jump to depends on where the If/Else block lives**:
-  - **Standalone If/Else** (not inside a Loop block): jump to Sysconfig Generated End, Halt, or any other block's \`_start\`/\`_end\` target.
-  - **If/Else nested inside a Loop block**: jump to that Loop's \`<LoopName>_start\` target so execution resumes the loop instead of exiting the whole program. Jumping to Sysconfig Generated End or Halt from inside a loop's branch ends the entire program early rather than just this iteration — only intentional if that's really the goal. To break out of the loop early (without ending the whole program), jump to the Loop's \`<LoopName>_end\` target instead.
+  - **Standalone If/Else** (not inside a Loop block): jump to Sysconfig Generated End, Halt, or any other block's \`_start\` target.
+  - **If/Else nested inside a Loop block**: jump to that Loop's \`<LoopName>_start\` target so execution resumes the loop instead of exiting the whole program. Jumping to Sysconfig Generated End or Halt from inside a loop's branch ends the entire program early rather than just this iteration — only intentional if that's really the goal. To break out of the loop early (without ending the whole program), jump to the start label of the block connected to the loop block target instead.
 - Every block, including this one and every block on either branch, has an addressable \`<blockName>_start\` entry point that a Flow Control block elsewhere in the design can jump to (e.g. to re-run this comparison, or to re-enter a Loop block from inside a branch).
 
 ### Terminology

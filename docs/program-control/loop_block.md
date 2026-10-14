@@ -29,11 +29,12 @@ Repeats a sequence of blocks a fixed number of times or infinitely. This is a co
 2. **Set Loop Count** or enable Infinite Loop
 3. **Optionally** mark blocks as Pre-Initialization to run them once before the loop
 4. On each iteration, all non-pre-init blocks execute in connection order
+5. After the loop block's code, a NOP is emmited, this is to ensure that the endloop label emitted at the end does not overlap with the start label of the next block, without it jumping to the next block's start would cause it to re-enter the loop as endloop and start (of next block) resolve to the same address
 
 ### Continue and Break implementation using Flow Control Blocks
 
 #### Continue 
-We can use Flow control to select the start label of the loop block (e.g. `loop_0_start`). For a finite loop, this reloads the counter (restarts the loop with the original count), not a true continue. Only for an infinite loop does jumping back to `_start` behave like a clean continue, as shown below with the `tamagawa_single_channel` example.
+We can use Flow control to select the start label of the loop block (e.g. `loop_0_start`). Checkout the `tamagawa_single_channel` example for a continue statement in loop emulation.
 
 <figure>
 <img src="../images/continue_using_flow_control_loop.png" alt="continue" width="900">

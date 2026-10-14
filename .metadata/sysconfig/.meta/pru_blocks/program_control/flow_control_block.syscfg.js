@@ -1,8 +1,7 @@
 /**
  * Enumerates every real, user-meaningful label in the current design that
  * a Flow Control block can validly jump to: every block's <name>_start
- * (entry point) and, for ordinary blocks, <name>_end (exit
- * point). Loop blocks do NOT expose `_end`. Conditional (If/Else) blocks only expose
+ * (entry point). Conditional (If/Else) blocks only expose
  * _start, since they have two forward addresses (_TRUE/_FALSE) rather
  * than one "end". Excludes internal hardware labels (endloop_N; the
  * startloop_N numeric suffix is kept since it's the only re-entry point
@@ -43,17 +42,19 @@ function getValidJumpTargets() {
 				if ('infiniteLoop' in inst) {
 					// Loop block
 					if (inst.infiniteLoop === true) {
+						// Infinite loop: dropdown shows startloop_N (matches allocator label)
 						targets.push({
 							name: `startloop_${i}`,
 							displayName: `${inst.$name} (loop start)`
 						});
 					} else {
+						// Finite loop: dropdown shows Loop_N_start; emitted assembly maps
+						// to endloop_N via constant1 getValue for clean exit.
 						targets.push({
-							name: `${inst.$name}_start`,
+							name: `Loop_${i}_start`,
 							displayName: `${inst.$name} (loop start)`
 						});
 					}
-					// Note: Loop blocks do not expose an _end label. Break via Flow Control to the next block or sysconfig_generated_end.
 				} else {
 					// Group block
 					const groupName = inst.groupName || inst.$name;
@@ -125,7 +126,7 @@ Controls PRU program flow by jumping to the end of generated code, halting the P
 
 ### _start targets
 
-- Every block exposes \`<name>_start\` — jump here to (re-)run that block from its entry point.
+- Every block, except the finite loop block exposes \`<name>_start\` — jump here to (re-)run that block from its entry point.
 
 ### Technical Details (Additional Information)
 
@@ -141,7 +142,7 @@ HALT                            ; Halt immediately (1 cycle)
 
 **Generated Assembly** (block target):
 \`\`\`asm
-JMP  Loop_0_start                ; Jump to the selected block's entry/exit point (1 cycle)
+JMP  Loop_0_start                ; Jump to the selected block's entry/exit point (1 cycle) 
 \`\`\`
 
 **Performance**: Every jumpTarget option executes in 1 PRU cycle
@@ -166,7 +167,7 @@ JMP  Loop_0_start                ; Jump to the selected block's entry/exit point
 - **Terminating block**: Block with no output - ends execution path
 - **HALT**: PRU instruction that stops core execution
 - **JMP**: Jump instruction that transfers control to a label
-- **jumpTarget**: The single dropdown selecting where this block jumps to — Sysconfig Generated End, Halt, or any real \`_start\`/\`_end\` target in the design, validated against the current design, not free text
+- **jumpTarget**: The single dropdown selecting where this block jumps to — Sysconfig Generated End, Halt, or any real \`_start\` target in the design, validated against the current design, not free text
 
 --- `;
 }
@@ -210,11 +211,19 @@ exports = {
 		},
 		{
 			name: "opCode",
-			hidden: true,
+			displayName: "Jump To",
 			default: "JMP",
-			getValue: (inst) => {
-				return (inst["jumpTarget"] === "HALT") ? "HALT" : "JMP";
-			}
+			options: [
+				{
+					name: "JMP",
+					displayName: "SysConfig Generated End",
+				},
+				{
+					name: "HALT",
+					displayName: "Halt",
+				},
+			],
+			hidden: true,
 		},
 		{
 			name: "constant1",
@@ -227,6 +236,16 @@ exports = {
 					return "";
 				}
 				else{
+					// Loop targets: infinite -> startloop_N (re-enter); finite -> endloop_N (exit)
+					if (String(inst["jumpTarget"]).includes('startloop_') && String(inst["jumpTarget"]).match(/startloop_(\d+)/)) {
+						return inst["jumpTarget"];
+					}
+					if ((String(inst["jumpTarget"]).includes('Loop_') || String(inst["jumpTarget"]).includes('loop_')) && String(inst["jumpTarget"]).includes('start')) {
+						const jt = String(inst["jumpTarget"]);
+						const match = jt.match(/Loop_(\d+)/);
+						if (match) return `endloop_${match[1]}`;
+						return jt.replace(/_start$/, '').replace(/^Loop_/, 'endloop_');
+					}
 					return inst["jumpTarget"];
 				}
 			},

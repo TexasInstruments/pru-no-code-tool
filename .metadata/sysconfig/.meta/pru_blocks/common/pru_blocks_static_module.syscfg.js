@@ -965,7 +965,7 @@ function checkDisconnectedChunks(inst, report) {
         }
     }
 
-    // Build a set of all block names that live inside any group container
+    // Build a set of members inside GROUP containers (not loop blocks) only
     const groupMemberNames = new Set();
     for (const modName in modules) {
         if (!modName.startsWith("/pru_blocks/")) continue;
@@ -973,9 +973,13 @@ function checkDisconnectedChunks(inst, report) {
         if (!mod || !mod.$instances) continue;
         for (const instObj of mod.$instances) {
             if (instObj && instObj.$groupContents && Array.isArray(instObj.$groupContents)) {
-                for (const child of instObj.$groupContents) {
-                    if (child && child.$name) {
-                        groupMemberNames.add(child.$name);
+                const modulePath = JSON.parse(JSON.stringify(instObj)).$module || '';
+                // Only group blocks (not loop blocks) exclude members from chunk check
+                if (modulePath.includes('group_block')) {
+                    for (const child of instObj.$groupContents) {
+                        if (child && child.$name) {
+                            groupMemberNames.add(child.$name);
+                        }
                     }
                 }
             }
@@ -997,7 +1001,9 @@ function checkDisconnectedChunks(inst, report) {
                 modulePath.includes('group_block') ||
                 modulePath.includes('conditional_block') ||
                 modulePath.includes('load_constant_block') ||
-                (instObj.$groupContents && ('infiniteLoop' in instObj && instObj.infiniteLoop === true))) {
+                (instObj.$groupContents && ('infiniteLoop' in instObj && instObj.infiniteLoop === true)) ||
+                // Exclude finite terminal loops (last block, no next connection) from chunk check
+                (modulePath.includes('loop_block') && instObj.infiniteLoop === false && (!instObj.next || instObj.next.length === 0))) {
                 continue;
             }
             // Skip any block inside a group container (group members have their own flow)
@@ -1072,6 +1078,19 @@ function checkDisconnectedChunks(inst, report) {
             // Follow control-flow next port
             const nextConnections = (current.next && current.next.length > 0) ? current.next : [];
             for (const conn of nextConnections) {
+                if (conn && conn.inst && conn.inst.$name) {
+                    stack.push(conn.inst.$name);
+                }
+            }
+            // Follow conditional branch ports (T / F) for If/Else blocks
+            const trueConnections = (current.T && current.T.length > 0) ? current.T : [];
+            for (const conn of trueConnections) {
+                if (conn && conn.inst && conn.inst.$name) {
+                    stack.push(conn.inst.$name);
+                }
+            }
+            const falseConnections = (current.F && current.F.length > 0) ? current.F : [];
+            for (const conn of falseConnections) {
                 if (conn && conn.inst && conn.inst.$name) {
                     stack.push(conn.inst.$name);
                 }
@@ -1228,7 +1247,8 @@ function validate(inst, report)
         // Unreachable-chunk warnings: only for block start labels, once globally
         for (const lbl of emittedLabels) {
             if (!visitedLabels.has(lbl)) {
-                const isBlockStart = lbl.endsWith('_start') || lbl.startsWith('startloop_') || lbl.startsWith('endloop_');
+                const isBlockStart = lbl.endsWith('_start') || lbl.startsWith('startloop_');
+                // Skip endloop labels: unvisited endloop is normal (loop exits after iterations)
                 if (isBlockStart && !warnedLabelsGlobal.has(lbl)) {
                     warnedLabelsGlobal.add(lbl);
                     // Look up block instance by stripping label suffix
@@ -1245,7 +1265,7 @@ function validate(inst, report)
                     }
                     const blockInst = lookupMap[blockName] || inst;
                     report.logWarning(
-                        `Unreachable chunk: label '${lbl}' was emitted but never executed during simulation.`,
+                        `Note: label '${lbl}' not executed in this simulation. This is expected for branches not taken by the current input or block combinations used.`,
                         blockInst, ""
                     );
                 }

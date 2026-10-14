@@ -15,11 +15,11 @@ Controls PRU program flow by jumping to the end of generated code, halting the P
 
 - **Sysconfig Generated End**: Jumps to the end label of the SysConfig-generated code. Allows any cleanup code or epilogue to execute. Recommended for normal program completion. Generated instruction: `JMP sysconfig_generated_end`
 - **Halt**: Immediately stops the PRU execution. Puts PRU into halt state, no cleanup or epilogue runs. Generated instruction: `HALT`. Use for emergency stops or when no cleanup needed.
-- **Any block's `_start`**: Every block in the design — ordinary blocks, If/Else blocks, Loop blocks, Group blocks — has an addressable `_start` entry point. The dropdown only lists real, currently-existing targets — SysConfig rejects the field if a previously-selected target no longer exists (e.g. the referenced block was renamed or deleted).
+- **Any block's `_start`**: Every block in the design — ordinary blocks, If/Else blocks, Infinite-Loop blocks — has an addressable `_start` entry point. The dropdown only lists real, currently-existing targets — SysConfig rejects the field if a previously-selected target no longer exists (e.g. the referenced block was renamed or deleted). 
 
-### _start vs _end targets
+### _start targets
 
-- Every block exposes `<name>_start` — jump here to (re-)run that block. For a finite Loop, this re-arms LOOP (counter reloads, not a clean continue); for an infinite loop (`startloop_N` with `QBA`), it acts like a true continue.
+- Every block exposes `<name>_start` — jump here to (re-)run that block to act as continue statement.
 
 ### Technical Details (Additional Information)
 
@@ -89,7 +89,7 @@ const flow1 = flow_control_block.addInstance();
 
 ### _start targets
 
-- Every block exposes `<name>_start` — jump here to (re-)run that block. For a finite Loop, this re-arms LOOP (counter reloads, not a clean continue); for an infinite loop (`startloop_N` with `QBA`), it acts like a true continue.
+- Every block exposes `<name>_start` — jump here to (re-)run that block. 
 
 ### Example Configurations
 

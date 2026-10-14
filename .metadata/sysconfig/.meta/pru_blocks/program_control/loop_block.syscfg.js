@@ -88,6 +88,7 @@ LDI    loop_counter, loop_count      ; Load iteration count (1-2 cycles)
 LOOP endloop_label, loop_counter     ; Hardware loop instruction
 ; ... blocks inside loop execute here ...
 endloop_label:
+NOP                           ; trampoline: ensures break-to-next-block lands past loop exit address
 ; Continue after loop
 \`\`\`
 
@@ -103,6 +104,7 @@ LOOP endloop_label, loop_counter     ; Hardware loop instruction
 LDI    R0.b2, 1                      ; Example: Increment value
 ADD    R0.b1, R0.b1, R0.b2           ; Accumulate: R0.b1 = R0.b1 + 1
 endloop_label:
+NOP                           ; trampoline: separates loop exit from next-block start
 ; Continue after loop (R0.b1 now contains accumulated result)
 \`\`\`
 
@@ -150,23 +152,25 @@ Blocks execute in the order they are connected via prev/next ports within the lo
 - Be careful with infinite loops - they never exit
 - Loop counter uses a register - this register is reserved during loop execution
 - Nested loops are possible (place a LOOP block inside another LOOP block)
-- Loop overhead is minimal (2-3 cycles setup, 2 cycles per iteration). Note: loop blocks do not emit a end label; break out via Flow Control (jump to next block or sysconfig_generated_end).
+- Loop overhead is minimal (2 cycles for setup, 1 cycle at end for loop block's trampoline). Note: loop blocks do not emit a end label; break out via Flow Control (jump to next block or sysconfig_generated_end).
+- After the loop block's code, a NOP is emmited, this is to ensure that the endloop label emitted at the end does not overlap with the start label of the next block, without it jumping to the next block's start would cause it to re-enter the loop as endloop and start (of next block) resolve to the same address
 
 ### Performance Calculation
 
 **Formula**:
-- Total cycles = Loop_overhead + (Loop_count × Body_cycles)
+- Total cycles = Loop_overhead + (Loop_count × Body_cycles) + NOP (end)
 
 Where:
-- Loop_overhead = 2-3 cycles (counter initialization + LOOP instruction; 3 for 4-byte counter)
+- Loop_overhead = 2 (counter initialization + LOOP instruction; 3 for 4-byte counter)
 - Body_cycles = sum of cycles for all blocks inside loop
 - Loop_count = number of iterations
+- NOP = placed at the end 
 
 **Example**:
 - Loop count: 100
 - Body: Load Constant (1 cycle) + Delay(10) (10 cycles) = 11 cycles
-- Total = 2 + (100 × 11) = 1102 cycles
-- At 200MHz: 1103 × 5ns = 5.510 microseconds
+- Total = 2 + (100 × 11) + 1(NOP) = 1103 cycles
+- At 200MHz: 1103 × 5ns = 5.515 microseconds
 
 ### Terminology
 - **Loop**: Programming construct that repeats a sequence of operations
@@ -283,12 +287,12 @@ exports = {
 			getValue: (inst) => {
 				if(inst["infiniteLoop"] == false)
 				{
-					//2 for loading loop counter and 1 for loop instruction
+					// 2 cycles (LDI + LOOP) + 1 cycle (NOP trampoline)
 					if(inst["loopCountRegSize"] == 4)
 					{
-						return 3;
+						return 4;
 					}
-					return 2;
+					return 3;
 				}
 				//when infinity block is connected return -1 as indicator of unknown cycle budget
 				return -1;

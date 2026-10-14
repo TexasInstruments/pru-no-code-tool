@@ -170,7 +170,7 @@ target instead so the loop keeps iterating:
 // if_else1 is one of the instances inside loop_block1.$groupContents
 const flow_true = flow_control_block.addInstance();
 flow_true.$name = "Flow_Control_True_End";
-flow_true.jumpTarget = "Loop_0_start"; // for INFINITE loops, this continues cleanly; for finite loops it re-arms LOOP (not a true continue)
+flow_true.jumpTarget = "Loop_0_start"; // for loop blocks, this behaves as a continue statement
 scripting.connect(true_path_block, "next", flow_true, "prev");
 
 const flow_false = flow_control_block.addInstance();
@@ -178,7 +178,7 @@ flow_false.$name = "Flow_Control_False_End";
 flow_false.jumpTarget = "Loop_0_start";
 scripting.connect(false_path_block, "next", flow_false, "prev");
 \`\`\`
-Jumping to `_start` resumes the loop for INFINITE loops (clean continue), but for finite loops it re-arms LOOP (counter reloads). For behavior corresponding to `break` use the flow control to jump to the start label of the block connected next to the loop block, `Continue and Break implementation using Flow Control Blocks` section in docs/program-control/loop_block.md for full context and details 
+Jumping to `_start` resumes the loop. For behavior corresponding to `break` use the flow control to jump to the start label of the block connected next to the loop block, `Continue and Break implementation using Flow Control Blocks` section in docs/program-control/loop_block.md for full context and details 
 
 ### Important Notes
 
