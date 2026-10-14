@@ -2,7 +2,7 @@ const additionalInstructions =  `
 CRITICAL WORKFLOW - ALWAYS FOLLOW:
 
 CRITICAL RULE: Before calling addModuleInstances for ANY block:
-1. MUST call getAIContext first to read documentation
+1. Must read Agents.md and read the docs_ai for the blocks which will be used 
 2. NO EXCEPTIONS - even if you think you know the block
 3. "When changing a module instance's $name configurable, the moduleInstanceId automatically updates to match the new name, so always use getModuleInstances() after renaming to retrieve the updated instance IDs before making connections or further modifications."
 4. If you skip this step, acknowledge your mistake immediately

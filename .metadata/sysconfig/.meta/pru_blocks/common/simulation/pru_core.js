@@ -1110,8 +1110,11 @@ function executeInstruction(pruState, pruInstructions, labelMap, r30ValueHistory
         case 'JMP': {
             // JMP label
             const label = operands[0];
-            
-            if (labelMap[label] !== undefined) {
+
+            if (label === 'sysconfig_generated_end') {
+                // Exit point: stop visiting further labels
+                pruState.pc = pruInstructions.length; // Force loop exit
+            } else if (labelMap[label] !== undefined) {
                 pruState.pc = labelMap[label];
             } else {
                 // If label not found, increment error counter and move to next instruction
@@ -1655,12 +1658,20 @@ function simulatePruInstructions(pruInstructions, pruInstructionsLabels, cycleCo
         }
     }
 
+    // Track which emitted labels are reached during simulation
+    // (used for unreachable-chunk detection post-sim)
+    const visitedLabels = new Set();
+
     // Execute instructions until cycle count is reached or PC is out of bounds
     while (pruState.cycles < cycleCount && pruState.pc < pruInstructions.length) {
+        const currentLabel = pruInstructionsLabels[pruState.pc];
+        if (currentLabel !== 0 && typeof currentLabel === 'string') {
+            visitedLabels.add(currentLabel);
+        }
         executeInstruction(pruState, pruInstructions, labelMap, r30ValueHistory, r31ValueHistory, cycleCount);
     }
 
-    return {pruState, r30ValueHistory, r31ValueHistory};
+    return {pruState, r30ValueHistory, r31ValueHistory, visitedLabels};
 }
 
 // Export the functions and constants

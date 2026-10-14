@@ -6,16 +6,22 @@ This file guides AI assistants when working with the PRU No-Code Tool inside TI 
 
 ## Critical Rules
 
-**Rule 1: MANDATORY — Always `listModules()` → `getAIContext()` → `addModuleInstances()`**
+**Rule 1: MANDATORY — Always `listModules()` → Read docs `.md` files → `addModuleInstances()`**
 - Call `listModules()` to get exact full module paths (short names like `"uart_tx"` do NOT work)
-- Call `getAIContext(modulePath)` on every block before adding it — **NO EXCEPTIONS**, even for familiar blocks
-- **CRITICAL: Read the "How to Configure (For AI/Scripting)" section in the context — this is ESSENTIAL for proper functioning**
-- Reason: `getAIContext()` reveals critical details you CANNOT guess:
+- Read the docs `.md` file for every block before adding it — **NO EXCEPTIONS**, even for familiar blocks
+- **ALSO READ THE DOCS FILE:** Pattern is `docs_ai/<category>/<block>.md`. Key examples per category:
+  - Program Control: `docs_ai/program_control/loop_block.md`, `conditional_block.md`, `flow_control_block.md`
+  - Data Handling: `docs_ai/data_handling/load_constant_block.md`, `arithmetic_block.md`
+  - PRU I/O: `docs_ai/pru_io_blocks/pru_gpi_block.md`, `pru_spi_read.md`
+  - Utilities: `docs_ai/utils/delay_block.md`, `memory_variable_block.md`
+  - Always read the "How to Configure (For AI/Scripting)" section.
+- **CRITICAL: Read the "How to Configure (For AI/Scripting)" section in the docs file** — this is ESSENTIAL
+- Reason: The `.md` docs reveal critical details you CANNOT guess:
   - Parameter encodings (e.g., `oversampleSize = 7` means 8x oversampling, not 8)
   - Baud rate calculation formulas and timing constraints
   - Correct parameter types (int vs string)
   - Valid value ranges and special encodings
-- If you skip this step, acknowledge your mistake immediately and re-read the full context before proceeding
+- If you skip reading the docs, acknowledge your mistake immediately and read the full `.md` file before proceeding
 
 **Rule 2: Semantic naming prevents connection errors**
 - Rename blocks immediately after creation to reflect PURPOSE, not just type
@@ -33,7 +39,7 @@ This file guides AI assistants when working with the PRU No-Code Tool inside TI 
 
 **Rule 4: Always build after completing block setup**
 - After adding, configuring, and connecting blocks, trigger a build to check for errors
-- Fix errors before reporting the setup as complete
+- Fix errors before reporting and build again to check for any other errors
 
 **Rule 5: Always `getModuleInstances()` after renaming a block**
 - When you set `$name` on an instance, the `moduleInstanceId` auto-updates
@@ -43,7 +49,7 @@ This file guides AI assistants when working with the PRU No-Code Tool inside TI 
 **Rule 6: No AI tool for connections — edit .syscfg directly**
 - Add `scripting.connect(instanceA, "portOnA", instanceB, "portOnB")` calls in the `.syscfg` file under "Connections between modules"
 - Port types: `"output1"`/`"input1"` (data), `"next"`/`"prev"` (control flow)
-- If `getAIContext()` returns nothing, verify the path with `listModules()` first
+- If the docs file (`docs_ai/<folder>/<block>.md`) is missing, verify the block path with `listModules()` first
 
 ---
 
@@ -52,7 +58,7 @@ This file guides AI assistants when working with the PRU No-Code Tool inside TI 
 | Tool | Purpose |
 |------|---------|
 | `listModules()` | Get exact full paths for all available blocks |
-| `getAIContext(modulePath)` | Read block documentation, parameters, encodings, and usage notes |
+| `readDocs(filePath)` | Read `.md` docs file at `docs_ai/<folder>/<block>.md` for parameters, encodings, usage notes |
 | `addModuleInstances(modulePath, configs)` | Add block instances with configuration |
 | `getModuleInstances(modulePath)` | Get current instances including up-to-date IDs (call after rename) |
 | `removeModuleInstances(modulePath, instanceIds)` | Remove block instances |
@@ -76,32 +82,6 @@ This file guides AI assistants when working with the PRU No-Code Tool inside TI 
    - Verify the SOURCE of each input (is it the right block?)
    - Verify the PURPOSE of each value (does it make logical sense?)
 
-**Example (UART TX with 8-bit data + 8-bit CRC in single frame):**
-
-```
-Data Flow (outline first):
-  Load_Constant (data=0xAA)     ─┬─→ CRC block (data input)
-                                 ├─→ Bitwise_OR (lower byte)
-                                 └─→ [WRONG CONNECTION - don't do this]
-  
-  Load_Constant (crc_init=0)    ─→ CRC block (init input)
-  
-  Load_Constant (shift_amt=8)   ─→ Bitwise_LSL (shift amount) ✓
-  
-  CRC block (output)            ─→ Bitwise_LSL (data to shift)
-  
-  Bitwise_LSL (output)          ─→ Bitwise_OR (upper byte)
-  
-  Load_Constant (data=0xAA)     ─→ Bitwise_OR (lower byte)
-  
-  Bitwise_OR (output)           ─→ UART_TX (16-bit frame)
-```
-
-**Key insight from planning:**
-- Need **3 Load Constants**, not 2 (data, crc_init, shift_amount)
-- Shift amount is a **constant (8)**, NOT the data value (0xAA)
-- Each constant has a **distinct purpose** — name it accordingly
-
 ---
 
 ### Step 1: Add and Name Blocks (Semantic Naming)
@@ -110,11 +90,7 @@ Data Flow (outline first):
 2. `addModuleInstances(modulePath, {})` → add blocks
 3. **Immediately rename each block to reflect its PURPOSE:**
    - `Load_Constant_0` → `Data_Byte` (or `Data_0xAA`)
-   - `Load_Constant_1` → `CRC_Init_Zero` (or `CRC_Init`)
-   - `Load_Constant_2` → `Shift_Amount_8` (or `Shift_8`)
    - `CRC_0` → `CRC_8bit` (clarifies CRC type)
-   - `Bitwise_0` → `CRC_ShiftLeft_8` (clarifies operation)
-   - `Bitwise_1` → `Combine_Data_CRC` (clarifies purpose)
 
    **Why:** When connecting later, semantic names make it obvious which constant goes where.
 
@@ -122,83 +98,16 @@ Data Flow (outline first):
 
 ### Step 2: Configure and Validate Inputs
 
-1. `getAIContext(modulePath)` for each block → read parameters, types, valid values
+1. Read the docs `.md` file (`docs_ai/<folder>/<block>.md`) for the block → read parameters, types, valid values
 2. `changeConfiguration()` → set values
 3. **For each configurable, write down:**
    - What it does
    - Why this value (reference the pre-planning)
    - Expected behavior
-   
-   Example:
-   ```
-   Load_Constant (Data_Byte):
-     - constant1 = 170 (0xAA)
-     - Purpose: 8-bit data payload to be CRC'd and transmitted
-   
-   Load_Constant (CRC_Init):
-     - constant1 = 0
-     - Purpose: CRC starts fresh (not chained from previous CRC)
-   
-   Load_Constant (Shift_Amount):
-     - constant1 = 8
-     - Purpose: Shift CRC left 8 bits to place in upper byte
-     - Math: 16-bit frame = [CRC:8 bits][Data:8 bits]
-   
-   Bitwise (CRC_ShiftLeft_8):
-     - opCode = LSL (left shift)
-     - input1 = CRC_8bit.output1 (the CRC to shift)
-     - input2 = Shift_Amount_8.output1 (shift by 8)
-     - output = 16-bit result (CRC now in upper byte)
-   ```
 
 ---
 
-### Step 3: Pre-Connection Validation Checklist
-
-**Before editing .syscfg to add `scripting.connect()` calls:**
-
-For each block input, answer these questions:
-
-```
-BLOCK: Bitwise_0 (CRC_ShiftLeft_8)
-□ input1: Should receive CRC output?
-  Source: CRC_0.output1 ✓
-  Semantically: "Shift the CRC result left" ✓
-  Type: 8 bits → 16 bits after LSL ✓
-
-□ input2: Should receive shift amount?
-  Source: Load_Constant_2 (Shift_Amount_8) ✓
-  NOT: Load_Constant_0 (Data_Byte) ✗
-  Semantically: "Shift by 8 bits" ✓
-  Math check: CRC << 8 makes sense for [CRC:8][Data:8] frame ✓
-
-BLOCK: Bitwise_1 (Combine_Data_CRC)
-□ input1: Should receive shifted CRC (upper byte)?
-  Source: Bitwise_0.output1 ✓
-  NOT: Load_Constant_0 (Data_Byte) ✗
-  Semantically: "Upper byte is shifted CRC" ✓
-
-□ input2: Should receive original data (lower byte)?
-  Source: Load_Constant_0 (Data_Byte) ✓
-  NOT: something else ✓
-  Semantically: "Lower byte is original data" ✓
-
-BLOCK: UART_TX_0
-□ input1: Should receive combined 16-bit frame?
-  Source: Bitwise_1.output1 ✓
-  Size: 16 bits (matches dataBits=16 config) ✓
-  Content: [CRC:8][Data:8] ✓
-```
-
-**Catch errors BEFORE building by asking:**
-- Is the SOURCE block correct?
-- Is the SOURCE port correct?
-- Does the semantic PURPOSE match the connection?
-- Does the data SIZE/TYPE match?
-
----
-
-### Step 4: Connect Blocks and Build
+### Step 3: Connect Blocks and Build
 
 1. Edit `.syscfg` → add `scripting.connect()` calls (use semantic names from Step 1)
 2. [If renamed] `getModuleInstances()` → retrieve updated IDs (if needed)
@@ -235,22 +144,6 @@ CONNECT & BUILD:
   └─ Build
   └─ Fix errors if found
 ```
-
----
-
-## Connection Example
-
-```js
-// Data connections
-scripting.connect(load_constant_1, "output1", memory_access_1, "input1");
-scripting.connect(memory_access_1, "output1", uart_tx1, "input1");
-
-// Control flow (execution order)
-scripting.connect(load_constant_1, "next", memory_access_1, "prev");
-scripting.connect(memory_access_1, "next", uart_tx1, "prev");
-```
-
-Key: Blocks can have both data and control connections. Port names matter; order of pairs doesn't.
 
 ---
 
@@ -319,18 +212,6 @@ CRC_0 (output = 8 bits) → Bitwise_LSL (input1) → OR (input1) → UART_TX (ex
 1. **Trace output size:** For each block, know the output size
 2. **Verify compatibility:** Check if next block's input matches the output size
 3. **Test the chain:** Mentally execute: CRC (8b) → LSL (16b) → OR (16b) → UART (16b) ✓
-
-### Mistake 4: Forgetting to Update Block Names After Creation
-
-**What happens:**
-- You create `Load_Constant_0`, `Load_Constant_1`, `Load_Constant_2`
-- Later, when connecting, you're not sure which is which
-- You accidentally connect the wrong one
-
-**How to avoid:**
-1. **Rename immediately after creation** (Step 1 of Design Build Pattern)
-2. **Use clear semantic names** that describe PURPOSE, not just type
-3. **Verify names match connections** when editing .syscfg
 
 ---
 
