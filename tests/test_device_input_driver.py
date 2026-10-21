@@ -429,4 +429,3 @@ def test_green_design_builds_and_sims_pass_with_ssi_decoding_4321_and_spi_drivin
         assert edges.get(4, 0) >= 50, trace      # SPI SCLK on the free GPO
         assert edges.get(0, 0) >= 48, trace      # SSI CLK untouched by the SPI block
         assert edges.get(2, 0) > 0 and edges.get(3, 0) > 0, trace   # MOSI and CS
-

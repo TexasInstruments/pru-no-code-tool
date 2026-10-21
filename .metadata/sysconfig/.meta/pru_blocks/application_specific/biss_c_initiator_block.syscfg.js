@@ -17,7 +17,7 @@ const bissCModule = {
 			hidden: true
 		},
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         // Not used by the macro (clock spacing is a fixed NOP); hidden until clock timing is implemented.
         { name: "clockFreq", displayName: "Clock Frequency (Hz)", default: 5000000, hidden: true },
         { name: "clkPin", displayName: "CLK Pin", default: 0 },
@@ -34,11 +34,11 @@ const bissCModule = {
         { name: "constant1", hidden: true, default: 0, getValue: (inst) => inst.clkPin },
         { name: "constant2", hidden: true, default: 1, getValue: (inst) => inst.dataPin },
         { name: "constant3", hidden: true, default: 32, getValue: (inst) => inst.dataLen },
-        
+
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 500, default: 500 }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         return [
             { name: "prev", type: "IO_PREV" },
             { name: "next", type: "IO_NEXT" },

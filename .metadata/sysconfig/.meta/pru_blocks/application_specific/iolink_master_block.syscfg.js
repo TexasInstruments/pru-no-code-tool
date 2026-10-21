@@ -115,7 +115,7 @@ var iolinkModule = {
         "",
         '**Maturity:** `assembles`. The ENDAT wrapper is accurately modelled on the',
         'existing `uart_tx` / `uart_rx` blocks, but the headless simulator does NOT',
-        "model the internal ENDAT FIFO/TX/RX state machine. Simulator-tested upgrade", 
+        "model the internal ENDAT FIFO/TX/RX state machine. Simulator-tested upgrade",
         "requires an ENDAT stub."
     ].join("\n"),
 

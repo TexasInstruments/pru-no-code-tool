@@ -86,7 +86,7 @@ function loadBlockModule(blockName, blockSubdir) {
 function expandMacro(macroStr, argsMap) {
     const lines = macroStr.split('\n');
     const expandedLines = [];
-    
+
     let macroHeaderIndex = -1;
     let params = [];
     for (let i = 0; i < lines.length; i++) {
@@ -98,11 +98,11 @@ function expandMacro(macroStr, argsMap) {
             break;
         }
     }
-    
+
     if (macroHeaderIndex === -1) {
         throw new Error("Could not find .macro definition in macro string");
     }
-    
+
     const paramNames = params;
     const mapping = {};
     const registersMap = {
@@ -111,7 +111,7 @@ function expandMacro(macroStr, argsMap) {
         'TEMP_REG3': 'R26',
         'TEMP_REG4': 'R27'
     };
-    
+
     for (let i = 0; i < paramNames.length; i++) {
         const pName = paramNames[i];
         if (argsMap[pName] !== undefined) {
@@ -120,17 +120,17 @@ function expandMacro(macroStr, argsMap) {
             mapping[pName] = argsMap[i];
         }
     }
-    
+
     const bodyLines = lines.slice(macroHeaderIndex + 1);
     const condStack = [true];
-    
+
     for (let line of bodyLines) {
         const trimmed = line.trim();
-        
+
         if (trimmed.startsWith('.endm')) {
             break;
         }
-        
+
         if (trimmed.startsWith('.if ')) {
             let cond = trimmed.substring(4).trim();
             for (const [pName, val] of Object.entries(mapping)) {
@@ -146,23 +146,23 @@ function expandMacro(macroStr, argsMap) {
             } else {
                 isTrue = (cond === '1' || cond.toLowerCase() === 'true');
             }
-            
+
             const parentActive = condStack[condStack.length - 1];
             condStack.push(parentActive && isTrue);
             continue;
         }
-        
+
         if (trimmed.startsWith('.else')) {
             const parentActive = condStack[condStack.length - 2] ?? true;
             condStack[condStack.length - 1] = parentActive && !condStack[condStack.length - 1];
             continue;
         }
-        
+
         if (trimmed.startsWith('.endif')) {
             condStack.pop();
             continue;
         }
-        
+
         if (condStack[condStack.length - 1]) {
             let processedLine = line;
             for (const [pName, val] of Object.entries(mapping)) {
@@ -173,19 +173,19 @@ function expandMacro(macroStr, argsMap) {
                     processedLine = processedLine.replace(new RegExp('\\b' + tempName + '\\b', 'g'), reg);
                 }
             }
-            
+
             // Safe replacement of sine_lut symbol to address 0
             processedLine = processedLine.replace(/\bsine_lut\b/g, '0');
-            
+
             expandedLines.push(processedLine);
         }
     }
-    
+
     const uniqueId = Math.floor(Math.random() * 1000000);
     const finalLines = expandedLines.map(line => {
         return line.replace(/\?/g, `_${uniqueId}`);
     });
-    
+
     return finalLines;
 }
 
@@ -213,7 +213,7 @@ function runSim(rawInstructions, cycles, r31Map = {}, mmioMap = {}, deviceBus = 
             labels.push(0);
         }
     }
-    
+
     return pruCore.simulatePruInstructions(processedInstructions, labels, cycles, r31Map, mmioMap, deviceBus);
 }
 
@@ -318,7 +318,7 @@ function runClarkeForward(iaRaw, ibRaw) {
     });
     // The macro never writes its inputs, so Ibeta is read from the block's
     // output: at theta = 0 (sin = 0, cos = 1.0 in Q12) Park gives Q = Ibeta.
-    
+
     const insts = [
         `ldi32 R0, ${iaRaw >>> 0}`,
         `ldi32 R1, ${ibRaw >>> 0}`,
@@ -326,7 +326,7 @@ function runClarkeForward(iaRaw, ibRaw) {
         ...expanded,
         `halt`
     ];
-    
+
     const res = runSim(insts, 150);
     return toSigned32(res.pruState.registers[5]);
 }
@@ -342,15 +342,15 @@ function runParkForward(ialphaRaw, ibetaRaw, thetaRaw) {
         THETA: 'R3',
         IS_FORWARD: '1'
     });
-    
+
     // Back-calculate Ia and Ib so that Clarke produces the target Ialpha and Ibeta
     const ia = ialphaRaw / Q12;
     const ibeta = ibetaRaw / Q12;
     const ib = (1.7320508 * ibeta - ia) / 2;
-    
+
     const iaRaw = Math.round(ia * Q12);
     const ibRaw = Math.round(ib * Q12);
-    
+
     const insts = [
         `ldi32 R0, ${iaRaw >>> 0}`,
         `ldi32 R1, ${ibRaw >>> 0}`,
@@ -358,7 +358,7 @@ function runParkForward(ialphaRaw, ibetaRaw, thetaRaw) {
         ...expanded,
         `halt`
     ];
-    
+
     const res = runSim(insts, 150);
     return {
         d: toSigned32(res.pruState.registers[4]),
@@ -377,7 +377,7 @@ function runInverseParkClarke(dRaw, qRaw, thetaRaw) {
         THETA: 'R4',
         IS_FORWARD: '0'
     });
-    
+
     const insts = [
         `ldi32 R2, ${dRaw >>> 0}`,
         `ldi32 R3, ${qRaw >>> 0}`,
@@ -386,7 +386,7 @@ function runInverseParkClarke(dRaw, qRaw, thetaRaw) {
         ...expanded,
         `halt`
     ];
-    
+
     const res = runSim(insts, 200);
     return {
         ia: toSigned32(res.pruState.registers[0]),
@@ -406,50 +406,50 @@ for (let step = 0; step < 1000; step++) {
     const iaR = (Math.random() * 4.0) - 2.0; // [-2.0, 2.0]
     const ibR = (Math.random() * 4.0) - 2.0; // [-2.0, 2.0]
     const thetaIdx = Math.floor(Math.random() * 256);
-    
+
     const iaRaw = Math.round(iaR * Q12);
     const ibRaw = Math.round(ibR * Q12);
-    
+
     // 1. Test Forward Clarke
     const gotIbetaRaw = runClarkeForward(iaRaw, ibRaw);
     const gotIbetaReal = gotIbetaRaw / Q12;
     const refIbetaReal = (iaR + 2 * ibR) * 0.577350269;
     const clarkeErr = Math.abs(gotIbetaReal - refIbetaReal);
-    
+
     if (clarkeErr >= CLARKE_EPS) {
         console.error(`Fuzz Clarke FAIL: Ia=${iaR.toFixed(3)} Ib=${ibR.toFixed(3)} -> Got=${gotIbetaReal.toFixed(4)} Ref=${refIbetaReal.toFixed(4)} Err=${clarkeErr.toFixed(4)}`);
         pcFail = true;
         break;
     }
-    
+
     // 2. Test Forward Park
     const thetaRad = thetaIdx * 2 * Math.PI / 256;
     const gotPark = runParkForward(iaRaw, gotIbetaRaw, thetaIdx);
     const gotDReal = gotPark.d / Q12;
     const gotQReal = gotPark.q / Q12;
-    
+
     // TI motor_control_sdk PARK_run convention, as documented in the macro:
     //   Id = Ialpha*cos + Ibeta*sin, Iq = -Ialpha*sin + Ibeta*cos
     const refDReal = iaR * Math.cos(thetaRad) + refIbetaReal * Math.sin(thetaRad);
     const refQReal = -iaR * Math.sin(thetaRad) + refIbetaReal * Math.cos(thetaRad);
-    
+
     const errD = Math.abs(gotDReal - refDReal);
     const errQ = Math.abs(gotQReal - refQReal);
-    
+
     if (errD >= CLARKE_EPS || errQ >= CLARKE_EPS) {
         console.error(`Fuzz Park FAIL: Ia=${iaR.toFixed(3)} Ib=${ibR.toFixed(3)} t=${thetaIdx} -> GotD=${gotDReal.toFixed(4)} GotQ=${gotQReal.toFixed(4)} RefD=${refDReal.toFixed(4)} RefQ=${refQReal.toFixed(4)}`);
         pcFail = true;
         break;
     }
-    
+
     // 3. Test Inverse Park/Clarke
     const gotInv = runInverseParkClarke(gotPark.d, gotPark.q, thetaIdx);
     const gotIaInv = gotInv.ia / Q12;
     const gotIbInv = gotInv.ib / Q12;
-    
+
     const errIaInv = Math.abs(gotIaInv - iaR);
     const errIbInv = Math.abs(gotIbInv - ibR);
-    
+
     if (errIaInv >= CLARKE_EPS || errIbInv >= CLARKE_EPS) {
         console.error(`Fuzz Inverse FAIL: Ia=${iaR.toFixed(3)} Ib=${ibR.toFixed(3)} -> GotIa=${gotIaInv.toFixed(4)} GotIb=${gotIbInv.toFixed(4)}`);
         pcFail = true;
@@ -470,12 +470,12 @@ if (pcFail) {
 function runPidTick(setpoint, feedback, initialIntegral, initialPrevError) {
     const pidModule = loadBlockModule('iqmath_pid_block', 'data_handling');
     const macroStr = pidModule.getMacro('m_iqmath_pid', 'm_iqmath_pid');
-    
+
     const STATE_PTR = 0x100;
     const kp = Math.round(1.0 * 4096);
     const ki = Math.round(0.5 * 4096);
     const kd = Math.round(0.25 * 4096);
-    
+
     // Setup state in DMEM0
     pruDMEM0.resetDMEM0();
     const initBuf = new Uint8Array(8);
@@ -483,7 +483,7 @@ function runPidTick(setpoint, feedback, initialIntegral, initialPrevError) {
     mem.setInt32(0, initialIntegral, true);
     mem.setInt32(4, initialPrevError, true);
     pruDMEM0.writeDMEM0(STATE_PTR, initBuf);
-    
+
     const expanded = expandMacro(macroStr, {
         RES: 'R2',
         SETPOINT: 'R0',
@@ -493,18 +493,18 @@ function runPidTick(setpoint, feedback, initialIntegral, initialPrevError) {
         KD: String(kd),
         STATE_PTR: String(STATE_PTR)
     });
-    
+
     const insts = [
         `ldi32 R0, ${setpoint >>> 0}`,
         `ldi32 R1, ${feedback >>> 0}`,
         ...expanded,
         `halt`
     ];
-    
+
     const res = runSim(insts, 100);
     const outBuf = pruDMEM0.readDMEM0(STATE_PTR, 8);
     const outMem = new DataView(outBuf.buffer, outBuf.byteOffset, outBuf.byteLength);
-    
+
     return {
         output: toSigned32(res.pruState.registers[2]),
         newIntegral: outMem.getInt32(0, true),
@@ -520,23 +520,23 @@ let pidFail = false;
 for (let tick = 0; tick < 500; tick++) {
     const setpointReal = (Math.random() * 2000) - 1000;
     const feedbackReal = (Math.random() * 2000) - 1000;
-    
+
     const setpointRaw = Math.round(setpointReal);
     const feedbackRaw = Math.round(feedbackReal);
-    
+
     // JS Model: replicates truncating Q12 fixed-point logic of the PRU macro
     const err = setpointRaw - feedbackRaw;
     const refIntegral = pidIntegral + err;
     const refDeriv = err - pidPrevErr;
-    
+
     const pTerm = (err * 4096) >> 12;
     const iTerm = (refIntegral * 2048) >> 12;
     const dTerm = (refDeriv * 1024) >> 12;
     const refOutput = pTerm + iTerm + dTerm;
-    
+
     // PRU macro simulator
     const t = runPidTick(setpointRaw, feedbackRaw, pidIntegral, pidPrevErr);
-    
+
     if (t.output !== refOutput || t.newIntegral !== refIntegral || t.newPrevError !== err) {
         console.error(`PID Fuzz FAIL at tick ${tick}: SP=${setpointReal} FB=${feedbackReal}`);
         console.error(`- Got output: ${t.output}, Expected: ${refOutput}`);
@@ -544,7 +544,7 @@ for (let tick = 0; tick < 500; tick++) {
         pidFail = true;
         break;
     }
-    
+
     pidIntegral = t.newIntegral;
     pidPrevErr = t.newPrevError;
 }
@@ -561,18 +561,18 @@ if (pidFail) {
 // ---------------------------------------------------------------------------
 function testCompositeFoc() {
     console.log('\n--- Starting Phase 3: Composite FOC Pipeline ---');
-    
+
     const STATE_PTR_D = 0x100;
     const STATE_PTR_Q = 0x110;
-    
+
     const kp = Math.round(1.0 * 4096);
     const ki = Math.round(0.5 * 4096);
     const kd = Math.round(0.25 * 4096);
-    
+
     pruDMEM0.resetDMEM0();
     const initBuf = new Uint8Array(32);
     pruDMEM0.writeDMEM0(STATE_PTR_D, initBuf);
-    
+
     const inverseLutBytes = new Uint8Array(256 * 4);
     for(let i = 0; i < 256; i++) {
         let val = Math.round(Math.sin(i * 2 * Math.PI / 256) * 4096);
@@ -583,10 +583,10 @@ function testCompositeFoc() {
         inverseLutBytes[i*4 + 3] = (val >> 24) & 0xFF;
     }
     pruDMEM0.writeDMEM0(0, inverseLutBytes);
-    
+
     const pcModule = loadBlockModule('iqmath_park_clarke_block', 'data_handling');
     const pidModule = loadBlockModule('iqmath_pid_block', 'data_handling');
-    
+
     // 1. Forward Clarke/Park: R4/R5 = Forward(R0, R1, R3)
     const fwdMacro = pcModule.getMacro('m_iqmath_transform', 'm_iqmath_transform');
     const expandedFwd = expandMacro(fwdMacro, {
@@ -597,7 +597,7 @@ function testCompositeFoc() {
         THETA: 'R3',
         IS_FORWARD: '1'
     });
-    
+
     // 2. PID D-axis: R10 = PID_D(0, R4, STATE_PTR_D)
     const pidMacroD = pidModule.getMacro('m_iqmath_pid', 'm_iqmath_pid');
     const expandedPidD = expandMacro(pidMacroD, {
@@ -609,7 +609,7 @@ function testCompositeFoc() {
         KD: String(kd),
         STATE_PTR: String(STATE_PTR_D)
     });
-    
+
     // 3. PID Q-axis: R11 = PID_Q(setpoint_q, R5, STATE_PTR_Q)
     const pidMacroQ = pidModule.getMacro('m_iqmath_pid', 'm_iqmath_pid');
     const expandedPidQ = expandMacro(pidMacroQ, {
@@ -621,7 +621,7 @@ function testCompositeFoc() {
         KD: String(kd),
         STATE_PTR: String(STATE_PTR_Q)
     });
-    
+
     // 4. Inverse Park/Clarke: R12/R13 = Inverse(R10, R11, R3)
     const invMacro = pcModule.getMacro('m_iqmath_transform', 'm_iqmath_transform');
     const expandedInv = expandMacro(invMacro, {
@@ -632,7 +632,7 @@ function testCompositeFoc() {
         THETA: 'R3',
         IS_FORWARD: '0'
     });
-    
+
     const insts = [
         `ldi32 R0, ${Math.round(1.0 * Q12)}`,
         `ldi32 R1, ${Math.round(-0.5 * Q12)}`,
@@ -645,21 +645,21 @@ function testCompositeFoc() {
         ...expandedInv,
         `halt`
     ];
-    
+
     const res = runSim(insts, 500);
-    
+
     const fwdD = toSigned32(res.pruState.registers[4]);
     const fwdQ = toSigned32(res.pruState.registers[5]);
     const pidOutD = toSigned32(res.pruState.registers[10]);
     const pidOutQ = toSigned32(res.pruState.registers[11]);
     const invIa = toSigned32(res.pruState.registers[12]);
     const invIb = toSigned32(res.pruState.registers[13]);
-    
+
     console.log(`Composite FOC verification results:`);
     console.log(`- Forward output vectors: D=${(fwdD/Q12).toFixed(4)}, Q=${(fwdQ/Q12).toFixed(4)}`);
     console.log(`- PID outputs: VD=${(pidOutD/Q12).toFixed(4)}, VQ=${(pidOutQ/Q12).toFixed(4)}`);
     console.log(`- Inverse outputs: Ia=${(invIa/Q12).toFixed(4)}, Ib=${(invIb/Q12).toFixed(4)}`);
-    
+
     if (isNaN(invIa) || isNaN(invIb)) {
         throw new Error("Composite FOC failed! Outputs are NaN.");
     }
@@ -1132,7 +1132,7 @@ testBissC();
 
 function testUtilityBlocks() {
     console.log('\n--- Running Phase 5: Utility Blocks tests ---');
-    
+
     // 1. Arithmetic Test
     const arithRes = runSim([
         'ldi R0, 100',
@@ -1286,7 +1286,7 @@ function testPwm() {
     console.log('\n--- Running Phase 6: PWM Block Test ---');
     const pwmModule = loadBlockModule('pwm_block', 'pru_io_blocks');
     const pwmMacro = pwmModule.getMacro('', 'm_pwm_run');
-    
+
     // Config: active high, pin 5, period 20 cycles (100ns), duty 5 cycles (25%)
     // Complementary enabled on pin 6, deadband 2 cycles (10ns)
     const expandedPwm = expandMacro(pwmMacro, {
@@ -1299,7 +1299,7 @@ function testPwm() {
         COMP_PIN: '6',
         DEADBAND_COUNTS: '2'
     });
-    
+
     // 150 cycles, not 50: the TRM-correct IEP prologue (disable -> program ->
     // clear status -> enable) costs ~14 cycles before the PWM loop starts, and
     // at PERIOD_COUNTS=20 a 50-cycle window no longer contains enough periods
@@ -1309,9 +1309,9 @@ function testPwm() {
         ...expandedPwm,
         'halt'
     ], 150);
-    
+
     const r30Hist = res.r30ValueHistory;
-    
+
     for (let c = 0; c < 150; c++) {
         const val = r30Hist[c];
         const p5 = (val & (1 << 5)) ? 1 : 0;

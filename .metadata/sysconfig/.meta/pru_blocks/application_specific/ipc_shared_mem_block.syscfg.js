@@ -20,7 +20,7 @@ const ipcSharedMemModule = {
     config: [
         { name: "$shape", hidden: true, default: "square" },
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "variableName", displayName: "Variable Name", default: "encoder_data" },
         { name: "memorySection", displayName: "Memory Section", default: "PRU_SHARED_RAM", options: [{name: "PRU_SHARED_RAM"}, {name: "PRU_DRAM_0"}],
           description: "PRU_SHARED_RAM places the variable in .usmem (PRU shared RAM); PRU_DRAM_0 places it in .udmem, the data RAM of the core this design runs on." },
@@ -51,14 +51,14 @@ const ipcSharedMemModule = {
         { name: "output1Size", default: 0, hidden: true },
         { name: "outputReg", default: "None", hidden: true },
         { name: "numOfConstants", default: 1, hidden: true },
-        
+
         { name: "constant1", hidden: true, default: "", getValue: (inst) => inst.variableName },
-        
+
         // mov (1) + ldi32 (2 instructions) + sbbo (1)
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 4, default: 4 }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         return [
             { name: "prev", type: "IO_PREV" },
             { name: "next", type: "IO_NEXT" },
