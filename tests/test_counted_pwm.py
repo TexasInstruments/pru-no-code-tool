@@ -128,11 +128,16 @@ def edges(result, pins):
 
 def run_asm(tmp_path, spec, name, steps):
     # Both PWM blocks program the IEP through c26; the run maps c26 to the IEP as on the device,
-    # whatever the checkout's constants_am243x.cfg says.
+    # whatever the checkout's constants_am243x.cfg says. The counted and the reference runs are
+    # compared cycle for cycle, so the IEP runs at the core clock: with an independent IEP clock
+    # (200 MHz IEP, 250 MHz PRU) an edge that waits on a compare event moves by the IEP-to-core
+    # phase at which its period starts (4 cycles on one three-phase edge), which is a property
+    # of the clocking, not of the counted mode.
     if elf_cosim.simulator_iep_base() != 0x0002E000:
         pytest.skip("pru-simulator checkout has no IEP0 model at 0x0002E000")
     elf, _ = elf_cosim.build_block_firmware(spec, name, str(tmp_path))
-    return elf_cosim.run_elf_closed_loop(elf, Idle(), max_steps=steps, constants=elf_cosim.IEP_CONSTANTS)
+    return elf_cosim.run_elf_closed_loop(elf, Idle(), max_steps=steps, constants=elf_cosim.IEP_CONSTANTS,
+                                         lock_iep_to_core=True)
 
 
 PWM_PINS = {"PWM": 3, "COMP": 4}

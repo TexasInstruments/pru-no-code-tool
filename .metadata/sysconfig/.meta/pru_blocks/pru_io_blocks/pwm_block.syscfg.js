@@ -24,7 +24,7 @@ const pwmModule = {
     displayName: "PWM (IEP-synced)",
     defaultInstanceName: `${PRU_USED}_PWM_INSTANCE_`,
     description: "P1 PWM generator (IEP-synced).",
-    longDescription: "Emits a single-channel IEP-CMP PWM (CMP0=period, CMP1=duty) edge-aligned. By default it loops forever and has no next port. Set Period count to N (1..2147483647) to emit exactly N full periods and then fall through to the next block: the block gains a next port, compare events are disabled after the last period, and every period, the last included, runs the same macro as the continuous mode, so the edge timing is the same. It is not cycle-exact: each edge lands 0..3 cycles after its IEP compare event, because the block polls the IEP status with a 4-cycle loop. Derived from the macro text and checked in the TI pru-simulator (LBCO = 3 cycles, not verified on silicon): the steady period is P +/-3 cycles; the first period is P+7..P+10; the steady active width is D-8..D-2 (D-9..D-3 with the complementary output); the complement edge follows its main edge by exactly 1 cycle. These windows hold only when the duty count D is at least 11 and the low time P-D is at least 10 counts (P = period counts, D = duty counts).  The exit costs 4 cycles, all after the final period boundary (measured from the cycle at which the continuous mode would start period N+1 to the cycle counter on return, in the TI pru-simulator on the clpru ELF). Note: Deadband (ns) is accepted but not yet inserted between the main and complementary edges, in either mode.",
+    longDescription: "Emits a single-channel IEP-CMP PWM (CMP0=period, CMP1=duty) edge-aligned. By default it loops forever and has no next port. Set Period count to N (1..2147483647) to emit exactly N full periods and then fall through to the next block: the block gains a next port, compare events are disabled after the last period, and every period, the last included, runs the same macro as the continuous mode, so the edge timing is the same. It is not cycle-exact: each edge lands 0..3 cycles after its IEP compare event, because the block polls the IEP status with a 4-cycle loop. Derived from the macro text and checked in TI pru-simulator with c26 mapped to its IEP model, as on the device, and the IEP at the core clock (LBCO = 3 cycles, not verified on silicon): the steady period is P +/-3 cycles; the first period is P+7..P+10; the steady active width is D-8..D-2 (D-9..D-3 with the complementary output); the complement edge follows its main edge by exactly 1 cycle. These windows hold only when the duty count D is at least 11 and the low time P-D is at least 10 counts (P = period counts, D = duty counts).  The exit costs 4 cycles, all after the final period boundary (measured from the cycle at which the continuous mode would start period N+1 to the cycle counter on return, in TI pru-simulator on the clpru ELF). Note: Deadband (ns) is accepted but not yet inserted between the main and complementary edges, in either mode.",
     uiView: "graph",
 
     config: [
@@ -67,9 +67,9 @@ const pwmModule = {
         { name: "constant8", hidden: true, default: 0, getValue: (inst) => inst.periodCount || 0 },
 
         { name: "noOfCycles", displayName: "Number Of Cycles", default: 1,
-          // Continuous mode never returns, so its 1 is a placeholder. A counted run is finite: each period
-          // measures ~2x the IEP period count in the TI pru-simulator, plus a
-          // margin per period for the setup and the 4-cycle exit, times N (as three_phase_pwm_block does).
+          // Continuous mode never returns, so its 1 is a placeholder. A counted run is finite: the bound is
+          // 2x the IEP period count per period plus a margin for the setup and the 4-cycle exit, times N
+          // (as three_phase_pwm_block does); tests check it covers the simulated clpru run.
           getValue: (inst) => {
               if (!(inst.periodCount > 0)) return 1;
               const counts = Math.round((inst.periodNs * inst.clkHz) / 1e9);

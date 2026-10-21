@@ -1,8 +1,8 @@
 "use strict";
 
 // Edge-aligned PWM only; center-aligned PWM is not implemented. The event list is sorted once per call.
-// Timing is checked on the JS PRU core; TI pru-simulator can serve as an independent timing check only in a
-// revision that models IEP CNT/CMP/W1C.
+// Timing is checked on the JS PRU core and on TI pru-simulator's IEP model, with c26 mapped to the IEP as on the
+// device (tests/test_counted_pwm.py).
 
 const GPIO_SIGNALS = Array.from({ length: 20 }, (_, i) => ({
     name: String(i),
