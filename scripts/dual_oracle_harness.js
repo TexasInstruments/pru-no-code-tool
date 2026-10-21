@@ -270,7 +270,7 @@ function evalCondition(rawCond, mapping, definedSymbols) {
 function expandMacro(macroStr, argsMap) {
     const lines = macroStr.split('\n');
     const expandedLines = [];
-    
+
     let macroHeaderIndex = -1;
     let params = [];
     for (let i = 0; i < lines.length; i++) {
@@ -282,11 +282,11 @@ function expandMacro(macroStr, argsMap) {
             break;
         }
     }
-    
+
     if (macroHeaderIndex === -1) {
         throw new Error("Could not find .macro definition in macro string");
     }
-    
+
     const paramNames = params;
     const mapping = {};
     const registersMap = {
@@ -295,7 +295,7 @@ function expandMacro(macroStr, argsMap) {
         'TEMP_REG3': 'R26',
         'TEMP_REG4': 'R27'
     };
-    
+
     for (let i = 0; i < paramNames.length; i++) {
         const pName = paramNames[i];
         if (argsMap[pName] !== undefined) {
@@ -304,17 +304,17 @@ function expandMacro(macroStr, argsMap) {
             mapping[pName] = argsMap[i];
         }
     }
-    
+
     const bodyLines = lines.slice(macroHeaderIndex + 1);
     const condStack = [{ active: true, taken: true, parent: true }];
-    
+
     for (let line of bodyLines) {
         const trimmed = line.trim();
-        
+
         if (trimmed.startsWith('.endm')) {
             break;
         }
-        
+
         if (trimmed.startsWith('.if ')) {
             const parentActive = condStack[condStack.length - 1].active;
             const isTrue = evalCondition(trimmed.substring(4), mapping);
@@ -352,17 +352,17 @@ function expandMacro(macroStr, argsMap) {
                     processedLine = processedLine.replace(new RegExp('\\b' + tempName + '\\b', 'g'), reg);
                 }
             }
-            
+
             processedLine = processedLine.replace(/\bsine_lut\b/g, '0');
             expandedLines.push(processedLine);
         }
     }
-    
+
     const uniqueId = Math.floor(Math.random() * 1000000);
     const finalLines = expandedLines.map(line => {
         return line.replace(/\?/g, `_${uniqueId}`);
     });
-    
+
     return finalLines;
 }
 

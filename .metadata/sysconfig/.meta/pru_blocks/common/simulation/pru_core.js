@@ -1764,7 +1764,7 @@ function executeInstruction(pruState, pruInstructions, labelMap, r30ValueHistory
             if (deviceId === 0) {
                 // MAC read
                 if (!pruState.mac) pruState.mac = { enabled: false, mode: 0, result: 0n };
-                
+
                 // Compute result on XIN
                 if (pruState.mac.enabled) {
                     // Standard 32x32 -> 64 signed multiply

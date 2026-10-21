@@ -302,14 +302,14 @@ class BissLineEncoder(DeviceModel):
 
     def _emit_frame(self, cycle: int) -> None:
         self._frame_emitted = True
-        
+
         expected_len = len(self._wire_bits)
         if self._clocks_in_burst != len(self._captured_bits):
             self._faults.append(
                 f"cycle {cycle}: clocks_in_burst ({self._clocks_in_burst}) != captured_bits ({len(self._captured_bits)})"
             )
             return
-            
+
         if len(self._captured_bits) != expected_len:
             self._faults.append(
                 f"cycle {cycle}: clocked {len(self._captured_bits)} times, expected {expected_len}"
@@ -318,7 +318,7 @@ class BissLineEncoder(DeviceModel):
 
         # Decode from wire
         clocked_wire = self._captured_bits
-        
+
         if self.line_coding:
             decoded_coded_bits = []
             for i in range(0, len(clocked_wire), 10):
@@ -364,7 +364,7 @@ class BissLineEncoder(DeviceModel):
         received_crc = 0
         for b in crc_data:
             received_crc = (received_crc << 1) | b
-            
+
         computed_crc = crc6_bissc(pos_bits + [ne, nw])
         crc_ok = (received_crc == computed_crc)
 

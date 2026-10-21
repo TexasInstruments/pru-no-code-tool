@@ -183,7 +183,7 @@ const C_MOE = 0x1B;
 /**
  * Multi-format ELF/COFF loader for PRU firmware binaries.
  * Handles both TI COFF (.out) and ELF (.out/.elf) with .pru encoding.
- * 
+ *
  * @param {Buffer} buffer - Raw firmware binary
  * @returns {Object} { text: Buffer, data: Buffer|null, symbols: Array, entryPoint: number }
  */

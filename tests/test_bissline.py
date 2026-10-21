@@ -588,7 +588,7 @@ class TestCrcWireCorruption:
 # ===================================================================
 class TestMasterDataCorruption:
     """Verify that the model observes what the MASTER drives on MO."""
-    
+
     def test_green_master_drives_zero(self):
         m = BissLineEncoder(data_bits=16, position=0xBEEF, line_coding=False, fec_enable=False)
         n_clocks = len(m._wire_bits)
@@ -603,7 +603,7 @@ class TestMasterDataCorruption:
         n_clocks = len(m._wire_bits)
         master_data = [0] * n_clocks
         # Bit 4 is a 0 in the payload. If master drives 1, it will corrupt the bit to 1.
-        master_data[4] = 1 
+        master_data[4] = 1
         _clock_model(m, n_clocks, half_period=10, master_data=master_data)
         assert m.faults() == []
         frames = [e for e in m.events() if e["kind"] == "frame"]
@@ -621,7 +621,7 @@ class TestWireLevelCodedFec:
         pos = 0xC0DE
         m = BissLineEncoder(data_bits=16, position=pos, line_coding=True, fec_enable=True)
         trace = _clock_model(m, m.total_wire_bits, half_period=10)
-        
+
         # Reconstruct wire bits from trace (sampled on falling edge of MA)
         wire_bits = []
         prev_clk = 0
@@ -636,7 +636,7 @@ class TestWireLevelCodedFec:
                     if last_active is not None:
                         wire_bits.append(data)
             prev_clk = clk
-            
+
         # 1. Decode 8b/10b
         decoded_bytes = []
         for i in range(0, len(wire_bits), 10):
@@ -646,12 +646,12 @@ class TestWireLevelCodedFec:
             bv = decode_8b10b_symbol(sym)
             assert bv is not None
             decoded_bytes.append(bv)
-            
+
         decoded_bits = []
         for bv in decoded_bytes:
             for j in range(7, -1, -1):
                 decoded_bits.append((bv >> j) & 1)
-                
+
         # 2. Decode FEC
         header = decoded_bits[:len(m._coded_bits)][:3]
         fec_bits = decoded_bits[:len(m._coded_bits)][3:-8]
@@ -664,13 +664,13 @@ class TestWireLevelCodedFec:
             assert not corrected
             for j in range(3, -1, -1):
                 pos_bits.append((nibble >> j) & 1)
-                
+
         pos_bits = pos_bits[-16:] # data_bits=16
-        
+
         recovered_pos = 0
         for b in pos_bits:
             recovered_pos = (recovered_pos << 1) | b
-            
+
         assert recovered_pos == pos
 
 class TestUnderclockPair:
@@ -697,6 +697,6 @@ class TestMutation:
 
         m = MutatedEncoder(data_bits=16, position=0xBEEF, line_coding=False, fec_enable=False)
         _clock_model(m, len(m._wire_bits), half_period=10)
-        
+
         frames = [e for e in m.events() if e["kind"] == "frame"]
         assert frames[0]["crc_ok"] is False, "Mutation was not caught! crc_ok is True"

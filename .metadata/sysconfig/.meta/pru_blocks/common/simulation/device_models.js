@@ -1106,7 +1106,7 @@ class TCA9538Model {
 
         this.device = new TCA9538Device(address);
         this.address = this.device.address;
-        
+
         this._events = [];
         this._faults = [];
         this._prevScl = null;
@@ -1198,7 +1198,7 @@ class BissCEncoder {
         this.cdsBit = (opts.cdsBit !== undefined ? opts.cdsBit : 0) & 1;
         this.invertCrc = opts.invertCrc !== undefined ? opts.invertCrc : true;
         this.ackClocks = Math.max(1, opts.ackClocks !== undefined ? opts.ackClocks : 1);
-        
+
         if (this.positionBits < 1 || this.positionBits > 32) throw new Error("position_bits must be 1..32");
 
         this.position = 0;
