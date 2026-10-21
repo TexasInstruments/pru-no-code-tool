@@ -1,6 +1,7 @@
 %const pruRegisterAllocationSummary = system.getScript("/pru_blocks/common/register_allocation/pru_register_allocator.js").getPruRegisterAllocationSummary();
 %const registerAllocator = system.getScript("/pru_blocks/common/register_allocation/pru_register_allocator.js");
 %const systemModules = system.modules;
+%const bindingModule = system.modules["/pru_blocks/common/pru_blocks_static_module"];
 ; Copyright (C) 2024 Texas Instruments Incorporated - http://www.ti.com/
 ;
 ; Redistribution and use in source and binary forms, with or without
@@ -53,6 +54,12 @@
 ;************************************* includes *************************************
     .include    "pru_syscfg.inc"
 
+; Define temporary registers for macro usage
+    .asg R28, TEMP_REG1
+    .asg R29, TEMP_REG2
+    .asg R26, TEMP_REG3
+    .asg R27, TEMP_REG4
+
     .retain     ; Required for building .out with assembly file
     .retainrefs ; Required for building .out with assembly file
 
@@ -98,10 +105,16 @@
 %        }
 %    }
 %}
+%// Program CTPPR0 (c28 -> shared RAM) and the SPI CS idle levels at every entry into generated code.
+%let ctSetup = bindingModule && typeof bindingModule.getConstantTableSetup === "function" ? bindingModule.getConstantTableSetup() : "";
+%let groupStartLabelSet = new Set((groupMetadata || []).map(g => `${g.groupName}_start`));
 ;**************************************************************************************
 ;                    PRU assembly code outside group block
 ;**************************************************************************************
 sysconfig_generated_start:
+%if(ctSetup){
+`ctSetup`
+%}
 %// First loop: Output ungrouped blocks (sysconfig_generated section)
 %for(let iterator = 0; iterator < groupStartIndex; iterator++)
 %{
@@ -128,6 +141,9 @@ sysconfig_generated_start:
 %if(typeof(labels[iterator]) == "string" && labels[iterator] !== "")
 %{
 `labels[iterator]`:
+%if(ctSetup && groupStartLabelSet.has(labels[iterator])){
+`ctSetup`
+%}
 %}
 %    if((!pruInstructions[iterator].includes("-1")) && (pruInstructions[iterator] != "0") && (!pruInstructions[iterator].includes("undefined")))
 %    {
