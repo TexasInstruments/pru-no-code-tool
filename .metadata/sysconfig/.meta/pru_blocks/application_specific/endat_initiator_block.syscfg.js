@@ -12,7 +12,7 @@ const endatModule = {
         { name: "singleTurnBits", displayName: "Single-turn bits (LSBs)", default: 13 },
         { name: "multiTurnBits", displayName: "Multi-turn bits (above ST)", default: 10 },
         { name: "totalBits", displayName: "Total telegram bits", default: 30, description: "Must equal 1 start + error bits (1 for 000111, 2 for 111000) + ST + MT + 5 CRC bits (max 32)" },
-        { name: "modeCommand", displayName: "Mode command (6-bit)", default: 7, description: "EnDat position mode command, sent MSB first after the 2T lead-in: 7 = 000111 (send position values, EnDat 2.1 set, reply S F1 position CRC), 56 = 111000 (send position value with additional data, EnDat 2.2 set, reply S F1 F2 position CRC)" },
+        { name: "modeCommand", displayName: "Mode command (6-bit)", default: 7, description: "EnDat mode command, sent MSB first after the 2T lead-in: 7 = position (EnDat 2.1), 56 = position with additional data (EnDat 2.2).", longDescription: "EnDat position mode command, sent MSB first after the 2T lead-in: 7 = 000111 (send position values, EnDat 2.1 set, reply S F1 position CRC), 56 = 111000 (send position value with additional data, EnDat 2.2 set, reply S F1 F2 position CRC)" },
         { name: "clkPin", displayName: "CLOCK Pin (R30 bit)", default: 0 },
         { name: "dataTxPin", displayName: "DATA TX Pin (R30 bit)", default: 1, description: "RS-485 transceiver driver input (master -> encoder data)" },
         { name: "dataRxPin", displayName: "DATA RX Pin (R31 bit)", default: 2, description: "RS-485 transceiver receiver output (encoder -> master data, same differential pair)" },

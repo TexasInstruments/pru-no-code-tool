@@ -41,7 +41,8 @@ const ipcSharedMemModule = {
          * means "I claim only this core writes it".
          */
         { name: "crossCoreWriters", displayName: "Also written by another core", default: false,
-          description: "Assert when a different PRU core (or the host) also WRITES this region. " +
+          description: "Set when another PRU core (or the host) also writes this region; such a write needs an XFR2SPIN lock.",
+          longDescription: "Assert when a different PRU core (or the host) also WRITES this region. " +
                        "A cross-core write with no XFR2SPIN lock around it is a build error: the " +
                        "tool cannot see the peer core's design, so it cannot infer this." },
 

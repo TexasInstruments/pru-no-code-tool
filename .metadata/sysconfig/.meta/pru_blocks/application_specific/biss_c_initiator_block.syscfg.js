@@ -3,8 +3,8 @@
 const bissCModule = {
     displayName: "BiSS-C Initiator",
     defaultInstanceName: "BISS_C_INITIATOR_",
-    description: "BiSS-C protocol initiator leveraging Motor Control SDK.",
-    longDescription: "Interfaces with the BiSS-C encoder. It is a shift register only: clock spacing is a fixed NOP (the clock frequency is not configurable), and there is no CRC, start/ACK or timeout handling. TI pru-simulator measures an 8-cycle bit period with changing input data. Exact 5 MHz physical timing and propagation delay are not implemented.",
+    description: "BiSS-C initiator: clocks MA and shifts in SLO bits.",
+    longDescription: "Interfaces with the BiSS-C encoder. It is a shift register only: clock spacing is a fixed NOP (the clock frequency is not configurable), and there is no CRC, start/ACK or timeout handling. A bit takes 8 cycles when the sampled SLO bit is 1 and 7 when it is 0 (clpru ELF on TI pru-simulator), so the MA period depends on the data. Exact 5 MHz physical timing and propagation delay are not implemented.",
     uiView: "graph",
 
     config: [

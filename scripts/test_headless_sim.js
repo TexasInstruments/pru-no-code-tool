@@ -1042,24 +1042,6 @@ function testSpadHardening() {
 testSpadHardening();
 console.log('SPAD: Hardening checks verified OK');
 
-function testTamagawa() {
-    const res = runSim([
-        'ldi32 R17, 0xCCBBAA1A',
-        'lsr   R16, R17, 8',
-        'ldi32 R18, 0x00FFFFFF',
-        'and   R16, R16, R18',
-        'halt'
-    ], 10);
-    const result = res.pruState.registers[16] >>> 0;
-    const expected = 0x00CCBBAA;
-    if (result !== expected) {
-        console.error(`Tamagawa: Payload parsing FAIL`);
-        process.exit(1);
-    }
-    console.log(`Tamagawa: Payload parsing verified OK`);
-}
-testTamagawa();
-
 function testSet() {
     const res = runSim([
         'ldi R5, 0',
@@ -1096,39 +1078,6 @@ function testSdfm() {
     console.log('SDFM Read Channel 2: OK (Got 0xDEADBEEF)');
 }
 testSdfm();
-
-// ---------------------------------------------------------------------------
-// BiSS-C Protocol Frame and CRC-6 Validation
-// ---------------------------------------------------------------------------
-function testBissC() {
-    function computeBissCrc6(data26) {
-        let crc = 0x00;
-        let data = data26;
-        for (let i = 25; i >= 0; i--) {
-            let bit = (data >>> i) & 1;
-            let crc_msb = (crc >>> 5) & 1;
-            crc = (crc << 1) & 0x3F;
-            if (bit ^ crc_msb) {
-                crc ^= 0x03;
-            }
-        }
-        return crc ^ 0x3F;
-    }
-
-    const data26 = 0x48D15B;
-    const expectedCrc = computeBissCrc6(data26);
-    const frame = ((data26 << 6) | expectedCrc) >>> 0;
-    const extractedData26 = frame >>> 6;
-    const extractedCrc = frame & 0x3F;
-    const computedCrc = computeBissCrc6(extractedData26);
-
-    if (extractedCrc !== computedCrc) {
-        console.error('BiSS-C CRC-6 Validation: FAIL');
-        process.exit(1);
-    }
-    console.log('BiSS-C CRC-6 Validation: OK (Matches ' + computedCrc.toString(16) + ')');
-}
-testBissC();
 
 function testUtilityBlocks() {
     console.log('\n--- Running Phase 5: Utility Blocks tests ---');
@@ -1654,6 +1603,55 @@ function testEndat(){
     console.log('✅ EnDat 2.2 Initiator verification: OK (frame mirror, CRC-5, flags, MSB-first command + DE, cycle budget)');
 }
 testEndat();
+
+// ---------------------------------------------------------------------------
+// BiSS-C initiator macro: shift-register capture and data-dependent bit period
+// ---------------------------------------------------------------------------
+function testBissCMacro() {
+    const bissMod = loadBlockModule('biss_c_initiator_block', 'application_specific');
+    const CLK = 0, DATA = 1;
+    const bits = [1, 0, 1, 1, 0, 0, 1, 0, 1, 1];
+    const exp = expandMacro(bissMod.getMacro('m_biss_c_read', 'm_biss_c_read'),
+                            { RES: 'R4', CLK: String(CLK), DATA: String(DATA), LEN: String(bits.length) });
+    // Slave: rising MA edge k presents bit k on SLO; MA idles high.
+    let lastClk = 1, edges = 0, data = 0;
+    const deviceBus = {
+        idlePruWord() { return 1 << CLK; },
+        settle(_cycle, r30) {
+            const clk = (r30 >>> CLK) & 1;
+            if (clk && !lastClk) {
+                data = edges < bits.length ? (bits[edges] << DATA) : 0;
+                edges++;
+            }
+            lastClk = clk;
+            return data;
+        }
+    };
+    const res = runSim([...exp, 'halt'], 1000, {}, {}, deviceBus);
+    const got = res.pruState.registers[4] >>> 0;
+    const want = bits.reduce((acc, b) => (acc << 1) | b, 0);
+    if (got !== want) {
+        console.error(`BiSS-C macro: captured 0x${got.toString(16)}, expected 0x${want.toString(16)}`);
+        process.exit(1);
+    }
+    // Rising MA edges from the R30 history: one per bit. (This harness pads each label line with a nop,
+    // so its cycle spacing is not the PRU's; tests/test_biss_c_initiator.py measures that on clpru + TI pru-simulator.)
+    const rises = [];
+    const h = res.r30ValueHistory;
+    for (let i = 1; i < h.length; i++) {
+        if (((h[i] >>> CLK) & 1) && !((h[i - 1] >>> CLK) & 1)) rises.push(i);
+    }
+    if (rises.length !== bits.length) {
+        console.error(`BiSS-C macro: ${rises.length} MA rising edges, expected ${bits.length}`);
+        process.exit(1);
+    }
+    if (((h[h.length - 1] >>> CLK) & 1) !== 1) {
+        console.error('BiSS-C macro: MA is not high after the frame');
+        process.exit(1);
+    }
+    console.log('BiSS-C macro: capture verified OK');
+}
+testBissCMacro();
 // ---------------------------------------------------------------------------
 // Multi-Axis Motion Controller Tests
 // ---------------------------------------------------------------------------

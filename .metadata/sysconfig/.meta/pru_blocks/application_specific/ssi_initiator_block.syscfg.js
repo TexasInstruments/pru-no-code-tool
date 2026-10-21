@@ -14,7 +14,7 @@ const ssiModule = {
         { name: "multiTurnBits", displayName: "Multi-turn bits (above ST)", default: 12 },
         { name: "clkPin", displayName: "CLK Pin (R30 bit)", default: 0 },
         { name: "dataPin", displayName: "DATA Pin (R31 bit)", default: 1 },
-        { name: "clockPolarity", displayName: "Clock idle polarity (1=high, SSI standard; 0=inverted line)", default: 1, description: "1: clock idles HIGH, the SSI convention (Hengstler AC58, P+F AVM78E/AVS36M) and what the simulator's SSI encoder model speaks. 0: every clock level inverted, for an inverting line driver between PRU and encoder; the simulator model does not attach inverted, so 0 is not simulator-verified." },
+        { name: "clockPolarity", displayName: "Clock idle polarity (1=high, SSI standard; 0=inverted line)", default: 1, description: "1: clock idles high (SSI convention). 0: every clock level inverted, for an inverting line driver; 0 is not simulator-verified.", longDescription: "1: clock idles HIGH, the SSI convention (Hengstler AC58, P+F AVM78E/AVS36M) and what the simulator's SSI encoder model speaks. 0: every clock level inverted, for an inverting line driver between PRU and encoder; the simulator model does not attach inverted, so 0 is not simulator-verified." },
         { name: "halfPeriodCycles", displayName: "Half-period delay loops", default: 10, description: "Delay iterations per half clock period; defines clock rate" },
         { name: "monoTimeCycles", displayName: "Monoflop timeout loops", default: 20, description: "Idle delay after frame before next transfer" },
         { name: "parityEnable", displayName: "Parity bit present (last bit)", default: false },
