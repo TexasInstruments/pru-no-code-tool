@@ -17,8 +17,8 @@
  *   node scripts/block_validate_runner.js --report
  *
  * blockPath forms:
- *   pru_io_blocks/pru_spi_read
- *   .metadata/sysconfig/.meta/pru_blocks/pru_io_blocks/pru_spi_read.syscfg.js
+ *   pru_io_blocks/spi_adc_sequencer_block
+ *   .metadata/sysconfig/.meta/pru_blocks/pru_io_blocks/spi_adc_sequencer_block.syscfg.js
  *   pru_blocks_static_module  (device-capability static module)
  *
  * instJson: JSON object for the block instance. Extra keys are ignored by
@@ -244,7 +244,9 @@ function printSweep(asReport) {
     // mapped to the number of error paths those tests cover. Kept here so the
     // runner can report without importing Python; add a block when its
     // validator test pair is added.
+    // Mirrors ARMED_BLOCKS / ARMED_ERROR_PATHS in tests/test_block_validators.py.
     const ARMED_ERROR_PATHS_BY_BLOCK = {
+        'spi_adc_sequencer_block': 1, // sample_period
     };
     const ARMED_BLOCKS = Object.keys(ARMED_ERROR_PATHS_BY_BLOCK);
     const validatorsFound = rows.length;
