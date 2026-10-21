@@ -176,7 +176,7 @@ console.log(JSON.stringify({ high: pick(1), low: pick(0),
     assert got["n"] == 17, got
 
 
-WHOLE_LEDGER = r"""
+WHOLE_LIBRARY = r"""
 const e = require('./scripts/emit_all_blocks');
 const REG = /^(R\d+(\.\w+)?|c\d+)$/i;
 const bad = {};
@@ -210,7 +210,7 @@ def test_every_emitted_label_operand_is_defined_in_its_own_expansion():
     """Whole-library check (catches a deleted lookup-table label or dropped stacked/trailing
     labels): every ldi32/ldi/jal/qb* symbol operand must be a label or .set/.equ/.asg symbol
     of the same expansion."""
-    bad = node_json(WHOLE_LEDGER)
+    bad = node_json(WHOLE_LIBRARY)
     # scheduler_block jumps into user task bodies it does not own (`jal task_N_start`);
     # those are external by design, nothing else may be.
     assert bad == {"scheduler_block": ["task_0_start", "task_1_start"]}, bad

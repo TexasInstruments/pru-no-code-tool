@@ -76,8 +76,8 @@ RESERVED = (
 )
 UPPER_MNEMONICS = [m.upper() for m in _MNEMONICS]
 
-# Assemble, so NOT reserved — but rejected by the old case-insensitive
-# matcher. Locked here as accepted-by-validation (oracle-correct).
+# These assemble, so they are NOT reserved; a case-insensitive matcher would
+# wrongly reject them. Locked here as accepted by validation (matches clpru).
 MIXED_CASE_ACCEPTED = (
     "Add Max Min Set Zero Fill Loop Not Or Mov Halt Ldi32 Qba "
     "B0 B1 B2 B3"
