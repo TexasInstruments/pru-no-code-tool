@@ -2,7 +2,7 @@
 
 Layer A - model falsification (runs anywhere):
   Green control arms: a correct STA driver completes a write and a read
-  against perif.mdio_phy_model.MdioPhyModel with no faults.
+  against pru_device_models.mdio_phy_model.MdioPhyModel with no faults.
 
   Negative mutations (each an independent mutant of the DRIVER, each
   paired with the green control of the same shape so the fault is
@@ -34,7 +34,7 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from perif.mdio_phy_model import MdioPhyModel
+from pru_device_models.mdio_phy_model import MdioPhyModel
 
 MDC_BIT = 0
 MDIO_BIT = 1

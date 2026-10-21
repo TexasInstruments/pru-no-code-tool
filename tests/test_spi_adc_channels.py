@@ -30,7 +30,7 @@ PRODUCT = ROOT / ".metadata" / "product.json"
 
 try:
     import elf_cosim
-    from perif.spi_adc import SpiAdc
+    from pru_device_models.spi_adc import SpiAdc
     elf_cosim.find_clpru()
     elf_cosim.find_pru_simulator()
     HAVE_ELF = True

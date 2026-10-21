@@ -5,7 +5,7 @@ import pytest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scripts", "sim")))
 
-from perif.spi_adc import SpiAdc
+from pru_device_models.spi_adc import SpiAdc
 import elf_cosim
 
 # --------------------------------------------------------------------- flags

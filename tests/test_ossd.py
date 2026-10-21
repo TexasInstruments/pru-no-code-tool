@@ -6,7 +6,7 @@ Focused tests for:
   (c) channel disagreement within the discrepancy window
   (d) channel disagreement beyond the window
   (e) boundary cases (OSSD_MAX, OSSD_MAX+1, window, window+1)
-  (f) independent bus-cosim oracle agreement (perif/buscosim.decode_ossd)
+  (f) independent bus-cosim oracle agreement (pru_device_models/buscosim.decode_ossd)
 
 The monitor block itself (safety_dual_monitor_block.syscfg.js) is
 exercised headlessly where possible: macro assembles, uses the
@@ -27,8 +27,8 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from perif.ossd_emitter import DualOssdEmitter
-from perif import buscosim
+from pru_device_models.ossd_emitter import DualOssdEmitter
+from pru_device_models import buscosim
 
 # ---------------------------------------------------------------- helpers
 def drive(model, cycles, start=0):
@@ -228,5 +228,5 @@ class TestSafetyMonitorBlockFile:
         assert '"ossd"' in txt
 
     def test_python_model_importable(self):
-        from perif.ossd_emitter import DualOssdEmitter as M
+        from pru_device_models.ossd_emitter import DualOssdEmitter as M
         assert M is not None

@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import test_fanout_register_alias as T  # noqa: E402
 import elf_cosim  # noqa: E402
-from perif.mdio_phy_model import MdioPhyModel  # noqa: E402
+from pru_device_models.mdio_phy_model import MdioPhyModel  # noqa: E402
 
 MDC_BIT = 0
 MDIO_BIT = 1

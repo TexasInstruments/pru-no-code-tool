@@ -13,8 +13,8 @@ try:
     import pytest
 except ImportError:
     pytest=None
-from perif.hall_sensor import HallSensorModel
-from perif import buscosim
+from pru_device_models.hall_sensor import HallSensorModel
+from pru_device_models import buscosim
 
 def drive_model(model, words, start_cycle=0):
     trace = []
