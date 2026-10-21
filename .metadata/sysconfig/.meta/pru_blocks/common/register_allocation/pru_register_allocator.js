@@ -45,7 +45,27 @@ let accumulatorBindings = {};    // update block name -> {preInit, container} fr
  * Fields that exist but are never touched by the macro are deliberately absent: reserving them would move allocations for nothing.
  */
 const PINNED_REGISTER_FIELDS = {
-    // Entries are added together with the blocks that declare such fields.
+    "/pru_blocks/pru_io_blocks/capture_block": [{ field: "dataRegister", default: "R4", role: "w", fullRegister: true }],
+    "/pru_blocks/pru_io_blocks/dshot_block": [{ field: "throttleRegister", default: "R14", role: "r", fullRegister: true, alwaysReserve: true, when: (inst) => inst.throttleMode === "register" }],
+    "/pru_blocks/pru_io_blocks/encoder_speed_block": [{ field: "posRegister", default: "R4", role: "w", fullRegister: true }, { field: "velRegister", default: "R5", role: "w", fullRegister: true }, { field: "dirRegister", default: "R8", role: "w", fullRegister: true }],
+    "/pru_blocks/pru_io_blocks/hall_block": [{ field: "sectorRegister", default: "R4", role: "w", fullRegister: true }, { field: "velRegister", default: "R5", role: "w", fullRegister: true }, { field: "faultRegister", default: "R6", role: "w", fullRegister: true }],
+    "/pru_blocks/pru_io_blocks/i2c_block": [{ field: "dataRegister", default: "R7", role: "w", fullRegister: true, when: (inst) => inst.rw === "read" }, { field: "nackRegister", default: "", role: "w", fullRegister: true }],
+    "/pru_blocks/pru_io_blocks/i3c_sdr_initiator_block": [{ field: "pidRegister", default: "R7", role: "w", fullRegister: true }],
+    // publish copies the register to the ring (reads it); consume loads the register from the ring (writes it)
+    "/pru_blocks/pru_io_blocks/mailbox_block": [{ field: "dataRegister", default: "R10", role: (inst) => inst.mode === "publish" ? "r" : "w", bytes: (inst) => Number(inst.slotBytes) || 4 }],
+    "/pru_blocks/pru_io_blocks/manchester_block": [{ field: "dataRegister", default: "R5.b0", role: "rm" }],
+    "/pru_blocks/pru_io_blocks/mdio_master_block": [{ field: "dataRegister", default: "R4", role: (inst) => inst.rw === "read" ? "w" : "r", fullRegister: true }],
+    "/pru_blocks/pru_io_blocks/pdm_block": [{ field: "dataRegister", default: "R5", role: "w" }],
+    "/pru_blocks/pru_io_blocks/quadrature_block": [{ field: "posRegister", default: "R4", role: "w", fullRegister: true }, { field: "edgeRegister", default: "R5", role: "w", fullRegister: true }],
+    "/pru_blocks/pru_io_blocks/sent_block": [{ field: "dataRegister", default: "R5", role: "rm" }],
+    "/pru_blocks/pru_io_blocks/serdes_block": [
+        { field: "dataRegister", default: "R1", role: "w", fullRegister: true },
+        { field: "txRegister", default: "R2", role: "r", fullRegister: true, alwaysReserve: true, when: (inst) => inst.txMode === "register" }
+    ],
+    "/pru_blocks/pru_io_blocks/ws2812_block": [{ field: "dataRegister", default: "R0", role: "rm" }],
+    // XOUT/XIN window: wordCount words (+1 sequence word with the seq handshake) starting at R<baseReg>; the producer reads it, the consumer writes it
+    "/pru_blocks/pru_io_blocks/pru_spad_block": [{ field: "baseReg", default: 5, role: (inst) => inst.role === "producer" ? "r" : "w", ownWindowCheck: true,
+        bytes: (inst) => ((Number(inst.wordCount) || 0) + (inst.handshake === "seq" ? 1 : 0)) * 4 }]
 };
 
 let pinnedRegisters = [];          // {block, field, token, firstByte, bytes} for every user-typed register, in the pool or not
@@ -1467,6 +1487,33 @@ function allocatePruRegisters() {
     allocationFailures = [];
     loopBoundaryViolations = [];
     pruByteArray = new Array(totalBytes).fill(0);
+    // Broadside peripherals with FIXED register windows (BSWAP 0xA1/0xA2, Table 6-95) publish those windows as
+    // instance.registerClobbers. They are deliberately NOT pre-reserved here: blanket-reserving them would make the
+    // conflict impossible to construct, so the build-time rejection could never fire, and the design would lose R2-R17
+    // whether or not a conflict exists. The rejection is validateBswapGlobal in pru_blocks_static_module, where
+    // liveness across the swap is known.
+    // R1:R5 are the XFRPSI data path (Table 6-111, R5:R1 [159:0]). Reserve bytes 4..23 (R1..R5) whenever an XFR2PSI
+    // block is present, so an allocation that would hold a value in that window across the transfer fails allocation
+    // instead of being corrupted. The precise live-across rejection is validateXfr2psiGlobal in pru_blocks_static_module.
+    try {
+        const xfrCheck = systemModules["/pru_blocks/pru_io_blocks/xfr2psi_block"];
+        if (xfrCheck && xfrCheck.$instances && xfrCheck.$instances.length > 0) {
+            for (let b = 4; b <= 23; b++) pruByteArray[b] = 1;
+        }
+    } catch(e) { /* capsule unavailable in test stub */ }
+    // SUM32 accumulate LBBOs a 32-byte DMEM block into R2-R9 and then XOUTs that FIXED window to the accelerator
+    // (TRM Table 6-93/6-94): the window is architectural, not chosen by the allocator. Reserve bytes 8..39 (R2..R9)
+    // whenever any sum32 instance with operation=accumulate is present, as for the XFR2PSI window above. The safety net
+    // is validateSum32Global in pru_blocks_static_module, which rejects any other block whose final allocation still
+    // lands in R2-R9.
+    try {
+        const sumCheck = systemModules["/pru_blocks/data_handling/sum32_block"];
+        const hasAccumulate = sumCheck && sumCheck.$instances &&
+            sumCheck.$instances.some(function (i) { return i.operation === "accumulate"; });
+        if (hasAccumulate) {
+            for (let b = 8; b <= 39; b++) pruByteArray[b] = 1;
+        }
+    } catch(e) { /* capsule unavailable in test stub */ }
 
     // user-typed registers the blocks emit verbatim leave the pool before anything is allocated
     reservePinnedRegisters();

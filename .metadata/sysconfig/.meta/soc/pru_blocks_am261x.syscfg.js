@@ -25,6 +25,8 @@ const topModules_pru = [
                     "/pru_blocks/utils/look_up_table",
                     "/pru_blocks/utils/access_look_up_table",
                     "/pru_blocks/utils/data_splitter",
+                    "/pru_blocks/utils/iep_block",
+                    "/pru_blocks/utils/logic_analyzer_block",
                     "/pru_blocks/utils/device_model_block",
                 ],
                 categories: [
@@ -43,7 +45,9 @@ const topModules_pru = [
                     "/pru_blocks/program_control/flow_control_block",
                     "/pru_blocks/program_control/conditional_block",
                     "/pru_blocks/program_control/loop_block",
-                    "/pru_blocks/program_control/group_block"
+                    "/pru_blocks/program_control/group_block",
+                    "/pru_blocks/program_control/event_block",
+                    "/pru_blocks/program_control/scheduler_block",
                 ],
             },
             {
@@ -52,6 +56,11 @@ const topModules_pru = [
                     "/pru_blocks/data_handling/load_constant_block",
                     "/pru_blocks/data_handling/arithmetic_block",
                     "/pru_blocks/data_handling/bitwise_block",
+                    "/pru_blocks/data_handling/mac_hw_block",
+                    "/pru_blocks/data_handling/iqmath_pid_block",
+                    "/pru_blocks/data_handling/iqmath_park_clarke_block",
+                    "/pru_blocks/data_handling/svpwm_block",
+                    "/pru_blocks/data_handling/trigger_router_block",
                 ],
             },
             {
@@ -65,6 +74,7 @@ const topModules_pru = [
                 modules: [
                     "/pru_blocks/pru_io_blocks/pru_gpo_block",
                     "/pru_blocks/pru_io_blocks/pru_gpi_block",
+                    "/pru_blocks/pru_io_blocks/sdfm_block",
                 ],
                 categories: [
                     {
@@ -76,6 +86,33 @@ const topModules_pru = [
                             "/pru_blocks/pru_io_blocks/pru_spi_write",
                             "/pru_blocks/pru_io_blocks/pru_spi_read",
                             "/pru_blocks/pru_io_blocks/pru_spi_transfer",
+                            "/pru_blocks/pru_io_blocks/spi_adc_sequencer_block",
+                            "/pru_blocks/pru_io_blocks/onewire_block",
+                            "/pru_blocks/pru_io_blocks/servo_block",
+                            "/pru_blocks/pru_io_blocks/dshot_block",
+                            "/pru_blocks/pru_io_blocks/sent_block",
+                            "/pru_blocks/pru_io_blocks/ws2812_block",
+                            "/pru_blocks/pru_io_blocks/stepper_block",
+                            "/pru_blocks/pru_io_blocks/pwm_block",
+                            "/pru_blocks/pru_io_blocks/three_phase_pwm_block",
+                            "/pru_blocks/pru_io_blocks/pdm_block",
+                            "/pru_blocks/pru_io_blocks/manchester_block",
+                            "/pru_blocks/pru_io_blocks/quadrature_block",
+                            "/pru_blocks/pru_io_blocks/capture_block",
+                            "/pru_blocks/pru_io_blocks/counter_block",
+                            "/pru_blocks/pru_io_blocks/i2c_block",
+                            "/pru_blocks/pru_io_blocks/i3c_sdr_initiator_block",
+                            "/pru_blocks/pru_io_blocks/can_classic_decoder_block",
+                            "/pru_blocks/pru_io_blocks/mailbox_block",
+                            "/pru_blocks/pru_io_blocks/parallel_bus_block",
+                            "/pru_blocks/pru_io_blocks/encoder_speed_block",
+                            "/pru_blocks/pru_io_blocks/serdes_block",
+                            "/pru_blocks/pru_io_blocks/pru_spad_block",
+                            "/pru_blocks/pru_io_blocks/hall_block",
+                            "/pru_blocks/pru_io_blocks/mdio_master_block",
+                            "/pru_blocks/pru_io_blocks/multi_axis_motion_block",
+                            "/pru_blocks/pru_io_blocks/safety_dual_monitor_block",
+                            "/pru_blocks/pru_io_blocks/xfr2psi_block",
                         ]
                     }
                 ]
@@ -128,6 +165,9 @@ const topModules_rtu_tx_pru =[
                     "/pru_blocks/data_handling/load_constant_block",
                     "/pru_blocks/data_handling/arithmetic_block",
                     "/pru_blocks/data_handling/bitwise_block",
+                    "/pru_blocks/data_handling/mac_hw_block",
+                    "/pru_blocks/data_handling/iqmath_pid_block",
+                    "/pru_blocks/data_handling/iqmath_park_clarke_block",
                 ],
             },
             {
@@ -140,6 +180,8 @@ const topModules_rtu_tx_pru =[
                 displayName: "INPUT & OUTPUT",
                 modules: [
                     "/pru_blocks/pru_io_blocks/pru_gpi_block",
+                    "/pru_blocks/pru_io_blocks/sdfm_block",
+                    "/pru_blocks/pru_io_blocks/xfr2psi_block",
                 ],
             },
             {
