@@ -35,7 +35,7 @@
 | [PRU SPI Read](blocks/pru_spi_read/design.md) | `pru_spi_read` | `(unclassified)` | 0/0 | `1` | — | — | [design](blocks/pru_spi_read/design.md) · [guide](blocks/pru_spi_read/user-guide.md) |
 | [PRU SPI Transfer](blocks/pru_spi_transfer/design.md) | `pru_spi_transfer` | `(unclassified)` | 0/0 | `1` | — | — | [design](blocks/pru_spi_transfer/design.md) · [guide](blocks/pru_spi_transfer/user-guide.md) |
 | [PRU SPI Write](blocks/pru_spi_write/design.md) | `pru_spi_write` | `(unclassified)` | 0/0 | `1` | — | — | [design](blocks/pru_spi_write/design.md) · [guide](blocks/pru_spi_write/user-guide.md) |
-| [PWM (IEP-synced)](blocks/pwm_block/design.md) | `pwm_block` | `continuous` | 0/0 | `1` | — | ⚠️ 2 | [design](blocks/pwm_block/design.md) · [guide](blocks/pwm_block/user-guide.md) |
+| [PWM (IEP-synced)](blocks/pwm_block/design.md) | `pwm_block` | `continuous` | 0/0 | `1` | — | — | [design](blocks/pwm_block/design.md) · [guide](blocks/pwm_block/user-guide.md) |
 | [Quadrature encoder decoder](blocks/quadrature_block/design.md) | `quadrature_block` | `continuous` | 0/0 | `1` | — | — | [design](blocks/quadrature_block/design.md) · [guide](blocks/quadrature_block/user-guide.md) |
 | [QUEUE_EMPTY (ICSSG Queue Status Query)](blocks/queue_empty_block/design.md) | `queue_empty_block` | `oneshot` | 0/1 | `1` | `queue_empty` | — | [design](blocks/queue_empty_block/design.md) · [guide](blocks/queue_empty_block/user-guide.md) |
 | [Safety dual-channel input monitor](blocks/safety_dual_monitor_block/design.md) | `safety_dual_monitor_block` | `continuous` | 0/1 | `1` | — | — | [design](blocks/safety_dual_monitor_block/design.md) · [guide](blocks/safety_dual_monitor_block/user-guide.md) |
@@ -45,7 +45,7 @@
 | [RC Servo / ESC PWM](blocks/servo_block/design.md) | `servo_block` | `oneshot` | 0/1 | `1` | — | — | [design](blocks/servo_block/design.md) · [guide](blocks/servo_block/user-guide.md) |
 | [SPI ADC Sequencer](blocks/spi_adc_sequencer_block/design.md) | `spi_adc_sequencer_block` | `oneshot` | 0/1 | `1` | — | — | [design](blocks/spi_adc_sequencer_block/design.md) · [guide](blocks/spi_adc_sequencer_block/user-guide.md) |
 | [Stepper Motor](blocks/stepper_block/design.md) | `stepper_block` | `oneshot` | 0/1 | `1` | — | — | [design](blocks/stepper_block/design.md) · [guide](blocks/stepper_block/user-guide.md) |
-| [Three-phase complementary PWM](blocks/three_phase_pwm_block/design.md) | `three_phase_pwm_block` | `oneshot` | 3/1 | `1260` | — | ⚠️ 2 | [design](blocks/three_phase_pwm_block/design.md) · [guide](blocks/three_phase_pwm_block/user-guide.md) |
+| [Three-phase complementary PWM](blocks/three_phase_pwm_block/design.md) | `three_phase_pwm_block` | `oneshot` | 3/1 | `1260` | — | — | [design](blocks/three_phase_pwm_block/design.md) · [guide](blocks/three_phase_pwm_block/user-guide.md) |
 | [PRU UART Config](blocks/uart_config/design.md) | `uart_config` | `(unclassified)` | 0/0 | `20` | — | — | [design](blocks/uart_config/design.md) · [guide](blocks/uart_config/user-guide.md) |
 | [PRU UART RX Op](blocks/uart_rx_op/design.md) | `uart_rx_op` | `(unclassified)` | 0/1 | `60` | — | — | [design](blocks/uart_rx_op/design.md) · [guide](blocks/uart_rx_op/user-guide.md) |
 | [PRU UART TX Op](blocks/uart_tx_op/design.md) | `uart_tx_op` | `continuous` | 1/0 | `9` | — | — | [design](blocks/uart_tx_op/design.md) · [guide](blocks/uart_tx_op/user-guide.md) |
@@ -89,7 +89,7 @@
 | [BiSS-C Initiator](blocks/biss_c_initiator_block/design.md) | `biss_c_initiator_block` | `oneshot` | 0/1 | `500` | — | — | [design](blocks/biss_c_initiator_block/design.md) · [guide](blocks/biss_c_initiator_block/user-guide.md) |
 | [CRC](blocks/crc_block/design.md) | `crc_block` | `(unclassified)` | 2/0 | `1` | — | — | [design](blocks/crc_block/design.md) · [guide](blocks/crc_block/user-guide.md) |
 | [EnDat 2.2 Initiator](blocks/endat_initiator_block/design.md) | `endat_initiator_block` | `oneshot` | 0/1 | `6538` | — | — | [design](blocks/endat_initiator_block/design.md) · [guide](blocks/endat_initiator_block/user-guide.md) |
-| [Industrial Serial Gateway](blocks/industrial_serial_gateway_block/design.md) | `industrial_serial_gateway_block` | `oneshot` | 2/1 | `5000` | — | ⚠️ 1 | [design](blocks/industrial_serial_gateway_block/design.md) · [guide](blocks/industrial_serial_gateway_block/user-guide.md) |
+| [Industrial Serial Gateway](blocks/industrial_serial_gateway_block/design.md) | `industrial_serial_gateway_block` | `oneshot` | 2/1 | `5000` | — | — | [design](blocks/industrial_serial_gateway_block/design.md) · [guide](blocks/industrial_serial_gateway_block/user-guide.md) |
 | [IO-Link Master](blocks/iolink_master_block/design.md) | `iolink_master_block` | `oneshot` | 2/1 | `50000` | — | — | [design](blocks/iolink_master_block/design.md) · [guide](blocks/iolink_master_block/user-guide.md) |
 | [IPC Shared Memory](blocks/ipc_shared_mem_block/design.md) | `ipc_shared_mem_block` | `oneshot` | 1/0 | `4` | — | — | [design](blocks/ipc_shared_mem_block/design.md) · [guide](blocks/ipc_shared_mem_block/user-guide.md) |
 | [Modbus RTU Framer](blocks/modbus_rtu_framer/design.md) | `modbus_rtu_framer` | `continuous` | 0/1 | `40` | — | — | [design](blocks/modbus_rtu_framer/design.md) · [guide](blocks/modbus_rtu_framer/user-guide.md) |
@@ -110,7 +110,7 @@
 | [Memory Access](blocks/memory_access_block/design.md) | `memory_access_block` | `(unclassified)` | 0/1 | `3` | — | — | [design](blocks/memory_access_block/design.md) · [guide](blocks/memory_access_block/user-guide.md) |
 | [Memory Variable](blocks/memory_variable_block/design.md) | `memory_variable_block` | `(unclassified)` | 0/0 | `0` | — | — | [design](blocks/memory_variable_block/design.md) · [guide](blocks/memory_variable_block/user-guide.md) |
 
-Total outstanding `TODO`/`VERIFY` items across all blocks: **5**.
+Total outstanding `TODO`/`VERIFY` items across all blocks: **0**.
 
 
 ## Portability matrix

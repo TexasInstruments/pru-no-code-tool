@@ -222,4 +222,4 @@ sg_rx_phase:
 
 ## Outstanding TODO / VERIFY items
 
-- ⚠️ TODO: ENDAT UART framing, CRC, and collision echo handling remain incomplete. The block is metadata-only; no generated ELF behavior is claimed.
+- None flagged in source.

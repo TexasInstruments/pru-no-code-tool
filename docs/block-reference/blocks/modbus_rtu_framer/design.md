@@ -9,7 +9,7 @@
 
 ### Purpose
 Receives one Modbus RTU frame over the PRU-ICSS ENDAT UART character layer
-(the same hardware the `uart_tx` / `uart_rx` blocks drive) and delimits it by
+(the same hardware the `uart_config` / `uart_tx_op` / `uart_rx_op` blocks drive) and delimits it by
 **measuring the 3.5-character-time inter-frame silence in PRU cycles**. The
 block then validates the frame with CRC-16 (Modbus parameters) and filters the
 slave address.
@@ -23,17 +23,16 @@ measured silence elapses. The threshold is computed at generation time
 (`silenceTicks`, shown in the block table) from the configured baud and PRU
 clock.
 
-**Honest scope of the advantage:** a hardware UART plus a well-fed software
+**Scope of the advantage:** a hardware UART plus a well-fed software
 timer works fine at 9.6–19.2 kbaud, where 3.5 characters is milliseconds. The
 PRU case strengthens at 115.2 kbaud and above, and on a loaded R5F where
 timer interrupts jitter. This block claims no universal advantage.
 
 ### How it works
-1. **Character layer init** — identical ENDAT programming sequence to the
-   `uart_rx` block (global reinit, GPCFG peripheral mode, RXCFG clock +
-   oversampling, CHx_CFG0 frame format, RX enable). Character reception uses
-   the same per-bit valid-flag polling as `uart_rx`. Response transmission is
-   owned by `uart_tx` block instances downstream — this block is the RX
+1. **Character layer init** — the ENDAT RX programming sequence (global
+   reinit, GPCFG peripheral mode, RXCFG clock + oversampling, CHx_CFG0 frame
+   format, RX enable). Character reception uses per-bit valid-flag polling.
+   Response transmission is owned by `uart_tx_op` block instances downstream — this block is the RX
    delimiting half.
 2. **Reception** — bytes are appended to a 256-byte frame buffer in DMEM
    (reserved by a paired Memory Variable block using `bufferSymbol`).
@@ -57,11 +56,11 @@ timer interrupts jitter. This block claims no universal advantage.
 
 Frames longer than 255 bytes drop the excess bytes; the truncation then fails
 CRC and reports status 1. The block **blocks** until a frame is delimited
-(it waits for silence), exactly like `uart_rx` waits for a character.
+(it waits for silence), as a UART RX block waits for a character.
 
-### Dependencies and seams (stated honestly)
+### Dependencies
 - **RS-485 direction control does not exist yet.** This block does not depend
-  on it and does not touch a direction pin. Seam: drive the transceiver DE/RE
+  on it and does not touch a direction pin. Drive the transceiver DE/RE
   pin from PRU GPO blocks around response transmission when that hardware is
   present.
 - **Frame buffer:** add a Memory Variable block with `labelName` =
@@ -79,7 +78,7 @@ CRC and reports status 1. The block **blocks** until a frame is delimited
   cycle granularity.
 - CRC: ~13 cycles per byte (two LDI32 bases, LBBO, shift/XOR update).
 - The block's `noOfCycles` reports only the deterministic init portion; the
-  reception/wait phase is inherently blocking (like `uart_rx`).
+  reception/wait phase is inherently blocking.
 
 ### Register budget
 TEMP_REG1 / TEMP_REG2 only (2-TEMP allocator pattern) plus the allocated
@@ -87,12 +86,12 @@ frame result register. No MULL anywhere; all scaling is done at generation
 time or with shifts.
 
 ### What is NOT claimed
-- No pru-simulator co-simulation of this block yet — the evidence gate for
-  this revision is a clean clpru assembly of the generated macro (see
+- No pru-simulator co-simulation of this block yet — it is checked by a clean
+  clpru assembly of the generated macro (see
   `scripts/verify_modbus_build.js`) plus a JS-side check of the generated
   CRC table against the bitwise reference.
 - No TX-side framing (CRC append + gap enforcement) inside this block; build
-  it from uart_tx + crc arithmetic downstream, or wait for a TX framer.
+  it from uart_tx_op + CRC arithmetic downstream.
 
 ## How to Configure (For AI/Scripting)
 
@@ -112,14 +111,14 @@ const framer1 = modbus.addInstance();
 | pruClockMhz | Integer | 192, 200 | 200 | PRU core clock used for the silence measurement |
 | clockSource | Integer | 0, 1 | 0 | ENDAT RX clock: 0 = 192 MHz UART_CLK, 1 = 200 MHz CORE_CLK (must match paired uart blocks) |
 | channel | Integer | 0, 1, 2 | 2 | ENDAT channel (must match paired uart blocks) |
-| oversampleSize | Integer | 0, 1, 3, 7 | 7 | Oversample encoding (0=1x, 1=2x, 3=4x, 7=8x — same encoding as uart_rx: 7 means 8x) |
+| oversampleSize | Integer | 0, 1, 3, 7 | 7 | Oversample encoding (0=1x, 1=2x, 3=4x, 7=8x — same encoding as uart_config: 7 means 8x) |
 | bufferSymbol | String | identifier | "modbus_rtu_frame_buf" | Label of the 256-byte .udmem frame buffer (Memory Variable block) |
 | lutMemoryLocation | String | "dmem", "smem" | "dmem" | Where the 512-byte CRC table is placed |
 
 ### Required companion blocks
 1. **Memory Variable** with `labelName` = `bufferSymbol`, `sizeInBytes` = 256,
    section `.udmem` — the frame buffer this macro writes via SBBO.
-2. **uart_tx instances** for the response path (character layer TX).
+2. **uart_config + uart_tx_op instances** for the response path (character layer TX).
 3. **Loop block** if you want continuous frame reception.
 
 ### Example
@@ -150,7 +149,7 @@ scripting.connect(framer1, "next", next_block, "prev");
    is passed at the call site or baked into the body (clpru [E0004] rejects
    numeric literals in .macro parameter positions).
 2. `channel`, `clockSource`, `oversampleSize` must match the paired
-   uart_tx/uart_rx instances — they describe the same hardware.
+   uart_config instance — they describe the same hardware.
 3. The block blocks until a frame is delimited by measured silence.
 4. Read the frame PDU from the buffer via Memory Access blocks using
    `bufferSymbol` after checking status == 0.
@@ -247,11 +246,11 @@ ICSS_CFG_PRU1_ENDAT_CH2_CFG0    .set    0x00118
 	;   frameReg     - allocated result register: b0=status, b1=length, w2=CRC-16
 	;   slaveAddr    - this station's Modbus address (0 also accepted = broadcast)
 	;   silenceTicks - 3.5-char-time silence threshold in watchdog iterations (3 cycles each)
-	;   clockDiv     - ENDAT RX clock divider matching the paired uart_rx/uart_tx config
+	;   clockDiv     - ENDAT RX clock divider matching the paired uart_config block
 	;   bufSymbol    - label of the 256-byte frame buffer (Memory Variable block, .udmem)
 	;   lutSymbol    - label of the 256-entry reflected CRC-16 lookup table (.initdmem)
 	; Register budget: TEMP_REG1/TEMP_REG2 only, plus frameReg.
-    ; ===== character layer init (same ENDAT sequence the uart_rx block emits) =====
+    ; ===== character layer init (ENDAT RX sequence, as the UART blocks program it) =====
     ; TRM sequence: assert tx_global_reinit, wait for busy clear, de-assert rx_en
     set     r31, r31, 19
 mb_wait_reinit?:
@@ -260,7 +259,7 @@ mb_wait_reinit?:
     ldi32   TEMP_REG1, 0x04000000
     ldi     TEMP_REG2.w0, ICSS_CFG_GPCFG1
     sbco    &TEMP_REG1, ICSS_CFG, TEMP_REG2.w0, 4
-    ldi     TEMP_REG1.w0, 0   ; oversample bits[2:0] (same encoding as uart_rx)
+    ldi     TEMP_REG1.w0, 0   ; oversample bits[2:0] (same encoding as uart_config)
     ldi     TEMP_REG1.w2, clockDiv
     ldi     TEMP_REG2.w0, ICSS_CFG_PRU1_ENDAT_RXCFG
     sbco    &TEMP_REG1, ICSS_CFG, TEMP_REG2.w0, 4
@@ -284,7 +283,7 @@ mb_gap_loop?:
     qbeq    mb_wait_char?, frameReg.b1, 0   ; idle line (no frame yet): keep listening
     qba     mb_frame_check?              ; frame boundary declared here
 mb_char_rx?:
-    ; receive one 10-bit UART character (uart_rx-compatible bit loop)
+    ; receive one 10-bit UART character (per-bit valid-flag polling loop)
     ldi     TEMP_REG1, 0
     ldi     TEMP_REG2.b0, 0
 mb_bit_loop?:

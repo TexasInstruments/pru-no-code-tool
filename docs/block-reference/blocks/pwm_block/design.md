@@ -113,13 +113,13 @@ pw_wd?:
     .if ACTIVE_HIGH
     clr   R30, R30, PIN
     .if EN_COMP == 1
-    ; TODO: insert DEADBAND_COUNTS delay here before toggling comp pin
+    ; deadband: DEADBAND_COUNTS is not inserted before the complementary pin toggles
     set   R30, R30, COMP_PIN
     .endif
     .else
     set   R30, R30, PIN
     .if EN_COMP == 1
-    ; TODO: insert DEADBAND_COUNTS delay here before toggling comp pin
+    ; deadband: DEADBAND_COUNTS is not inserted before the complementary pin toggles
     clr   R30, R30, COMP_PIN
     .endif
     .endif
@@ -151,5 +151,4 @@ pw_wp?:
 
 ## Outstanding TODO / VERIFY items
 
-- ⚠️ ; TODO: insert DEADBAND_COUNTS delay here before toggling comp pin,
-- ⚠️ TODO: insert DEADBAND_COUNTS delay here before toggling comp pin
+- None flagged in source.

@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Applies zero-sequence/common-mode injection to Q12 alpha/beta commands, returns phase A/B/C duty counts, sector 1..6, and a center-period current-sampling trigger. Duties are clamped to the configured dead-time margins. This slice computes synchronized duty contracts; six-pin complementary waveform emission remains follow-up work.
+Applies zero-sequence/common-mode injection to Q12 alpha/beta commands, returns phase A/B/C duty counts, sector 1..6, and a center-period current-sampling trigger. Duties are clamped to the configured dead-time margins. This block computes the duties only; the Three-phase complementary PWM block emits the six-pin complementary waveform.
 
 ## Block Diagram
 

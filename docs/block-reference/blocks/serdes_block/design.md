@@ -30,8 +30,8 @@ and SysConfig warns with the split actually generated. The defaults 4 / 4 give a
 LSB-first, so a saved design with the defaults (33 / 4 / 4) keeps a 33-cycle period MSB-first and goes from 34 to 33 LSB-first;
 any other preCycles / postCycles now produce the configured bitCycles instead of the old trip-derived period.
 
-**Evidence.** tests/test_serdes_bit_period.py measures the CLK period from R30 edges on the TI pru-simulator running the
-real SysConfig + clpru ELF at bitCycles 14..64, both bit orders, against the configured number. NOT hardware validated.
+**Verification.** The CLK period was measured from R30 edges on the TI pru-simulator running the real SysConfig + clpru
+ELF at bitCycles 14..64, both bit orders, against the configured number. NOT hardware validated.
 
 
 ## Block Diagram
