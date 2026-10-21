@@ -2,11 +2,10 @@
 
 // Exercises the production register allocator and the production
 // validateSum32Global — not copies — so this test cannot drift from shipped
-// code. This is the regression guard for the first pass's defect:
-// `accumulate` emitted `xout 47|49, &R2, 32` without ever declaring R2-R9 to
-// the allocator, so the allocator treated those bytes as free general-purpose
-// pool and could hand them to an unrelated block, which then got checksummed
-// instead of the user's data.
+// code. It checks that `accumulate` declares R2-R9 to the allocator: its
+// `xout 47|49, &R2, 32` reads those bytes, and an allocator that treated them
+// as free general-purpose pool could hand them to an unrelated block, which
+// would then get checksummed instead of the user's data.
 const assert = require("assert");
 const fs = require("fs");
 const path = require("path");

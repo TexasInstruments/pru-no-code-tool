@@ -107,12 +107,10 @@ def test_sweep_reports_validators_found_vs_armed():
     validators = report["validators"]
     # Total blocks declaring validate() — sweep is authoritative
     assert summary["validatorsFound"] == len(validators)
-    # FLOORS, not exact totals. These were the counts when landed
-    # (58 validators / 227 logError sites). An exact equality here breaks on
-    # every new block that declares validate() - xfr2psi_block made it
-    # 59 within the hour and turned this suite red for no defect. What is worth
-    # catching is the sweep seeing FEWER validators than it used to, which means
-    # the harness stopped recognising a block, so the floor is the assertion and
+    # FLOORS, not exact totals (58 validators / 227 logError sites). An exact
+    # equality would fail on every new block that declares validate(). What is
+    # worth catching is the sweep seeing FEWER validators, which means the
+    # harness stopped recognising a block, so the floor is the assertion and
     # growth is expected.
     assert summary["validatorsFound"] >= 58, f"sweep regressed: expected at least 58 blocks with validate(), got {summary['validatorsFound']}"
     assert summary["errorPathsFound"] >= 227, f"sweep regressed: expected at least 227 logError sites, got {summary['errorPathsFound']}"

@@ -120,8 +120,8 @@ assert.strictEqual(cfg("noOfCycles").getValue({ operation: "configure" }), 7);
 // 2. Behaviour: the repository Simulator executes the production macro body,
 //    including its own arithmetic (no precomputed LDI32 standing in for it).
 // ---------------------------------------------------------------------------
-// 2a. configure: ringEntries=16 -> raw nums=15. This is the literal regression
-//     guard against a double shift (nums=15 must not become 30 / decode as ring size 31).
+// 2a. configure: ringEntries=16 -> raw nums=15. Guards against a double shift
+//     (nums=15 must not become 30 / decode as ring size 31).
 let sim = runInSimulator([], macroBody(configureText, {
     RES: "R9", SRC_BASE: "65536", TR_SIZE: "1", RING_BASE: "66048", RING_NUMS: "15", RESET: "0"
 }));
@@ -227,7 +227,7 @@ try {
 // 3. Further red arms: mutate the real emitted/executed body at one fault
 //    site each; the assertion above must stop holding.
 // ---------------------------------------------------------------------------
-// 3a. Double-shift regression reproduced directly: if RING_NUMS were
+// 3a. Double shift reproduced directly: if RING_NUMS were
 //     shifted into bit 9 instead of bit 8, nums=15 would decode as 30.
 let broken = macroBody(configureText.replace("RING_NUMS << 8", "RING_NUMS << 9"), {
     RES: "R9", SRC_BASE: "0", TR_SIZE: "0", RING_BASE: "0", RING_NUMS: "15", RESET: "0"
@@ -244,7 +244,7 @@ broken = macroBody(submitText.replace("mov   R2, IN1", "mov   R2, 0"), {
 sim = runInSimulator([`LDI32 R20, ${(1 << 16) | 7}`, "LDI32 R21, 0"], broken);
 assert.notDeepStrictEqual(sim.state.xfr2tr.queue, [7, 1], "dropping the IN1 dataflow mapping must be discriminated");
 
-// 3c. ID0-as-hole regression: a parser that treats ID 0 as an
+// 3c. ID 0 as a hole: a parser that treats ID 0 as an
 //     absent/sentinel slot (filtering zeros) must be discriminated.
 function idsWithZeroFiltered(pruState, bank, srcRegN, count) {
     const tr = this._xfr2trState(pruState);

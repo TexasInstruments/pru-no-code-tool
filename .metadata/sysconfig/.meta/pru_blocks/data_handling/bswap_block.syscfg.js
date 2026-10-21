@@ -81,7 +81,7 @@ function validate(inst, report) {
     }
     if (inst.byteWidth !== undefined) {
         report.logError(
-            "BSWAP no longer has a Width setting: the span is the XIN length, and 0xA1/0xA2 " +
+            "BSWAP has no Width setting: the span is the XIN length, and 0xA1/0xA2 " +
             "operate on fixed register windows. Remove byteWidth and select a mode.", inst, "mode");
     }
     if (MODES[name].fixedWindow && inst.input1 && inst.input1.length > 0) {

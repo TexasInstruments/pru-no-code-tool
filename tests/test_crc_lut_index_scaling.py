@@ -23,7 +23,7 @@ Arms:
     step - runs wherever node exists.
   * ti_sim: same vectors on the real clpru-assembled macro running on the
     TI pru-simulator - SKIPs with a reason when the simulator
-    (PRU_SIMULATOR_PATH / tools/pru-simulator-upstream) or clpru
+    (PRU_SIMULATOR_PATH, a pru-simulator checkout) or clpru
     (CGT_TI_PRU_PATH) is unavailable; it must never silently pass.
 """
 

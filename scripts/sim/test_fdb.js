@@ -225,7 +225,7 @@ function loadFdbGlobal(mods, allocExports){
     const nop2 = { $name:"NOP2", numOfInputPorts:0, numOfOutputPorts:1, numOfConstants:0, output1Size:4, noOfCycles:1, opCode:"nop", output1:[] };
     // Chain: pat -> nop1 -> nop2 -> cmp  (use prev/next for ordering, but allocator orders by input dependencies; to force order we use a linear prev chain)
     // Simpler: test hazard via existing validator's peakCycles path: it sums cyclesBetween for non-FDB nodes between FDB nodes in chainOrder.
-    // Our earlier adjacent test covers the red arm; for green we add delay blocks that appear in chainOrder between them.
+    // The adjacent case is covered above; here delay blocks sit between them in chainOrder.
     // Use group ordering via allocator: make pat feed nop1, nop1 feed nop2, nop2 feed cmp via input chain? FDB blocks don't have input ports for compare, so allocator input recursion won't order them.
     // Instead we rely on the allocator's prev/next chain - the test above already uses prev/next chain; the green case needs two non-FDB instructions in between.
     // We simulate by ensuring chainOrder has gap: patch allocator summary manually

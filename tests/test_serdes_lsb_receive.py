@@ -171,7 +171,7 @@ def _needs_device():
         return pytest.mark.skip(
             reason="needs the TI pru-simulator for the device half and "
                    "PRU_SIMULATOR_PATH is unset (or not a checkout); "
-                   "set PRU_SIMULATOR_PATH to tools/pru-simulator-upstream")
+                   "set PRU_SIMULATOR_PATH to a pru-simulator checkout")
     return pytest.mark.skipif(False, reason="")
 
 

@@ -14,10 +14,9 @@ Table 6-93 (SUM32 XFR ID): XOUT 49 (0x31, PRU) / 38 (0x26, RTU_PRU) for BS RAM +
 XOUT 47 (0x2F, PRU) / 39 (0x27, RTU_PRU) for SUM32 only; XIN 02 (0x2h) for both cores.
 Table 6-94: R2-R9 write-only (always 32 bytes); R29 sum, read-only, self-clears on read.
 
-redo (this file). The first pass's accumulate macro emitted
-`xout 47|49, &R2, 32` without declaring or loading R2-R9, so the allocator treated that window
-as free general-purpose pool and any other block's value could land there and get checksummed
-instead of the user's data — the block was unusable from the graph. Fixed both halves:
+An accumulate macro that emits `xout 47|49, &R2, 32` without declaring or loading R2-R9 lets
+the allocator treat that window as free general-purpose pool, so any other block's value could
+land there and get checksummed instead of the user's data. The block handles both halves:
  (a) DATA PATH: accumulate gets an `input1` port carrying a 32-bit DMEM byte address; the macro
      LBBOs the 32-byte block from that address into R2-R9 before the XOUT.
  (b) REGISTER WINDOW: pru_register_allocator reserves bytes 8..39 (R2-R9) whenever any accumulate
@@ -282,7 +281,7 @@ def test_accumulate_snoop_macro_lbbo_then_device_49():
 
 
 def test_accumulate_lbbo_mutation_flips():
-    """Regression guard for the first pass: dropping the LBBO must be discriminated."""
+    """Dropping the LBBO that loads R2-R9 must be detected."""
     macro = _get_macro("m_sum32_accumulate_only")
     mutated = macro.replace("    lbbo  &R2, SRC_ADDR, 0, 32\n", "")
     assert "&R2, SRC_ADDR, 0, 32" not in mutated

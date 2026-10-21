@@ -1,7 +1,8 @@
 """MAC operand write-to-access gap check.
 
-On LP-AM261 silicon (measured on the board), the MAC broadside interface does not see an operand written in the instruction
-immediately before XIN 0 or XOUT 0.
+On LP-AM261 the MAC broadside interface was observed not to see an operand written in the instruction
+immediately before XIN 0 or XOUT 0. This is a bench observation; no TRM statement or measurement log for it
+is part of this repository, so the rule below is a conservative constraint, not a documented one.
 The last write to R28 (TEMP_REG1) or R29 (TEMP_REG2) must be at least ONE
 instruction before XIN 0 / XOUT 0 (e.g. an independent instruction or a NOP).
 
