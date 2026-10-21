@@ -1382,6 +1382,24 @@ function getUsectLinkerDirectives()
         }
     }
 
+    // Look for IPC Shared Memory module
+    const ipcModule = systemModules["/pru_blocks/application_specific/ipc_shared_mem_block"];
+    if (ipcModule && ipcModule.$instances) {
+        for (let instance of ipcModule.$instances) {
+            if (instance.variableName) {
+                const labelName = instance.variableName;
+                const sizeMap = { "uint32_t": 4, "int32_t": 4, "float": 4 };
+                const sizeInBytes = sizeMap[instance.dataType] || 4;
+                const sectionName = instance.memorySection === "PRU_SHARED_RAM" ? ".usmem" :
+                                    instance.memorySection === "PRU_DRAM_0" ? ".udmem" :
+                                    instance.memorySection === "PRU_DRAM_1" ? ".udmem" : ".usmem";
+                
+                // Always use 4-byte alignment
+                usectDirectives.add(`${labelName}\t.usect "${sectionName}", ${sizeInBytes}, 4`);
+            }
+        }
+    }
+
     // Look for PID module
     const pidModule = systemModules["/pru_blocks/data_handling/iqmath_pid_block"];
     if (pidModule && pidModule.$instances) {

@@ -67,6 +67,16 @@ const topModules_pru = [
                 displayName: "APPLICATION SPECIFIC",
                 modules: [
                     "/pru_blocks/application_specific/crc_block",
+                    "/pru_blocks/application_specific/tamagawa_initiator_block",
+                    "/pru_blocks/application_specific/biss_c_initiator_block",
+                    "/pru_blocks/application_specific/endat_initiator_block",
+                    "/pru_blocks/application_specific/ipc_shared_mem_block",
+                    "/pru_blocks/application_specific/vibration_edge_block",
+                    "/pru_blocks/application_specific/application_host_block",
+                    "/pru_blocks/application_specific/industrial_serial_gateway_block",
+                    "/pru_blocks/application_specific/iolink_master_block",
+                    "/pru_blocks/application_specific/modbus_rtu_framer",
+                    "/pru_blocks/application_specific/ssi_initiator_block",
                 ],
             },
             {
@@ -174,6 +184,11 @@ const topModules_rtu_tx_pru =[
                 displayName: "APPLICATION SPECIFIC",
                 modules: [
                     "/pru_blocks/application_specific/crc_block",
+                    "/pru_blocks/application_specific/tamagawa_initiator_block",
+                    "/pru_blocks/application_specific/biss_c_initiator_block",
+                    "/pru_blocks/application_specific/endat_initiator_block",
+                    "/pru_blocks/application_specific/ipc_shared_mem_block",
+                    "/pru_blocks/application_specific/application_host_block",
                 ],
             },
             {
