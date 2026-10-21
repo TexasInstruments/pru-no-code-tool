@@ -23,6 +23,13 @@ function getDataSize(instance) {
 /*to do: figure out a way for the user to input large number of values without manually entering
 everything*/
 function validate(inst, report) {
+    // $name is emitted as the table symbol ("<name> .byte/.ushort/.uint ..." in .initdmem); reject clpru reserved identifiers via the shared helper.
+    if (typeof system !== "undefined" && system.getScript) {
+        var reservedNames = system.getScript("/pru_blocks/common/pru_reserved_names.js");
+        if (reservedNames && typeof reservedNames.validateInstanceName === "function") {
+            reservedNames.validateInstanceName(inst, report, "This block emits the instance name as the lookup-table symbol in .initdmem.");
+        }
+    }
     if (inst["tableSize"] < 1 || inst["tableSize"] > 65536) {
         report.logError("Table size must be between 1 and 65536", inst);
     }

@@ -6,6 +6,13 @@
  */
 
 function validate(inst, report) {
+    // labelName is emitted as a .usect reservation label; reject clpru reserved identifiers via the shared helper.
+    if (typeof system !== "undefined" && system.getScript) {
+        var reservedNames = system.getScript("/pru_blocks/common/pru_reserved_names.js");
+        if (reservedNames && typeof reservedNames.validateSymbolField === "function") {
+            reservedNames.validateSymbolField(inst, report, "labelName", "This symbol is emitted as a .usect reservation label.");
+        }
+    }
     // Validate label name
     if (!inst.labelName || inst.labelName.trim() === "") {
         report.logError("Label name cannot be empty", inst, "labelName");

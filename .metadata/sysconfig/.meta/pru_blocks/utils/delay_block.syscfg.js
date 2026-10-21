@@ -98,7 +98,7 @@ scripting.connect(delay1, "next", next_block, "prev");
 
 ### Important Notes
 
-1. **Maximum Delay**: Single Delay block limited to 255 cycles. Use Loop block for longer delays.
+1. **Maximum Delay**: Single Delay block limited to 255 cycles. Do not put Delay(count > 1) inside a Loop: both emit PRU hardware LOOP. Chain Delays or split work into sequential finite loops instead.
 
 2. **Timing**: At 200MHz PRU clock, 1 cycle = 5ns. delayCount of 200 = 1 microsecond.
 
@@ -138,53 +138,30 @@ At 200MHz PRU clock (default on most TI devices):
 
 ### Technical Details (Additional Information)
 **Generated Assembly**:
-- loop endloop, count - 1    ; Setup loop counter (2 cycles overhead)
+- loop endloop, count - 1    ; Setup loop counter (1 cycle)
 -     NOP                     ; No operation (count-1 times)
 - endloop:                    ; Loop end label
 
-**Total Cycles**: count + 2 (2 cycle overhead for loop setup)
+**Total Cycles**: count (the block takes exactly count cycles, matching noOfCycles)
 
 ### Usage Notes
 - Maximum delay per block: 255 cycles (hardware limitation)
-- Minimum delay is 1 cycle (+ 2 overhead = 3 total)
+- Minimum delay is 1 cycle (single NOP)
 - This is a **pass-through block** - connects input to output without modification
 
 ### For Delays Greater Than 255 Cycles
 
-Since the Delay block is limited to 255 cycles maximum, use the **Loop block** for longer delays:
+One Delay block waits at most 255 cycles. For longer waits:
 
-**Method 1: Loop with single Delay block**
+- **Chain Delay blocks.** Delay(255) -> Delay(255) -> Delay(100) waits 610 cycles. 10 us at 200 MHz is 2,000 cycles, so 8 chained blocks; 100 us is about 79.
+- **Put the chain in an infinite Loop** for a periodic task. An infinite Loop compiles to a branch, not the hardware LOOP instruction, so Delay blocks of any length are legal inside it.
+- **Use a software counter loop** (an Arithmetic block that decrements a counter and a Conditional block that branches back while it is non-zero) for very long waits.
 
-Loop (count: N) → Delay (255 cycles)
-
-Total delay = N × 255 cycles
-Example: Loop count 10 with Delay 255 = 2,550 cycles = 12.75μs @ 200MHz
-
-**Method 2: Loop with multiple Delay blocks in sequence**
-
-Loop (count: N) → Delay (255 cycles) → Delay (255 cycles) → Delay (100 cycles)
-
-Total delay = N × (255 + 255 + 100) = N × 610 cycles
-Example: Loop count 100 with 610 cycles = 61,000 cycles = 305μs @ 200MHz
-
-**Method 3: Nested loops for very long delays**
-
-Outer Loop (count: 1000)
-└─ Inner Loop (count: 200)
-	└─ Delay (255 cycles)
-
-Total delay = 1000 × 200 × 255 = 51,000,000 cycles = 255ms @ 200MHz
-
-**Delay Examples**:
-- **10 microseconds**: Loop(40) → Delay(50) = 2,000 cycles
-- **100 microseconds**: Loop(100) → Delay(200) = 20,000 cycles
-- **1 millisecond**: Loop(200) → Loop(5) → Delay(200) = 200,000 cycles
-- **10 milliseconds**: Loop(1000) → Loop(10) → Delay(200) = 2,000,000 cycles
+Do not wrap a Delay longer than one cycle in a finite Loop: both emit the PRU hardware LOOP instruction, and the PRU has only one hardware-loop context, so SysConfig rejects it. Delay(1) is a plain NOP and is allowed inside any Loop.
 
 **Important Notes**:
-- Loop overhead adds 2-3 cycles per iteration
-- For precise timing, account for loop setup overhead
-- Inner loop body executes sequentially (prev to next connections)
+- Each Delay(count > 1) uses PRU hardware LOOP setup (1 cycle) plus count - 1 NOP iterations, totaling exactly count cycles matching noOfCycles
+- For precise timing, check the generated cycle budget
 - Use simulation to verify exact cycle counts
 
 ### Terminology
@@ -192,7 +169,7 @@ Total delay = 1000 × 200 × 255 = 51,000,000 cycles = 255ms @ 200MHz
 - **Cycle**: One tick of the PRU clock
 - **NOP**: No Operation - instruction that does nothing but consume time
 - **Loop overhead**: Extra cycles required for loop setup/teardown
-- **Nested loops**: Loop block inside another Loop block for longer delays
+- **Hardware-loop context**: PRU state used by the \`LOOP\` instruction; only one is available, so it cannot nest
 
 ---`;
 }
@@ -232,7 +209,7 @@ exports = {
 			default: 1,
             range: [1, 255],
 		},
-        {
+		{
 			name: "opCode",
             displayName: "m_wait_cycles",
 			default: "m_wait_cycles",
@@ -244,6 +221,14 @@ exports = {
 				return "m_wait_cycles";
 			},
 			hidden: true
+		},
+		{
+			// Consumed by Loop.validate().  A one-cycle Delay is a NOP and does
+			// not allocate the PRU's single hardware LOOP context.
+			name: "emitsHardwareLoop",
+			default: false,
+			hidden: true,
+			getValue: (inst) => inst["delayCount"] > 1
 		},
 		{
 			name: "numOfInputPorts",
