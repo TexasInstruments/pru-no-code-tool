@@ -18,7 +18,11 @@ function getPruNumberFromContext() {
     return "PRU1";
 }
 const PRU_USED = getPruNumberFromContext();
+// CS Setup/Hold Time are nanoseconds; the macros take PRU cycles. One shared conversion.
+const spiTiming = system.getScript("/pru_blocks/common/pru_spi_timing.js");
 function validate(inst, report) {
+	spiTiming.validateCsTimes(inst, report);
+	spiTiming.validateIramBudget(inst, report);
 	// Port connection warnings
 	for(let iterator = 1; iterator <= inst["numOfInputPorts"]; iterator++)
 	{
@@ -165,8 +169,8 @@ function getMacro(pruInstructionMacro, opCode) {
 	;   DELAY_COMPEN_1    - High pulse delay compensation (PRU cycles)
 	;   DELAY_COMPEN_2    - Low pulse delay compensation (PRU cycles)
 	;   CS_PIN            - Chip select output pin number (GPO)
-	;   CS_SETUP_TIME     - Setup time after CS assertion (PRU cycles)
-	;   CS_HOLD_TIME      - Hold time before CS deassertion (PRU cycles)
+	;   CS_SETUP_TIME     - Setup time after CS assertion (PRU cycles; the block converts its nanosecond setting, rounding up)
+	;   CS_HOLD_TIME      - Hold time before CS deassertion (PRU cycles; the block converts its nanosecond setting, rounding up)
 	;   DATA_SETUP_TIME   - Data setup time after clock edge (PRU cycles)
 `;
 		}
@@ -1466,6 +1470,16 @@ exports = {
 	},
 	validate,
 	moduleStatic: {
+
+        getPinUsage: function(inst) {
+            const isCtrl = inst["Device Mode"] === "controller";
+            const pins = [];
+            if (inst["SCLK Signal"] !== undefined) pins.push({ pin: parseInt(inst["SCLK Signal"]), dir: isCtrl ? "GPO" : "GPI" });
+            if (inst["SDO Signal"] !== undefined) pins.push({ pin: parseInt(inst["SDO Signal"]), dir: "GPO" });
+            if (inst["CS Signal"] !== undefined) pins.push({ pin: parseInt(inst["CS Signal"]), dir: isCtrl ? "GPO" : "GPI" });
+            return pins;
+        }
+    ,
         modules: function(inst) {
             return [{
                 name: "pru_register_allocator_validator",

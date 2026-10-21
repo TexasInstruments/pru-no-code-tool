@@ -57,6 +57,22 @@ function getMemoryReserveSize(symbolName) {
 	return -1; // Symbol not found
 }
 
+/**
+ * Other Memory Access instances that resolve to the SAME auto-created memVar
+ * object as this one (neither picks a different symbol via symbolSelect).
+ * Setting labelName through any one of them renames the variable for all of
+ * them..
+ */
+function getSharedMemVarPeers(inst) {
+    if (!inst.memVar || (inst.symbolSelect && inst.symbolSelect !== "")) return [];
+    const accessModule = system.modules["/pru_blocks/utils/memory_access_block"];
+    if (!accessModule || !accessModule.$instances) return [];
+    return accessModule.$instances.filter(other =>
+        other !== inst &&
+        other.memVar === inst.memVar &&
+        !(other.symbolSelect && other.symbolSelect !== ""));
+}
+
 function validate(inst, report) {
 	// Check input port connections for write mode
 	if (inst["operationMode"] === "write") {
@@ -69,6 +85,17 @@ function validate(inst, report) {
 	if (!referencedMemVar) {
 		report.logError("Please select a memory symbol to access", inst, "symbolSelect");
 		return;
+	}
+
+	// Two blocks on one shared memVar object cannot hold different names.
+	const sharedPeers = getSharedMemVarPeers(inst);
+	if (sharedPeers.length > 0) {
+		const names = sharedPeers.map(p => p.$name).join(", ");
+		report.logWarning(
+			`Shares one Memory Variable ('${referencedMemVar.labelName}') with ${names}. Setting labelName through any one block's memVar renames the variable for every block that shares it. Use separate Memory Variable instances and select them with symbolSelect`,
+			inst,
+			"symbolSelect"
+		);
 	}
 
 	// Validate data size
@@ -363,6 +390,34 @@ Result: Writes 16 bytes to largeBuffer[0-15] using multiple registers
 **Write Mode**:
 - Input 1: data (value to store)
 - Input 2: offset (only in Register Input mode)
+
+### Two buffers: use explicit Memory Variable instances
+
+Each Memory Access block's nested memVar is ONE shared object. Setting labelName through one block renames it for every block sharing it, so the second assignment silently wins and the first buffer is never reserved:
+
+\\\`\\\`\\\`javascript
+// WRONG: both blocks end up on out_buf, in_buf is never reserved
+rd.memVar.labelName = "in_buf";
+wr.memVar.labelName = "out_buf";
+\\\`\\\`\\\`
+
+Create one Memory Variable instance per buffer and assign it by reference:
+
+\\\`\\\`\\\`javascript
+const memory_reserve = scripting.addModule("/pru_blocks/utils/memory_variable_block", {}, false);
+const in_buf = memory_reserve.addInstance();
+in_buf.$name = "In_Buf";
+in_buf.labelName = "in_buf";
+in_buf.sizeInBytes = 64;
+const out_buf = memory_reserve.addInstance();
+out_buf.$name = "Out_Buf";
+out_buf.labelName = "out_buf";
+out_buf.sizeInBytes = 64;
+rd.memVar = in_buf;
+wr.memVar = out_buf;
+\\\`\\\`\\\`
+
+The block raises a validation warning when two Memory Access blocks share one memVar.
 
 ### Important Notes
 
