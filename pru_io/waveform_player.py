@@ -1,4 +1,4 @@
-"""WaveformPlayer — cycle-keyed R31 stimulus as a DeviceModel..
+"""WaveformPlayer — cycle-keyed R31 stimulus as a DeviceModel.
 
 WHY
 ---
