@@ -29,6 +29,12 @@ TI_TOOLS = Path(os.environ.get("TOOLS_PATH", (os.environ.get("SystemDrive", "C:"
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
+#: PRU constant-table entry 26 is the ICSS IEP0 register block (0x0002E000) on
+#: AM64x/AM243x. A pru-simulator checkout whose config/constants_am243x.cfg maps
+#: c26 elsewhere still places its IEP model at 0x0002E000, so firmware that
+#: programs the IEP through c26 passes this to run_elf_closed_loop(constants=...).
+IEP_CONSTANTS = {26: 0x0002E000}
+
 CLPRU_CANDIDATES = [
     str(TI_TOOLS / "ti-cgt-pru_2.3.3" / "bin" / "clpru.exe"),
     str(TI_TOOLS / "ti-cgt-pru_2.3.3" / "bin" / "clpru"),
@@ -67,6 +73,19 @@ def _is_simulator_checkout(path: str) -> bool:
     """A directory counts as a TI pru-simulator checkout only when it holds simulator.py;
     a directory that merely has the expected name is skipped."""
     return os.path.isfile(os.path.join(path, "simulator.py"))
+
+
+def simulator_iep_base() -> Optional[int]:
+    """Base address of the checkout's IEP0 register model, or None if it has none."""
+    sim_dir = find_pru_simulator()
+    with _sim_namespace(sim_dir):
+        from simulator import Simulator  # type: ignore
+
+        sim = Simulator(os.path.join(sim_dir, "memory.cfg"))
+        for region in getattr(sim.memory, "regions", []):
+            if getattr(region, "name", "") == "ICSS_IEP":
+                return region.base_addr
+    return None
 
 
 class SimulatorNotFound(RuntimeError):
@@ -149,6 +168,7 @@ def run_elf_closed_loop(
     max_steps: int = 20000,
     core: str = "pru0",
     on_step=None,
+    constants: Optional[Dict[int, int]] = None,
 ) -> CosimResult:
     """Run a real ELF against a DeviceModel in a closed pin loop.
 
@@ -156,6 +176,9 @@ def run_elf_closed_loop(
     tick(cycle, pins_out) -> pins_in (GPI word).
     ``on_step`` (optional) is called each step with (cycle, gpo, gpi, sim) so
     tests can inject extra stimuli (e.g. an EnDat mode command).
+    ``constants`` (optional) overrides constant-table entries {index: address}
+    before the run, for firmware that relies on an entry the simulator's
+    config maps differently from the device (see IEP_CONSTANTS).
     """
     sim_dir = find_pru_simulator()
     # Run the whole loop with the simulator's packages first on sys.path, so its
@@ -169,6 +192,8 @@ def run_elf_closed_loop(
         if errors:
             raise RuntimeError(f"ELF load errors: {errors}")
         pru = sim.cores[core]
+        for index, address in (constants or {}).items():
+            sim.constant_table.set(index, address)
 
         result = CosimResult()
         result = _loop(sim, pru, core, model, max_steps, on_step)
