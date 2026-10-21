@@ -169,6 +169,7 @@ def run_elf_closed_loop(
     core: str = "pru0",
     on_step=None,
     constants: Optional[Dict[int, int]] = None,
+    lock_iep_to_core: bool = False,
 ) -> CosimResult:
     """Run a real ELF against a DeviceModel in a closed pin loop.
 
@@ -179,6 +180,10 @@ def run_elf_closed_loop(
     ``constants`` (optional) overrides constant-table entries {index: address}
     before the run, for firmware that relies on an entry the simulator's
     config maps differently from the device (see IEP_CONSTANTS).
+    ``lock_iep_to_core`` runs the IEP at the core's clock. A checkout that
+    clocks the IEP at its own rate (e.g. 200 MHz IEP, 250 MHz PRU) shifts
+    edges that wait on IEP compare events by the IEP-to-core phase, so tests
+    that compare two runs cycle for cycle pin the two clocks together.
     """
     sim_dir = find_pru_simulator()
     # Run the whole loop with the simulator's packages first on sys.path, so its
@@ -194,6 +199,8 @@ def run_elf_closed_loop(
         pru = sim.cores[core]
         for index, address in (constants or {}).items():
             pru.constant_table.set(index, address)
+        if lock_iep_to_core:
+            sim.set_iep_clock_mhz(pru.clock_mhz)
 
         result = CosimResult()
         result = _loop(sim, pru, core, model, max_steps, on_step)
