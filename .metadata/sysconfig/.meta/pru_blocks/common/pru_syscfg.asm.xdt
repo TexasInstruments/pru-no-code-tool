@@ -2,6 +2,17 @@
 %const registerAllocator = system.getScript("/pru_blocks/common/register_allocation/pru_register_allocator.js");
 %const systemModules = system.modules;
 %const bindingModule = system.modules["/pru_blocks/common/pru_blocks_static_module"];
+%const bindingManifest = bindingModule && bindingModule.$static ? bindingModule.buildDeviceBindingsWithModels(bindingModule.$static, systemModules) : {version:1, bindings:[]};
+%bindingManifest.core = system.getScript("/common").getSelfSysCfgCoreName();
+%// Carry the allocator's result register of the block reading each device.
+%if (bindingModule && typeof bindingModule.resolveDeviceReaders === "function") {
+%    const readerOrder = ((pruRegisterAllocationSummary && pruRegisterAllocationSummary.pruInstructionInstances) || []).map(i => i && i.$name);
+%    bindingModule.resolveDeviceReaders(bindingManifest, systemModules, { registerOf: registerAllocator.getBlockRegisterAllocation, order: readerOrder });
+%}
+; PRU_DEVICE_BINDINGS_BEGIN
+; `JSON.stringify(bindingManifest)`
+; PRU_DEVICE_BINDINGS_END
+; PRU_DESIGN_DIGEST `system.getScript("/pru_blocks/common/pru_ti_run.js").designDigest(system.modules, system)`
 ; Copyright (C) 2024 Texas Instruments Incorporated - http://www.ti.com/
 ;
 ; Redistribution and use in source and binary forms, with or without

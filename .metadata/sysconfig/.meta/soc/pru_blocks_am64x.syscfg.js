@@ -25,6 +25,7 @@ const topModules_pru = [
                     "/pru_blocks/utils/look_up_table",
                     "/pru_blocks/utils/access_look_up_table",
                     "/pru_blocks/utils/data_splitter",
+                    "/pru_blocks/utils/device_model_block",
                 ],
                 categories: [
                     {
