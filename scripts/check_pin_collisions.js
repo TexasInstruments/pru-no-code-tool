@@ -457,7 +457,7 @@ function run() {
         if (r.judgedOn) judged[r.judgedOn] = (judged[r.judgedOn] || 0) + 1;
         if (r.evaluated) evaluated++;
         if (r.errors.length === 0) continue;
-        found[rel] = { reason: "TODO", errors: r.errors };
+        found[rel] = { reason: "(state why these findings are expected)", errors: r.errors };
         const entry = baseline && baseline[rel];
         if (entry) {
             seen.add(rel);

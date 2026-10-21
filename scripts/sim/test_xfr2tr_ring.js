@@ -121,7 +121,7 @@ assert.strictEqual(cfg("noOfCycles").getValue({ operation: "configure" }), 7);
 //    including its own arithmetic (no precomputed LDI32 standing in for it).
 // ---------------------------------------------------------------------------
 // 2a. configure: ringEntries=16 -> raw nums=15. This is the literal regression
-//     guard for defect 1 (nums=15 must not become 30 / decode as ring size 31).
+//     guard against a double shift (nums=15 must not become 30 / decode as ring size 31).
 let sim = runInSimulator([], macroBody(configureText, {
     RES: "R9", SRC_BASE: "65536", TR_SIZE: "1", RING_BASE: "66048", RING_NUMS: "15", RESET: "0"
 }));
@@ -227,7 +227,7 @@ try {
 // 3. Further red arms: mutate the real emitted/executed body at one fault
 //    site each; the assertion above must stop holding.
 // ---------------------------------------------------------------------------
-// 3a. Double-shift regression (defect 1) reproduced directly: if RING_NUMS were
+// 3a. Double-shift regression reproduced directly: if RING_NUMS were
 //     shifted into bit 9 instead of bit 8, nums=15 would decode as 30.
 let broken = macroBody(configureText.replace("RING_NUMS << 8", "RING_NUMS << 9"), {
     RES: "R9", SRC_BASE: "0", TR_SIZE: "0", RING_BASE: "0", RING_NUMS: "15", RESET: "0"
@@ -235,7 +235,7 @@ let broken = macroBody(configureText.replace("RING_NUMS << 8", "RING_NUMS << 9")
 sim = runInSimulator([], broken);
 assert.notStrictEqual(sim.state.xfr2tr.ringNums, 15, "the << 9 mutation must be discriminated (nums would decode as 30)");
 
-// 3b. Ignored operation (defect 3): if submit's IN1 mapping is dropped (mov
+// 3b. Ignored operation: if submit's IN1 mapping is dropped (mov
 //     R2 always loaded with a fixed value instead of the block's own input),
 //     the submitted IDs must stop reflecting the connected producer.
 broken = macroBody(submitText.replace("mov   R2, IN1", "mov   R2, 0"), {
@@ -244,7 +244,7 @@ broken = macroBody(submitText.replace("mov   R2, IN1", "mov   R2, 0"), {
 sim = runInSimulator([`LDI32 R20, ${(1 << 16) | 7}`, "LDI32 R21, 0"], broken);
 assert.notDeepStrictEqual(sim.state.xfr2tr.queue, [7, 1], "dropping the IN1 dataflow mapping must be discriminated");
 
-// 3c. ID0-as-hole regression (defect 4): a parser that treats ID 0 as an
+// 3c. ID0-as-hole regression: a parser that treats ID 0 as an
 //     absent/sentinel slot (filtering zeros) must be discriminated.
 function idsWithZeroFiltered(pruState, bank, srcRegN, count) {
     const tr = this._xfr2trState(pruState);
@@ -462,7 +462,7 @@ assert.ok(!noneAcross.errors.some((e) => e.includes("XFR2TR")),
     `no XFR2TR error is allowed when nothing is live across the call, got ${JSON.stringify(noneAcross.errors)}`);
 
 // ---------------------------------------------------------------------------
-// 6. Capability gating (defect 5): XFR2TR is ICSSG-only (RTU_PRU cores),
+// 6. Capability gating: XFR2TR is ICSSG-only (RTU_PRU cores),
 //    catalogued only where those cores exist, and rejected on the wrong core.
 // ---------------------------------------------------------------------------
 delete require.cache[capsPath];

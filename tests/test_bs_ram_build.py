@@ -21,7 +21,7 @@ import elf_cosim  # noqa: E402
 
 SYSCONFIG_NODE = Path(str(TI_TOOLS / "sysconfig_1.28.0" / "nodejs" / "node.exe"))
 SYSCONFIG_CLI = Path(str(TI_TOOLS / "sysconfig_1.28.0" / "dist" / "cli.js"))
-SCRATCH = ROOT / ".tmp" / "v182"
+SCRATCH = ROOT / ".tmp" / "bs_ram_build"
 
 pytestmark = pytest.mark.skipif(
     not (Path(str(TI_TOOLS / "ti-cgt-pru_2.3.3" / "bin" / "clpru.exe")).exists() and SYSCONFIG_NODE.exists() and SYSCONFIG_CLI.exists()),
