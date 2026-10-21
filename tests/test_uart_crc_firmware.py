@@ -65,7 +65,7 @@ def crc8(data, poly=0x07):
     return crc
 
 
-def test_oracle_matches_the_documented_frames():
+def test_reference_crc_matches_the_documented_frames():
     assert crc8([0x41]) == 0xC0
     assert crc8([0x41]) != 0x11
     assert crc8([0xAA]) == 0x5F

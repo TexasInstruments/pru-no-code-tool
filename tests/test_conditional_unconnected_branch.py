@@ -5,9 +5,8 @@ then clpru failed with [E0300] undefined symbol cmp_FALSE. Fix: fail early,
 at validate time, with a clear message naming the port. A fully connected
 design must still validate without that error.
 
-The harness is the committed runner (scripts/block_validate_runner.js), the
-same one the other block-validator tests use. Control and red arms differ only
-in the T/F lists.
+The harness is scripts/block_validate_runner.js. The connected and the
+unconnected cases differ only in the T/F lists.
 """
 
 import json

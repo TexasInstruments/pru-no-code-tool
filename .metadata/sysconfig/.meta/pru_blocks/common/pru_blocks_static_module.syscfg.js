@@ -1198,12 +1198,12 @@ function validatePruInstructions(inst, report) {
  * GUI pin warnings: shared GPO/GPI physical pads, duplicate GPO drivers,
  * malformed getPinUsage results, and unavailable device/core pad data.
  *
- * The command-line pin-collision check (run by the test suite and CI) fails a design where a two-way (bidirectional)
- * pad is shared by blocks of DIFFERENT modules (e.g. two blocks of different modules reading and driving the same two-way pad).
- * This validator emits a report.logWarning (not logError, so code generation still succeeds) to give
- * the user immediate feedback in the SysConfig GUI before CI runs.
+ * A two-way (bidirectional) pad shared by blocks of DIFFERENT modules (e.g. two blocks of different
+ * modules reading and driving the same two-way pad) makes the generated firmware contend on that pad.
+ * This validator emits a report.logWarning (not logError, so code generation still succeeds) so the
+ * user sees the conflict in the SysConfig GUI.
  *
- * The check uses the same data and exemptions as the command-line pin-collision check:
+ * Rules and exemptions:
  *   - claims come from each block's moduleStatic pin usage query (inst);
  *   - exempt (no warning):
  *       (a) the same instance's own open-drain pair;
@@ -1212,10 +1212,10 @@ function validatePruInstructions(inst, report) {
  *   - only pads that are actually shared between GPO and GPI on the device count (derived from
  *     SysConfig device data).
  *
- * Warning text names both blocks (instance names), the pad, and warns that CI's pin check will FAIL.
- * Device scope: both read the design's own device and PRU core (CI from the @cliArgs --device/--context header, the GUI from system.deviceData and the core name), so they agree on every device.
+ * Warning text names both blocks (instance names) and the pad.
+ * Device scope: the design's own device and PRU core (system.deviceData and the core name).
  */
-// SysConfig core name -> pad signal prefix, same mapping as the command-line pin-collision check:
+// SysConfig core name -> pad signal prefix:
 // icss_g<N>_[rtu_|tx_]pru<K> -> PRG<N>_PRU<K> (ICSSG), icss_m<N>_pru<K> -> PR<N>_PRU<K> (ICSSM).
 function padPrefixForCore(coreName) {
     const m = /^icss_([gm])(\d)(?:_(?:rtu|tx))?_pru(\d)$/.exec(coreName || '');
@@ -1302,7 +1302,7 @@ function validateBidiPinCollisionsGlobal(inst, report) {
         // GUI pin warnings: shared GPO/GPI physical pads, duplicate GPO drivers
         //, malformed pin-usage results, and unavailable device/core pad data.
         // The GPO/GPI shared-pad rule needs device pad data; the duplicate-GPO rule and the
-        // 'could not evaluate' diagnostics do not, exactly as in CI's checkSyscfg.
+        // 'could not evaluate' diagnostics do not.
         const padSharing = getDevicePadSharing(system.deviceData, system.getScript("/common").getSelfSysCfgCoreName());
         const sharedIndices = padSharing || new Set();
 
@@ -1328,9 +1328,9 @@ function validateBidiPinCollisionsGlobal(inst, report) {
                 }
                 const block = modName.split('/').pop();
                 if (!Array.isArray(pins)) {
-                    // CI's for-of over a non-iterable throws and fails the design.
+                    // A non-array result cannot be checked; report it rather than skip it silently.
                     report.logWarning(
-                        `Pin-sharing check could not evaluate block '${iname}' (${modName}): its pin-usage function did not return an array; CI's pin check will FAIL this design.`,
+                        `Pin-sharing check could not evaluate block '${iname}' (${modName}): its pin-usage function did not return an array, so its pins are not checked for sharing.`,
                         inst
                     );
                     continue;
@@ -1338,7 +1338,7 @@ function validateBidiPinCollisionsGlobal(inst, report) {
                 for (const p of pins) {
                     if (!p || (p.dir !== "GPO" && p.dir !== "GPI")) {
                         report.logWarning(
-                            `Pin-sharing check could not evaluate block '${iname}' (${modName}): its pin-usage function returned an entry without a GPO/GPI dir; CI's pin check will FAIL this design.`,
+                            `Pin-sharing check could not evaluate block '${iname}' (${modName}): its pin-usage function returned an entry without a GPO/GPI dir, so that entry is not checked for sharing.`,
                             inst
                         );
                         continue;
@@ -1346,7 +1346,7 @@ function validateBidiPinCollisionsGlobal(inst, report) {
                     const pin = parseInt(p.pin);
                     if (isNaN(pin)) {
                         report.logWarning(
-                            `Pin-sharing check could not evaluate block '${iname}' (${modName}): unparseable ${p.dir} pin "${String(p.pin)}"; CI's pin check will FAIL this design.`,
+                            `Pin-sharing check could not evaluate block '${iname}' (${modName}): unparseable ${p.dir} pin "${String(p.pin)}", so that pin is not checked for sharing.`,
                             inst
                         );
                         continue;
@@ -1372,7 +1372,7 @@ function validateBidiPinCollisionsGlobal(inst, report) {
 
         if (padSharing === null && gpoBits.length && gpiBits.length) {
             report.logWarning(
-                "GPO/GPI pad sharing could not be checked for this device/core; CI's pin check will FAIL this design.",
+                "GPO/GPI pad sharing could not be checked for this device/core: no pad data is available, so shared GPO/GPI pads are not detected.",
                 inst
             );
         }
@@ -1393,7 +1393,7 @@ function validateBidiPinCollisionsGlobal(inst, report) {
                     warnedPairs.add(pairKey);
 
                     report.logWarning(
-                        `Pad ${o.pin} is driven (GPO) by '${o.iname}' (${o.block}) and read (GPI) by '${i.iname}' (${i.block}); CI's pin check will FAIL this design.`,
+                        `Pad ${o.pin} is driven (GPO) by '${o.iname}' (${o.block}) and read (GPI) by '${i.iname}' (${i.block}); the generated firmware will contend on this pad.`,
                         inst
                     );
                 }
@@ -1401,8 +1401,7 @@ function validateBidiPinCollisionsGlobal(inst, report) {
         }
 
         // two different instances drive one GPO index and at least one block is CONTINUOUS
-        // (fail closed: a block missing from the control-flow table counts as continuous). Mirrors
-        // the duplicate-GPO rule of the command-line pin-collision check.
+        // (fail closed: a block missing from the control-flow table counts as continuous).
         for (let x = 0; x < gpoBits.length; x++) {
             for (let y = x + 1; y < gpoBits.length; y++) {
                 const a = gpoBits[x], b = gpoBits[y];
@@ -1413,7 +1412,7 @@ function validateBidiPinCollisionsGlobal(inst, report) {
                     .filter((blk, k, arr) => arr.indexOf(blk) === k);
                 if (!cont.length) continue;
                 report.logWarning(
-                    `GPO ${a.pin} is driven by both '${a.iname}' (${a.block}) and '${b.iname}' (${b.block}); continuous: ${cont.join(', ')}; CI's pin check will FAIL this design (duplicate GPO drivers).`,
+                    `GPO ${a.pin} is driven by both '${a.iname}' (${a.block}) and '${b.iname}' (${b.block}); continuous: ${cont.join(', ')}; the drivers will overwrite each other on this pin (duplicate GPO drivers).`,
                     inst
                 );
             }

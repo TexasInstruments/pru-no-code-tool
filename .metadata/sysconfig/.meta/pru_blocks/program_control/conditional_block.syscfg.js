@@ -1,5 +1,5 @@
 function validate(inst, report) {
-	// "<name>_TRUE"/"<name>_FALSE" branch labels are derived from $name; only the derived forms are checked (a reserved base such as c0 still assembles as c0_TRUE — probed with clpru).
+	// "<name>_TRUE"/"<name>_FALSE" branch labels are derived from $name; only the derived forms are checked (a reserved base such as c0 still assembles as c0_TRUE — checked with clpru 2.3.3).
 	if (typeof system !== "undefined" && system.getScript) {
 		var reservedNames = system.getScript("/pru_blocks/common/pru_reserved_names.js");
 		if (reservedNames && typeof reservedNames.validateDerivedSymbol === "function") {

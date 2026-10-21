@@ -15,7 +15,7 @@
  * w0-w7, assembler directives (byte/ushort/uint/usect/text/sect/global/...),
  * sp, pc, main, call, ret, TEMP_REG1 and ordinary names all assemble fine.
  *
- * Case (each claim probed with clpru itself, both as a data symbol and as
+ * Case (each claim checked with clpru 2.3.3, both as a data symbol and as
  * a code label): register names r0-r31/c0-c31
  * are case-insensitive (R5, C0 fail) — ANY case is rejected. Mnemonics are
  * rejected in exact-lowercase (add) and exact-ALL-UPPERCASE (ADD) only; a
@@ -38,10 +38,10 @@ var REGISTER_NAMES = [];
 })();
 
 // Byte-lane selectors the assembler reserves as identifiers (w0-w7 are NOT
-// reserved — probed, they assemble — so only b0-b3 are listed).
+// reserved — checked with clpru, they assemble — so only b0-b3 are listed).
 var BYTE_LANE_NAMES = ["b0", "b1", "b2", "b3"];
 
-// PRU instruction mnemonics clpru reserves (each probed lowercase and
+// PRU instruction mnemonics clpru reserves (each checked lowercase and
 // ALL-UPPERCASE; mixed-case forms assemble and are NOT rejected — see
 // isReservedAsmName. SCAN/BROAD/IDLE/MULL/MUL assemble and are NOT listed).
 var MNEMONIC_NAMES = [
@@ -112,7 +112,7 @@ function validateInstanceName(inst, report, detail) {
  * Reject a reserved value in a derived assembly symbol. Some blocks never
  * emit the raw name: conditional emits `<name>_TRUE`/`<name>_FALSE` branch
  * labels, group emits `<groupName>_start`, pid emits `<name>_pid_state`.
- * Those derived symbols assemble even for a reserved base (probed: c0_TRUE,
+ * Those derived symbols assemble even for a reserved base (checked with clpru: c0_TRUE,
  * c0_start, c0_pid_state and add_TRUE all build), so only the DERIVED form
  * is checked — a reserved base whose derived symbols assemble is accepted.
  * `field` is a config field name, or "$name" for the instance name.

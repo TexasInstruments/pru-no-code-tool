@@ -3,11 +3,12 @@ The device-capability gate must fail CLOSED or error VISIBLY on every failure pa
 
 Failure paths covered (each must report an error instead of silently skipping
 validation and leaving the build clean):
-  1. getScript("/common") failure          -> silent return          (was: return)
-  2. missing SoC (getSocName() -> null)     -> silent return          (was: return)
-  3. isWidgetAvailable() exception          -> available = true       (was: true)
-  4. null pruDeviceCaps (caps unloadable)   -> silent return          (was: return)
-  5. unknown SoC                            -> default ICSSM caps     (was: ICSSM default)
+  failure path                              fail-open behaviour this test rejects
+  1. getScript("/common") failure          -> silent return
+  2. missing SoC (getSocName() -> null)     -> silent return
+  3. isWidgetAvailable() exception          -> available = true
+  4. null pruDeviceCaps (caps unloadable)   -> silent return
+  5. unknown SoC                            -> default ICSSM caps
 
 Drives the REAL validator in
 .metadata/sysconfig/.meta/pru_blocks/common/pru_blocks_static_module.syscfg.js

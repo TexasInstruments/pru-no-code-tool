@@ -71,7 +71,7 @@ def test_every_block_module_adds_an_instance() -> None:
         _assert_instantiated(module_path, _run(module_path))
 
 
-def test_red_arm_rejects_a_deliberately_invalid_module_path() -> None:
+def test_an_invalid_module_path_is_rejected() -> None:
     """The add-instance assertion fails when a design names no module."""
     result = _run("/pru_blocks/this_module_does_not_exist")
     output = result.stdout + result.stderr

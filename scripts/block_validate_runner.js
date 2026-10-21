@@ -207,7 +207,7 @@ function runValidate(blockPath, inst) {
     try {
         validate(inst, report);
     } catch (e) {
-        // Keep red results red — a validator that throws is a failure, not a silent pass
+        // A validator that throws is reported as an error, not as a clean result
         errors.push({ message: `validator threw: ${e.message}`, field: null });
     } finally {
         if (prevSystem !== undefined) global.system = prevSystem;
@@ -285,7 +285,7 @@ function main() {
     }
     if (!blockPath) {
         console.error('Usage: node scripts/block_validate_runner.js <blockPath> \'<instJson>\'  OR  --sweep  OR  --report');
-        console.error('Example: node scripts/block_validate_runner.js pru_io_blocks/spi_adc_sequencer_block \'{"sample_period":100,"noOfCycles":970}\'');
+        console.error('Example: node scripts/block_validate_runner.js utils/delay_block \'{"delayCount":100}\'');
         process.exit(2);
     }
     let inst = {};
@@ -300,7 +300,7 @@ function main() {
         inst = JSON.parse(fs.readFileSync(fp, 'utf8'));
     }
     const result = runValidate(blockPath, inst);
-    // Keep red results red: emit structured errors, exit 0 so caller can inspect red vs green
+    // Emit structured errors and exit 0 so the caller can inspect errors vs a clean result
     console.log(JSON.stringify({ file: path.relative(ROOT, result.file).replace(/\\/g, '/'), errors: result.errors, warnings: result.warnings, infos: result.infos }));
 }
 
