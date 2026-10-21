@@ -1,12 +1,12 @@
 """serdes_block LSB-first receive path must reconstruct the sent word.
 
-Defect: the LSB-first receive branch of m_serdes_run emitted
+The LSB-first receive branch of m_serdes_run must place each sampled bit in a
+field wide enough to hold it. A form such as
     lsl TEMP_REG2.b1, TEMP_REG2.b1, 31
-which shifts an 8-bit field left by 31. The field keeps only the low 8 bits
-of the result, so the shifted value is always 0 and the following
+shifts an 8-bit field left by 31; the field keeps only the low 8 bits, so the
+shifted value is always 0, the following
     or DATA_REG, DATA_REG, TEMP_REG2.b1
-adds nothing: DATA_REG is just shifted right once per bit and the routine
-receives 0x0 for every LSB-first word (observed on TI pru-simulator for
+adds nothing, and every LSB-first word reads as 0x0 (on TI pru-simulator, for
 device-sent 0xFF, 0x01 and 0x80). LSB-first transmit and MSB-first receive
 are correct and must not change.
 

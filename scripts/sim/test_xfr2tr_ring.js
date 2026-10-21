@@ -182,8 +182,8 @@ const ids9Count = capSim.state.xfr2tr.queue.filter((id) => id === 9).length;
 assert.strictEqual(ids9Count, 1, "the held submission must proceed exactly once (no replay), not disappear or duplicate");
 assert.ok(capSim.state.xfr2tr.queue.length <= 8, "the ring must never exceed the documented 8-level capacity");
 
-// Mutation: bypass the capacity/hold check entirely (simulating the removed
-// defect) and prove the same scenario goes red -- capacity is exceeded.
+// Mutation: bypass the capacity/hold check entirely and show the same
+// scenario then fails -- capacity is exceeded.
 const realXfr2trXout = Simulator.prototype._xfr2trXout;
 Simulator.prototype._xfr2trXout = function (pruState, bank, srcRegN, count) {
     if (bank !== 114) return realXfr2trXout.call(this, pruState, bank, srcRegN, count);
@@ -277,7 +277,7 @@ try {
 sim = runInSimulator(["LDI32 R6, 65536", "LDI32 R7, 0", "XOUT 112, &R6, 8", "LDI32 R9, 0xDEADBEEF"],
     ["XIN 112, &R9, 4"]);
 assert.strictEqual(sim.state.registers[9], 0, "an XIN on the XOUT-only 0x70 must return zero, not stale/staged data");
-assert.ok(sim.state.unsupported_xfr.includes(112), "the unsupported direction must be recorded, matching PR #30's policy");
+assert.ok(sim.state.unsupported_xfr.includes(112), "the unsupported direction must be recorded, not trapped");
 
 // ---------------------------------------------------------------------------
 // 4. Real production allocator exercised end to end for every operation.

@@ -1,9 +1,9 @@
 """i3c_sdr_initiator_block declares the pru_blocks_static_module dependency, so a design containing only it emits.
 
-Before the fix the block's moduleStatic had no `modules` entry, so a design whose only block was i3c_sdr_initiator_block
-generated a pru_syscfg.asm with no macro call (the macro definition lives in pru_syscfg.inc, which only the static module
-generates) and the firmware contained no I3C code.  scripts/check_syscfg_arity.js carried the block in
-STANDALONE_UNREACHABLE as a known gap.
+Without a moduleStatic `modules` entry, a design whose only block is i3c_sdr_initiator_block generates a
+pru_syscfg.asm with no macro call (the macro definition lives in pru_syscfg.inc, which only the static module
+generates), so the firmware contains no I3C code. scripts/check_syscfg_arity.js must not list the block in
+STANDALONE_UNREACHABLE.
 
 Production path: .syscfg (no explicit static-module addModule) -> real SysConfig CLI -> pru_syscfg.asm -> clpru -> ELF.
 Red arms: (a) the moduleStatic.modules entry removed -> the generated asm has no m_i3c_entdaa call (asserted by text);

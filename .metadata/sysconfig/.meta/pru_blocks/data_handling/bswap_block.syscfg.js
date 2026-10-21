@@ -184,7 +184,7 @@ const bswapModule = {
     modes: MODES,
     registerClobbers: Object.keys(MODES).reduce((out, key) => { out[key] = MODES[key].clobbers; return out; }, {}),
     deviceIds: Object.keys(MODES).reduce((out, key) => { out[key] = MODES[key].id; return out; }, {}),
-    cycleEvidence: {
+    cycleBasis: {
         word_swap: { peakCycles: 2, basis: "1-cycle XIN 0xA0 (Table 6-95) plus the dataflow MOV into the output register" },
         swap_4_8: { peakCycles: 2, basis: "1-cycle XIN 0xA1 (Table 6-95) plus the MOV that publishes R2 as the block output" },
         swap_4_16: { peakCycles: 2, basis: "1-cycle XIN 0xA2 (Table 6-95) plus the MOV that publishes R2 as the block output" }

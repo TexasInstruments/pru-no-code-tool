@@ -177,7 +177,7 @@ function expand(macro, conditionEvaluator = sharedHarness.evalConditionDetailed,
   const undecidable = [];
   const decide = (c) => {
     const r = conditionEvaluator(c, values, defined);
-    if (typeof r === 'boolean') return r;   // injected legacy evaluators (red arms)
+    if (typeof r === 'boolean') return r;   // test-injected evaluators that return a plain boolean
     if (!r.decided) undecidable.push(c.trim());
     return r.value;
   };
@@ -418,7 +418,7 @@ function bindingDisclosure(bindings) {
 // The macro the SysConfig generator really emits for a block's default instance. The generated
 // firmware calls `getMacro("", instance["opCode"])` (common/pru_syscfg.inc.xdt), so the macro is
 // named by the instance's evaluated opCode, NOT by `m_<id>` (onewire_block's default instance
-// calls m_onewire_reset_standard; m_onewire_block is a legacy readByte-style macro with other
+// calls m_onewire_reset_standard; m_onewire_block is a separate readByte-style macro with other
 // formals). `m_<id>` is only the fallback for a block with no opCode, an opCode that cannot be
 // evaluated, or one whose macro is empty; `source` says which one was used so the fallback is
 // never silent.

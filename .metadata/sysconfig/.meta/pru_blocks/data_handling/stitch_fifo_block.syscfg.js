@@ -265,7 +265,7 @@ const stitchFifoModule = {
     modes: MODES,
     registerClobbers: Object.keys(MODES).reduce((out, key) => { out[key] = MODES[key].clobbers; return out; }, {}),
     deviceId: 0x08,
-    cycleEvidence: {
+    cycleBasis: {
         push: { peakCycles: 3, basis: "1-cycle XOUT (SPRUIM2J 6.4.6.2.5) plus the MOV staging INPUT into R2 and the MOV publishing R2 as the block output" },
         pop: { peakCycles: 2, basis: "1-cycle XIN (SPRUIM2J 6.4.6.2.5) plus the MOV that publishes R2 as the block output" },
         rewind: { peakCycles: 2, basis: "1-cycle XOUT (SPRUIM2J 6.4.6.2.5) plus the LDI that sets R10.b0 bit0" },

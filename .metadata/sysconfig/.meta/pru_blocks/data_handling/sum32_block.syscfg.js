@@ -207,7 +207,7 @@ const sum32Module = {
 
     // Machine-readable metadata used by documentation and tests. Instruction
     // / TRM-cycle-count claims, not a hardware benchmark.
-    cycleEvidence: {
+    cycleBasis: {
         accumulate: { peakCycles: 12, basis: "LBBO &R2, SRC_ADDR, 0, 32 loads 8 words from DMEM: " +
             "2 + N cycles for N 4-byte words (PRU ISA LBBO timing, same convention as " +
             "utils/access_look_up_table.syscfg.js) = 2 + 8 = 10, plus the SUM32 op itself which is " +

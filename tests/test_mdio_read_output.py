@@ -1,8 +1,9 @@
 """mdio_master_block read must land the sampled value in its data register and expose it on output1.
 
-a block-built read returned the register's prior content (R4's seed 0x410) for a static 0 and a
-static 1 on MDIO (expected 0x0000 / 0xffff), and `scripting.connect(<mdio>, "output1", ...)` failed with
-"Unknown object passed to scripting.connect", so the value could not reach a downstream block.
+A block-built read must return 0x0000 / 0xffff for a static 0 / static 1 on MDIO, not the register's older
+content (R4 is seeded with 0x410 to tell them apart), and `scripting.connect(<mdio>, "output1", ...)` must succeed
+(it fails with "Unknown object passed to scripting.connect" when the block has no output1), so the value reaches a
+downstream block.
 
 Whole path under test: SysConfig CLI -> generated pru_syscfg.asm -> clpru -> TI pru-simulator, with R31 driven by an
 independent model while the firmware runs. The oracle is the simulator's register file at halt (plain Python, never the

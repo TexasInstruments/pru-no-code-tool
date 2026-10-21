@@ -2042,8 +2042,8 @@ function validateStitchFifoGlobal(inst, report) {
 // R2-R9 to another block. This function is the safety net: if that reservation
 // is ever bypassed, deleted, or ordered after another block's allocation, any
 // OTHER block whose final register allocation still overlaps R2-R9 is rejected
-// here, naming the offending register — mirroring the first pass's
-// failure mode (declared but never wired) so it cannot recur silently.
+// here, naming the offending register, so a window that is used but not
+// reserved cannot pass silently.
 function validateSum32Global(inst, report) {
     const sumMod = system.modules["/pru_blocks/data_handling/sum32_block"];
     if (!sumMod || !sumMod.$instances || sumMod.$instances.length === 0) return;

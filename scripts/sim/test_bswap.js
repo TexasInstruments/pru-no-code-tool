@@ -69,7 +69,7 @@ const clob = (m) => JSON.stringify(block.registerClobbers[m]);
 assert.strictEqual(clob("word_swap"), "[]");
 assert.strictEqual(clob("swap_4_8"), JSON.stringify([[2, 4], [6, 4]]));
 assert.strictEqual(clob("swap_4_16"), JSON.stringify([[2, 4], [6, 4], [10, 4], [14, 4]]));
-assert.strictEqual(block.cycleEvidence.word_swap.peakCycles, 2);
+assert.strictEqual(block.cycleBasis.word_swap.peakCycles, 2);
 assert.doesNotThrow(() => block.getMacro("m_bswap_word_swap R4, R5", ""),
     "static validation must accept allocator-style macro calls");
 assert.throws(() => block.getMacro("", "m_bswap_word_rotate_left"),

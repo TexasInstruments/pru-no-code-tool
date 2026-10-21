@@ -6,13 +6,13 @@
  *
  * The CLI build only loads the modules a design uses, and the headless
  * tests call getValue() directly, so neither runs SysConfig's configurable schema
- * check. Two defects reached the development branch that way and were found only by
- * opening the GUI (2026-10-03):
+ * check. Errors that only that check reports would otherwise show up only when
+ * the GUI opens the product, for example:
  *
- *   - queue_empty_block declared two hidden fields as name: "" -> the GUI refuses
- *     the whole product: "Duplicate configurable definition: ''".
- *   - six blocks declared registerClobbers with default: [] and no options ->
- *     "Configurable ... is of an unknown schema type", the block cannot render.
+ *   - two hidden fields declared as name: "" -> the GUI refuses the whole
+ *     product: "Duplicate configurable definition: ''".
+ *   - a configurable with default: [] and no options -> "Configurable ... is of
+ *     an unknown schema type", the block cannot render.
  *
  * This loads every pru_blocks module the way SysConfig does (system.getScript
  * resolved against the .meta root) and rejects:

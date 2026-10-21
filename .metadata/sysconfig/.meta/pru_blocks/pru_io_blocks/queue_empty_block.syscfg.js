@@ -124,7 +124,7 @@ const queueEmptyModule = {
     deviceIds: { query: 0xF0 },
     direction: "xin_only",
     registerClobbers: { query: [] },
-    cycleEvidence: {
+    cycleBasis: {
         query: { peakCycles: 1, basis: "1-cycle XIN 0xF0 (Table 6-60) into output register" }
     },
 

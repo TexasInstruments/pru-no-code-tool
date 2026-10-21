@@ -52,7 +52,7 @@
  * "NOTE: Firmware must have 8 NOP before XIN after XOUT." appears three times
  * in Table 6-98, on the EXT_SPIN_ID0 0x91 XOUT block and on both EXT_SPIN_ID1
  * 0x92 blocks. It is NOT printed against the INT_SPIN_ID 0x90 rows, so for
- * 0x90 it is a conservative carry-over, not a quoted requirement; `nopEvidence`
+ * 0x90 it is a conservative carry-over, not a quoted requirement; `nopBasis`
  * below records it as such rather than as a TRM citation.
  *
  * Because acquire and release are separate blocks that the graph may schedule
@@ -312,7 +312,7 @@ const xfr2spinModule = {
     numFlags: NUM_FLAGS,
     nopsAfterXout: NOPS_AFTER_XOUT,
     clobberedRegister: CLOBBERED_REGISTER,
-    trmEvidence: {
+    trmReference: {
         deviceId: "Table 6-60 (PDF p573): 'XFR2SPIN 0x90 1 copy per PRU_ICSSG system'",
         flagSelect: "Table 6-98 (PDF p638): R1.b0[5-0] own_req_vector, 'Always exported'; 6.4.6.2.9: 'XOUT of this register is not required'",
         acquire: "Table 6-98 INT_SPIN_ID 0x90 XIN: 'own_req input will assert during this XIN transaction ... result ... returned to R1.b3[0] via own_req_status 0h: not owned/lost 1h: owned/won'",
@@ -320,7 +320,7 @@ const xfr2spinModule = {
         cores: "6.4.6.2.9: '64 ownership flags ... 6 Internal PRU cores: PRU0/1, RTU_PRU0/1 and TX_PRU0/1 cores'"
     },
     // Recorded as an inference, not as a citation. See the header comment.
-    nopEvidence: {
+    nopBasis: {
         quote: "Table 6-98: 'NOTE: Firmware must have 8 NOP before XIN after XOUT.'",
         printedAgainst: ["EXT_SPIN_ID0 0x91 XOUT", "EXT_SPIN_ID1 0x92 XOUT", "EXT_SPIN_ID1 0x92 XIN"],
         appliedTo: "INT_SPIN_ID 0x90 release",
@@ -339,7 +339,7 @@ const xfr2spinModule = {
                     "also agrees with 'clear the flag selected by R1.b0/own_req_vector'.",
         status: "UNVERIFIED on silicon. Needs a hardware run or a TI reference example to settle."
     },
-    cycleEvidence: {
+    cycleBasis: {
         acquire: { peakCycles: -1, basis: "unbounded: LDI + a spin of XIN/QBBC whose length is set by the core holding the flag" },
         try_acquire: { peakCycles: 3, basis: "LDI + 1-cycle XIN (Table 6-60 broadside access) + AND mask" },
         release: { peakCycles: 10, basis: "LDI + XOUT + the 8 NOP separation" }

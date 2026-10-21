@@ -44,7 +44,7 @@ assert.ok(/nop\s*\n\s*nop\s*\n\s*nop\s*\n\s*;.*XIN/i.test(readClear) || /nop[\s\
     "the 3 NOPs must immediately precede the XIN, not float elsewhere in the macro");
 
 // accumulate must LBBO the DMEM block into R2-R9 BEFORE the XOUT — this is the
-// defect fix: the block must move data into R2-R9 itself, not assume
+// the block must move data into R2-R9 itself, not assume
 // it is already there.
 const accOnly = macro("m_sum32_accumulate_only");
 const accSnoop = macro("m_sum32_accumulate_snoop");

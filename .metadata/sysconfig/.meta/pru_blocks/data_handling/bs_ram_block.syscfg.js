@@ -76,7 +76,7 @@
  * Cycle count: 1 by house convention (SPRUIM2J 6.4.6.2.5 notes XFR is 1 cycle;
  *   the address + data pair is still counted as 1 in the block's cycle
  *   metadata). Must NOT be promoted above simulator-tested maturity without a
- *   bench; stated explicitly in cycleEvidence.
+ *   bench; stated explicitly in cycleBasis.
  */
 
 const BS_RAM_SIZE = 2048;
@@ -341,7 +341,7 @@ const bsRamModule = {
     rowBytes: ROW_BYTES,
     deviceSizeBytes: BS_RAM_SIZE,
     deviceIds: IDS_PRU,
-    cycleEvidence: {
+    cycleBasis: {
         write: { peakCycles: 1, basis: "House convention: 1 cycle per XFR (SPRUIM2J 6.4.6.2.5). Address XOUT R10,2 plus data XOUT R2,32 counted as one broadside transaction." },
         read: { peakCycles: 1, basis: "House convention: 1 cycle per XFR (SPRUIM2J 6.4.6.2.5). Address XOUT R10,2 plus data XIN R2,BYTECOUNT counted as one broadside transaction." },
         snoop_write: { peakCycles: 1, basis: "House convention: 1 cycle per XFR. Address XOUT R10,2 plus snoop XOUT R2,32 (device 49) counted as one." }

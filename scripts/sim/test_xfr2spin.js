@@ -328,8 +328,8 @@ check('an unknown macro name is refused rather than silently aliased', () => {
 
 check('the TRM ambiguity is recorded, not hidden', () => {
     assert.ok(block.knownTrmAmbiguity && /UNVERIFIED/.test(block.knownTrmAmbiguity.status));
-    assert.strictEqual(block.nopEvidence.status, 'conservative-carryover');
-    assert.ok(!block.nopEvidence.printedAgainst.some((s) => /0x90/.test(s)),
+    assert.strictEqual(block.nopBasis.status, 'conservative-carryover');
+    assert.ok(!block.nopBasis.printedAgainst.some((s) => /0x90/.test(s)),
         'the 8-NOP note must not be claimed as printed against the 0x90 rows');
 });
 

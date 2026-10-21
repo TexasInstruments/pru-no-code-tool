@@ -369,7 +369,7 @@ const fdbGpRamModule = {
 
     deviceIds: BS_IDS,
     operations: OPERATIONS,
-    trmEvidence: {
+    trmReference: {
         broadsideIds: "Table 6-60 (FDB IDs 30,31,35, PRU0/PRU1)",
         address: "Table 6-103 (9-bit FDB_Address, R10[8]=bank)",
         hazard: "Table 6-105 (1 cycle per XFR + 2-cycle hazard before XIN 35)",

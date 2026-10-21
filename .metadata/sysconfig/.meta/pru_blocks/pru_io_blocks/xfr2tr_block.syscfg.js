@@ -143,7 +143,7 @@ function getCoreType() {
 }
 
 // Peak-cycle estimates are an emitted-instruction-count claim, not a hardware
-// timing benchmark (same caveat as cycleEvidence). submit is the
+// timing benchmark (same caveat as cycleBasis). submit is the
 // one operation that can genuinely block -- Table 6-112's FIFO is 8 levels
 // deep and a full-FIFO submit holds until the ring drains -- so its bound is
 // declared unknown (-1) rather than a fixed count that ignores backpressure.
@@ -519,7 +519,7 @@ const xfr2trModule = {
     // Machine-readable metadata for tests/tooling.
     deviceIds: { sourceConfig: 0x70, ringConfigStatus: 0x71, submit: 0x72 },
     registerClobbers: { configure: [[6, 2]], submit: [[2, 4]], status: [[7, 2]] },
-    cycleEvidence: {
+    cycleBasis: {
         configure: { peakCycles: 7, basis: "2x LDI32 (2 instr each) + XOUT per BS ID (0x70 then 0x71), plus the RES marker" },
         submit: { peakCycles: -1, basis: "Table 6-112's submit FIFO is 8 levels deep; a full-FIFO XOUT holds until the ring drains, so the bound is declared unknown rather than fixed" },
         status: { peakCycles: 2, basis: "1 XIN (Table 6-112 BS ID 0x71) plus the MOV that publishes the status word as RES" }
