@@ -2206,7 +2206,7 @@ function validateXfr2trGlobal(inst, report) {
  * lock<->variable, and position in the emitted instruction chain - so that
  * deleting the guard changes a verdict.
  *
- * Scope note, stated rather than papered over: a SysConfig design covers ONE
+ * Scope note: a SysConfig design covers ONE
  * core. Nothing in this tool can open the peer core's design, so the fact that
  * a region is written by a second core is taken from the user's
  * `crossCoreWriters` assertion on ipc_shared_mem_block. What is checked here is

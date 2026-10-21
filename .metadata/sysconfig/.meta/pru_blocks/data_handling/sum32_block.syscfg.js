@@ -179,7 +179,7 @@ const sum32Module = {
         { name: "numOfConstants", hidden: true, default: 0 },
         // accumulate has no dataflow output (side effect on R2-R9 only); "None"
         // here skips the allocator's automatic output-register allocation
-        // (same idiom as delay_block.syscfg.js / ipc_shared_mem_block.syscfg.js).
+        // (same idiom as delay_block.syscfg.js).
         { name: "outputReg", hidden: true, default: "",
           getValue: (inst) => inst.operation === "accumulate" ? "None" : "" },
 
