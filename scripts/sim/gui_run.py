@@ -514,7 +514,7 @@ def other_design_view(port, elf):
     who = f"design '{design}'" if design else "a design this run cannot identify"
     return {"status": "other design", "url": f"http://127.0.0.1:{port}", "pid": pid, "design": design,
             "reason": f"a live view of {who} is still serving on port {port}; this run did not ask for "
-                      f"a live view, so it was left running (tick 'Open live web view' to replace it)",
+                      f"a live view, so it was left running (tick 'Open Live Web View After Run' to replace it)",
             "log": None}
 
 

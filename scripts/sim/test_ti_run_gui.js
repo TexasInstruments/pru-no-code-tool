@@ -273,7 +273,7 @@ test('findPython: Windows fixed-directory fallback retains its backslashes', () 
               'a single-backslash JS literal would give C:Python313/python.exe');
 });
 
-// ---- "Open live web view" checkbox ---------------------------------
+// ---- "Open Live Web View After Run" checkbox ---------------------------------
 
 function liveArgs(settings) {
     return ti.launchSpec(sys, settings, 'AAAA').args;

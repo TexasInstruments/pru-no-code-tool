@@ -39,10 +39,11 @@ function kindConfigs() {
         for (const pf of table.pinFields(kind)) {
             configs.push({
                 name: pf.field,
-                displayName: pf.spec.label,
-                description: pf.spec.drives
+                displayName: table.displayTitle(pf.spec),
+                description: (pf.spec.drives
                     ? "Pin the DEVICE drives (the PRU reads it)." + (pf.spec.optional ? " -1 if unused." : "")
-                    : "Pin the PRU drives (the device only listens)." + (pf.spec.optional ? " -1 if unused." : ""),
+                    : "Pin the PRU drives (the device only listens)." + (pf.spec.optional ? " -1 if unused." : ""))
+                    + (pf.spec.hint ? " " + pf.spec.hint : ""),
                 default: defaultPin(pf.spec),
                 hidden: hidden
             });
@@ -51,7 +52,7 @@ function kindConfigs() {
             const p = pf.spec;
             const cfg = {
                 name: pf.field,
-                displayName: p.label,
+                displayName: table.displayTitle(p),
                 default: p.def,
                 hidden: hidden
             };
@@ -59,6 +60,9 @@ function kindConfigs() {
                 const lo = p.min !== undefined ? p.min : "-inf";
                 const hi = p.max !== undefined ? p.max : "inf";
                 cfg.description = "Range " + lo + " .. " + hi + ".";
+            }
+            if (p.hint) {
+                cfg.description = p.hint;
             }
             configs.push(cfg);
         }
@@ -238,7 +242,7 @@ exports = {
         },
         {
             name: "runHint",
-            displayName: "Where to run",
+            displayName: "Where to Run",
             description: "Where the Run on TI pru-simulator button for this design is.",
             default: "",
             getValue: runHint

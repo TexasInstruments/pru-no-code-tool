@@ -38,6 +38,9 @@ const PIN_MAX = 19;   // PRU R30/R31 pin range accepted by scripts/sim/device_bi
 // type: int | float | bool | bytes. `omit`: the value that means "not set" -
 // the key is then left out of the manifest and the model takes its own default
 // (the Python models take None there, which a typed int field cannot say).
+// `label` is the noun used in messages; the field's display name is
+// displayTitle(spec): `title` when given, else the label in Title Case. `hint`
+// is extra tooltip text for a field whose title leaves something out.
 const KINDS = {
     quadrature: {
         displayName: "Quadrature encoder (A/B/Z)",
@@ -63,7 +66,7 @@ const KINDS = {
         params: [
             { key: "bits", label: "Frame width (bits)", type: "int", def: 13, min: 1, max: 64 },
             { key: "position", label: "Position", type: "int", def: 0, min: 0, positionBitsKey: "bits" },
-            { key: "cycles_per_count", label: "Cycles per count (0 = stationary)", type: "int", def: 0, min: 0, omit: 0 },
+            { key: "cycles_per_count", label: "Cycles per count (0 = stationary)", title: "Cycles Per Count (0=Stationary)", type: "int", def: 0, min: 0, omit: 0 },
             { key: "min_clk_period_cycles", label: "Minimum clock period (cycles)", type: "int", def: 20, min: 1 },
             { key: "monoflop_cycles", label: "Monoflop time (cycles)", type: "int", def: 400, min: 1 },
             { key: "gray", label: "Gray-coded position", type: "bool", def: true }
@@ -108,7 +111,7 @@ const KINDS = {
         params: [
             { key: "position_bits", label: "Position bits", type: "int", def: 24, min: 1, max: 64 },
             { key: "position", label: "Position", type: "int", def: 0, min: 0, positionBitsKey: "position_bits" },
-            { key: "cycles_per_count", label: "Cycles per count (0 = stationary)", type: "int", def: 0, min: 0, omit: 0 },
+            { key: "cycles_per_count", label: "Cycles per count (0 = stationary)", title: "Cycles Per Count (0=Stationary)", type: "int", def: 0, min: 0, omit: 0 },
             { key: "calc_cycles", label: "Calculation time (cycles)", type: "int", def: 50, min: 0 },
             { key: "lead_in_clocks", label: "Lead-in clocks", type: "int", def: 2, min: 0 },
             { key: "min_half_period_cycles", label: "Minimum half period (cycles)", type: "int", def: 0, min: 0 },
@@ -134,10 +137,11 @@ const KINDS = {
         displayName: "UART transmitter",
         sink: false,
         pins: [
-            { key: "tx", label: "TX pin (device drives)", slot: "primaryPin", drives: true }
+            { key: "tx", label: "TX pin (device drives)", title: "TX Pin", slot: "primaryPin", drives: true }
         ],
         params: [
-            { key: "payload", label: "Payload bytes (comma separated, 0-255; empty = model default)", type: "bytes", def: "", omit: "" },
+            { key: "payload", label: "Payload bytes (comma separated, 0-255; empty = model default)", title: "Payload Bytes",
+              hint: "Comma-separated bytes 0-255. Empty uses the model default.", type: "bytes", def: "", omit: "" },
             { key: "bit_period", label: "Bit period (cycles)", type: "int", def: 50, min: 1 },
             { key: "start_cycle", label: "Start cycle", type: "int", def: 0, min: 0 },
             { key: "idle_gap_bits", label: "Idle gap (bits)", type: "int", def: 2, min: 0 },
@@ -162,9 +166,11 @@ const KINDS = {
         displayName: "SPI ADC (SPI mode 0)",
         sink: false,
         pins: [
-            { key: "sdi", label: "MISO pin (device drives; the model calls it sdi_pin)", slot: "primaryPin", drives: true },
+            { key: "sdi", label: "MISO pin (device drives; the model calls it sdi_pin)", title: "MISO Pin",
+              hint: "The model calls it sdi_pin.", slot: "primaryPin", drives: true },
             { key: "sclk", label: "SCLK pin", slot: "clockPin", drives: false },
-            { key: "sdo", label: "MOSI pin (the model calls it sdo_pin)", slot: "indexPin", drives: false },
+            { key: "sdo", label: "MOSI pin (the model calls it sdo_pin)", title: "MOSI Pin",
+              hint: "The model calls it sdo_pin.", slot: "indexPin", drives: false },
             { key: "cs", label: "CS pin", slot: "param:cs_pin", drives: false }
         ],
         params: [
@@ -195,8 +201,8 @@ const KINDS = {
             { key: "data", label: "DATA pin", slot: "primaryPin", drives: false }
         ],
         params: [
-            { key: "num_leds", label: "LEDs in the string", type: "int", def: 1, min: 1 },
-            { key: "ns_per_cycle", label: "ns per PRU cycle", type: "float", def: 5, min: 0.001 },
+            { key: "num_leds", label: "LEDs in the string", title: "Number of LEDs", type: "int", def: 1, min: 1 },
+            { key: "ns_per_cycle", label: "ns per PRU cycle", title: "Nanoseconds Per PRU Cycle", type: "float", def: 5, min: 0.001 },
             { key: "t0h_ns", label: "T0H (ns)", type: "float", def: 400, min: 0 },
             { key: "t0l_ns", label: "T0L (ns)", type: "float", def: 850, min: 0 },
             { key: "t1h_ns", label: "T1H (ns)", type: "float", def: 800, min: 0 },
@@ -228,6 +234,23 @@ function paramField(kind, param) {
     // snake_case model keyword -> camelCase field, prefixed by kind so the
     // names stay unique in one flat config list.
     return kind + "_" + param.key.replace(/_([a-z0-9])/g, function (_m, c) { return c.toUpperCase(); });
+}
+
+// Words SysConfig's UI convention leaves in lower case inside a display name.
+const TITLE_LOWER = ["to", "from", "for", "of", "by", "in"];
+
+/**
+ * Display name of a pin or parameter field. SysConfig display names are Title
+ * Case with acronyms kept upper case and at most 36 characters, so the label is
+ * converted word by word: a word that already starts with a capital, a digit
+ * or a parenthesis is kept as it is.
+ */
+function displayTitle(spec) {
+    if (spec.title) return spec.title;
+    return spec.label.split(" ").map(function (w, i) {
+        if (i > 0 && TITLE_LOWER.indexOf(w) !== -1) return w;
+        return w.charAt(0).toUpperCase() + w.slice(1);
+    }).join(" ");
 }
 
 /** The (field, spec) pairs of a kind, for building and for reading back. */
@@ -622,6 +645,7 @@ exports = {
     paramField,
     pinFields,
     paramFields,
+    displayTitle,
     parseBytes,
     checkInstance,
     claimedPins,

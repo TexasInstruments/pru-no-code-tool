@@ -2723,8 +2723,9 @@ If the frequencies don't match, timing-sensitive operations (SPI, ADC) may not w
             },
             {
                 name: "tiRunLiveView",
-                displayName: "Open live web view after the run",
-                description: "After the run, open TI pru-simulator's dashboard in your browser on the ELF the button just built, with the bound devices attached. It does not change the result, and it is not started when the run was refused or the build failed. The view shows the simulator, not hardware.",
+                displayName: "Open Live Web View After Run",
+                description: "After the run, open TI pru-simulator's dashboard in your browser on the ELF the button just built.",
+                longDescription: "After the run, open TI pru-simulator's dashboard in your browser on the ELF the button just built, with the bound devices attached. It does not change the result, and it is not started when the run was refused or the build failed. The view shows the simulator, not hardware.",
                 default: false,
                 onChange: (inst, ui) => {
                     ui.tiRunLivePort.hidden = !inst.tiRunLiveView;
@@ -2732,7 +2733,7 @@ If the frequencies don't match, timing-sensitive operations (SPI, ADC) may not w
             },
             {
                 name: "tiRunLivePort",
-                displayName: "Live web view port",
+                displayName: "Live Web View Port",
                 description: "Local port for the live web view (127.0.0.1 only). A view from an earlier Run is replaced; a port held by anything else is reported, not taken.",
                 default: 8765,
                 hidden: true
