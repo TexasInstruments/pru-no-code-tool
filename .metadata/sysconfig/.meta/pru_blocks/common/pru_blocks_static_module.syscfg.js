@@ -165,14 +165,17 @@ function validatePatternInput(inst, report, pinNum) {
  * drop. Both produce a simulation that runs happily and proves nothing, which
  * is exactly the outcome attaching a real model is supposed to prevent.
  */
-function validateDeviceInput(inst, report, pinNum) {
+function validateDeviceInput(inst, report, pinNum, pins) {
     const kindField = `gpi${pinNum}_deviceKind`;
     const clockField = `gpi${pinNum}_deviceClockPin`;
     const indexField = `gpi${pinNum}_deviceIndexPin`;
     const paramsField = `gpi${pinNum}_deviceParams`;
 
-    const clockPin = inst[clockField];
-    const indexPin = inst[indexField];
+    // `pins` carries the effective companion pins when they differ from the
+    // fields; errors are still logged against `inst`, because report.logError
+    // only accepts the instance SysConfig passed to validate().
+    const clockPin = pins ? pins.clockPin : inst[clockField];
+    const indexPin = pins ? pins.indexPin : inst[indexField];
 
     for (const [field, value, label] of [[clockField, clockPin, "Clock/B"],
                                          [indexField, indexPin, "Index/Z"]]) {
@@ -307,11 +310,7 @@ function validateR31SimulationInput(inst, report) {
             // for a field the design already answers.
             const kind = inst[`gpi${pinNum}_deviceKind`];
             const defaults = devicePinDefaults(inst, pinNum, kind);
-            const effectiveInst = Object.assign({}, inst, {
-                [`gpi${pinNum}_deviceClockPin`]: defaults.clockPin,
-                [`gpi${pinNum}_deviceIndexPin`]: defaults.indexPin
-            });
-            if (!validateDeviceInput(effectiveInst, report, pinNum)) {
+            if (!validateDeviceInput(inst, report, pinNum, defaults)) {
                 return false;
             }
         }

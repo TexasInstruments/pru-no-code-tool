@@ -25,24 +25,29 @@ const assert = require('assert');
 const SRC = path.join(__dirname, '..', '..', '.metadata', 'sysconfig', '.meta',
                       'pru_blocks', 'common', 'pru_blocks_static_module.syscfg.js');
 
-function loadValidator() {
-    // Normalise line endings first: this repo's sources are CRLF, and matching
-    // on a bare "\n}\n" silently finds nothing.
-    const source = fs.readFileSync(SRC, 'utf8').replace(/\r\n/g, '\n');
-    const start = source.indexOf('function validateDeviceInput');
-    assert.notStrictEqual(start, -1, 'validateDeviceInput not found in the module');
+function extractFunction(source, name) {
+    const start = source.indexOf(`function ${name}(`);
+    assert.notStrictEqual(start, -1, `${name} not found in the module`);
 
     // Take from the function keyword to the line that closes it at column 0.
     const rest = source.slice(start);
     const end = rest.indexOf('\n}\n');
-    assert.notStrictEqual(end, -1, 'could not find the end of validateDeviceInput');
-    const body = rest.slice(0, end + 2);
-
-    // eslint-disable-next-line no-new-func
-    return new Function(`${body}; return validateDeviceInput;`)();
+    assert.notStrictEqual(end, -1, `could not find the end of ${name}`);
+    return rest.slice(0, end + 2);
 }
 
-const validateDeviceInput = loadValidator();
+function loadFunctions(names) {
+    // Normalise line endings first: this repo's sources are CRLF, and matching
+    // on a bare "\n}\n" silently finds nothing.
+    const source = fs.readFileSync(SRC, 'utf8').replace(/\r\n/g, '\n');
+    const bodies = names.map(name => extractFunction(source, name)).join('\n');
+    // eslint-disable-next-line no-new-func
+    return new Function(`${bodies}; return { ${names.join(', ')} };`)();
+}
+
+const { validateDeviceInput, validateR31SimulationInput } = loadFunctions([
+    'validateDeviceInput', 'devicePinDefaults', 'validateR31SimulationInput'
+]);
 
 function makeReport() {
     const errors = [];
@@ -160,6 +165,31 @@ test('every refusal names the field it is about', () => {
     // A SysConfig error with no field attaches to nothing in the UI.
     const r = run(3, { gpi3_deviceKind: 'ssi' });
     assert.ok(r.errors[0].field, 'error must name a config field');
+});
+
+test('a refusal from the module validator is reported against the real instance', () => {
+    // SysConfig's report.logError only accepts an instance it owns; any other
+    // object throws "Unknown instance", which aborts validation and with it
+    // code generation and serialization of the whole design.
+    const real = inst(3, { gpi3_inputMode: 'device', gpi3_deviceKind: 'ssi' });
+    real.signalsToDisplayR31 = ['3'];
+    const seen = [];
+    const report = {
+        logError(message, target, field) {
+            if (target !== real) throw new Error('Unknown instance');
+            seen.push({ message, field });
+        }
+    };
+    assert.strictEqual(validateR31SimulationInput(real, report), false);
+    assert.strictEqual(seen.length, 1);
+    assert.strictEqual(seen[0].field, 'gpi3_deviceClockPin');
+});
+
+test('the module validator accepts a legal device binding', () => {
+    const real = inst(3, { gpi3_inputMode: 'device', gpi3_deviceKind: 'ssi', gpi3_deviceClockPin: 4 });
+    real.signalsToDisplayR31 = ['3'];
+    const report = makeReport();
+    assert.strictEqual(validateR31SimulationInput(real, report), true, JSON.stringify(report.errors));
 });
 
 let failed = 0;
