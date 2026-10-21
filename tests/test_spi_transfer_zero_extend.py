@@ -65,7 +65,7 @@ def test_read_header_form_clears_inside_the_macro(name):
 
 
 def test_read_prefix_probe_does_not_throw_but_a_real_variant_without_an_insert_point_does():
-    """scripts/block_control_flow.js probes getMacro("", "m_read_packet_spi_"); that must stay quiet."""
+    """The block control-flow classifier probes getMacro("", "m_read_packet_spi_"); that must stay quiet."""
     code = r'''
 const {loadBlockModule}=require('./scripts/dual_oracle_harness');
 const mod=loadBlockModule('pru_spi_read', 'pru_io_blocks');

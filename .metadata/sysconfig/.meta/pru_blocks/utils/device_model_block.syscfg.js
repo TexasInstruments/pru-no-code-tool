@@ -20,7 +20,7 @@ const STATIC_MODULE = "/pru_blocks/common/pru_blocks_static_module";
 const SELF_MODULE = "/pru_blocks/utils/device_model_block";
 const DEFAULT_KIND = "ssi";
 
-// Slot -> default pin, so a fresh instance of any kind starts on distinct pins (table.defaultPin; scripts/check_pin_collisions.js uses it too).
+// Slot -> default pin, so a fresh instance of any kind starts on distinct pins (table.defaultPin, shared with the command-line pin check).
 const defaultPin = table.defaultPin;
 
 function kindOptions() {

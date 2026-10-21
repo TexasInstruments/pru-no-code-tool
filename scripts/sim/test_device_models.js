@@ -3,10 +3,8 @@
  *
  * The models in .metadata/.../simulation/device_models.js are JavaScript
  * ports of the Python DeviceModel implementations in the TI pru-simulator
- * checkout. These tests prove the PORTS behave: legal traffic is answered,
- * illegal traffic is refused. The cross-check that the two languages still
- * agree is scripts/sim/test_device_model_crosscheck.js — this file proves
- * behaviour, that one proves identity.
+ * checkout. These tests check that the PORTS behave: legal traffic is
+ * answered, illegal traffic is refused.
  *
  * The tests that matter are the refusals: a model that cannot reject broken
  * firmware is a waveform generator, not an oracle. Every fault arm is paired

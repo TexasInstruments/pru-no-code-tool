@@ -514,8 +514,7 @@ def main(argv=None):
 
     bindings = manifest.get("bindings", [])
     if not bindings and not args.allow_empty:
-        # Comparing zero cases is a failure, not a pass - the same rule as
-        # second_oracle.py. Pass --allow-empty when a project genuinely has no
+        # Comparing zero cases is a failure, not a pass. Pass --allow-empty when a project genuinely has no
         # attached devices and you want the step to be a no-op.
         print("REFUSED: manifest has no device bindings. A run that attaches "
               "nothing proves nothing; pass --allow-empty if that is intended.")

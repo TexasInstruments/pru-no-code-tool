@@ -19,7 +19,7 @@ On top of the stock dashboard this adds, without editing it:
     GET /live/info      what is attached and on which pins
     GET /               the stock page plus a verdict banner
 
-Facts settled by reading and probing TI pru-simulator (see tests/test_live_view.py):
+Behaviour of TI pru-simulator's dashboard this relies on:
   * ui.server builds its Simulator at import, as a module global. Everything it
     does reaches that object through the module, so it is attached BEFORE
     uvicorn starts; nothing needs a running server.

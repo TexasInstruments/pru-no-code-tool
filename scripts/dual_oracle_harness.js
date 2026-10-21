@@ -220,7 +220,7 @@ function evalConditionDetailed(rawCond, mapping, definedSymbols) {
     }
     // Before the substitution below, which would rewrite the quoted name.
     // `$isdefed("SYM")` / `$defined(SYM)` are decidable only for a caller that tracks assembler
-    // symbol definitions (emit_all_blocks.js). Without a symbol set they stay undecidable.
+    // symbol definitions. Without a symbol set they stay undecidable.
     const dm = cond.match(/^(!?)\s*\$(isdefed|defined)\(\s*("([^"]+)"|[A-Za-z_]\w*)\s*\)$/);
     if (dm) {
         const quoted = dm[3].startsWith('"');

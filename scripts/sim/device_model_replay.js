@@ -2,9 +2,9 @@
  * device_model_replay.js - replay a fixed pin stimulus through the JS device
  * models and print the resulting R31 trace, events and faults as JSON.
  *
- * Exists for scripts/sim/test_device_model_crosscheck.py, which replays the
- * SAME stimulus through the Python oracle models and diffs the two. Keeping
- * this runner tiny and deterministic is what makes that diff meaningful.
+ * Replaying the SAME stimulus through the Python models of TI pru-simulator
+ * and diffing the two outputs cross-checks the ports. Keeping this runner tiny
+ * and deterministic is what makes that diff meaningful.
  *
  * Usage:
  *   node scripts/sim/device_model_replay.js stimulus.json

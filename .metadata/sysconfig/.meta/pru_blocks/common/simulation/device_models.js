@@ -2,12 +2,11 @@
  * device_models.js - device models attachable to Simulation Settings pins.
  *
  * JavaScript ports of the DeviceModel implementations in the TI pru-simulator
- * checkout (pru_io/quadrature_encoder.py, pru_io/ssi_encoder.py; built under
- * and). The ports are line-by-line faithful in behaviour, and
- * scripts/sim/test_device_model_crosscheck.js drives the JS and Python models
- * with the same stimulus and diffs drives, events and faults, so a drift
- * between the two is a red test rather than an assumption. If you change
- * behaviour here, change the Python model too, in the same commit series.
+ * (pru_io/quadrature_encoder.py, pru_io/ssi_encoder.py). The ports are meant
+ * to be line-by-line faithful in behaviour (scripts/sim/device_model_replay.js
+ * replays a stimulus through the JS models so the two can be diffed). If you
+ * change behaviour here, change the Python model too, in the same commit
+ * series.
  *
  * WHY THESE TWO FIRST
  * The SysConfig dropdown (pru_blocks_static_module.syscfg.js) lists every

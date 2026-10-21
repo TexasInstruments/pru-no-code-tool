@@ -123,8 +123,7 @@ class SsiEndatEncoder(DeviceModel):
     # ------------------------------------------------------------- SSI frame
     def _build_ssi_frame(self) -> int:
         """Frame layout (MSB first): [MT | ST | error? | parity?], masked to
-        total_width. Follows the landed oracle (scripts/ssi_oracle.js):
-        gray applies to the whole ST+MT payload word; parity is even parity of
+        total_width. Gray applies to the whole ST+MT payload word; parity is even parity of
         all frame bits above the parity bit (parity_type 1 inverts)."""
         st = self.st_value & ((1 << self.st_bits) - 1)
         mt = self.mt_value & ((1 << self.mt_bits) - 1)

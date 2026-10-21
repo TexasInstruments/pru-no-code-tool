@@ -1,7 +1,7 @@
 """pru_io package.
 
-the EnDat model that lived here was retired by EnDat has one
-model, TI pru-simulator's pru_io/endat_encoder.py.
+There is no EnDat model here: EnDat is modelled by TI pru-simulator's EnDat
+encoder model.
 """
 
 from .waveform_player import WaveformPlayer  # noqa: F401

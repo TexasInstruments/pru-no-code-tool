@@ -734,16 +734,13 @@ class Simulator {
     // in labelMap, the branch was silently not taken, and a contended spin
     // loop looked like a single arbitration attempt instead of a spin.
     //
-    // Contrary to what this comment used to claim, NOT every
-    // producer splits same-line labels before calling loadInstructions
-    // (scripts/sim/test_bswap.js, test_xfr2spin.js,
-    // test_xfr2tr_ring.js and run_headless_json.js pass raw macro lines
-    // through). loadInstructions therefore handles `lbl: instr` itself now:
+    // Not every producer splits same-line labels before calling
+    // loadInstructions (scripts that pass raw macro lines through do not).
+    // loadInstructions therefore handles `lbl: instr` itself:
     // the label is registered at the line's own index and the stored line is
     // replaced with the bare instruction, so a branch to the label EXECUTES
     // that instruction instead of no-oping past it (and sequential flow no
-    // longer silently drops it). No block emits a same-line label today, so
-    // this only closes the latent gap; it changes nothing for bare labels.
+    // longer silently drops it). It changes nothing for bare labels.
     for (let i = 0; i < this._instructions.length; i++) {
       const line = this._instructions[i];
       if (typeof line !== 'string') continue;

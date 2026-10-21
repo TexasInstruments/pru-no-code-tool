@@ -1056,8 +1056,7 @@ function generateR31SimulationInputConfigs() {
         // per-pin idiom. The fuller SysConfig answer is an instance-array
         // module, one instance per attached device, which is how TI models
         // multi-pin peripherals elsewhere. That is a larger change to the
-        // static module's data flow and is recorded in
-        // docs/simulation/device_binding.md rather than chosen silently here.
+        // static module's data flow and is not made here.
         configs.push({
             name: `gpi${pinNum}_deviceClockPin`,
             displayName: `GPI${pinNum} Device Clock/B Pin`,

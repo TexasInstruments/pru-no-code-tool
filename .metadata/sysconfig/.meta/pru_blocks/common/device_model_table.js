@@ -17,9 +17,9 @@
  * The GPI route takes a JSON string, so a typo in a key, a string where a
  * number belongs, or an out-of-range value is only found when a model refuses
  * it at run time. A typed field is range-checked in the GUI. A key here MUST be
- * a keyword of the Python model constructor; test_device_model.py
- * proves that against the real constructors, so renaming a model parameter
- * breaks a test here instead of producing a model that is not the one asked for.
+ * a keyword of the Python model constructor, so renaming a model parameter
+ * must be done in both places; otherwise the run refuses the model instead of
+ * building one that is not the one asked for.
  *
  * PIN SLOTS
  * `slot` is where the pin travels in the manifest: primaryPin / clockPin /
@@ -411,8 +411,8 @@ function defaultPin(pinSpec) {
 
 /**
  * `inst` with every field of its kind that it does not carry set to the field's default - what a .syscfg
- * that leaves a field unset means. SysConfig does this itself; scripts/check_pin_collisions.js (which has
- * no SysConfig runtime) needs it spelled out.
+ * that leaves a field unset means. SysConfig does this itself; a command-line check (which has no
+ * SysConfig runtime) needs it spelled out.
  */
 function withDefaults(inst) {
     const out = { deviceKind: inst.deviceKind, $name: inst.$name };
@@ -428,7 +428,7 @@ function withDefaults(inst) {
  * WS2812 DATA, MDIO's MDC, ...) may be driven only by the blocks that legitimately talk to that device. A second block on
  * the pad (a SPI write whose SCLK is the same GPO) makes the device see its output as extra input edges; sequential
  * hand-off of a pad is legal only while NO device listens on it, which is why the duplicate-GPO rule exempts sequential
- * blocks and this one does not. Shared by the GUI validator and scripts/check_pin_collisions.js so the two cannot disagree.
+ * blocks and this one does not. Shared by the GUI validator and the command-line pin-collision check so the two cannot disagree.
  *
  * DRIVER_BLOCKS is the explicit list. Per kind, per PRU-driven pad (the device-pin `key` of KINDS), the block modules
  * that legitimately drive that pad. A rule is one of

@@ -1,12 +1,12 @@
-"""loop-carried accumulator (option 3, phase 1).
+"""Loop-carried accumulator.
 
 Repeat-add computes x*N by adding x to an accumulator N times in a counted
-loop. At base c5f20509 the ADD reads the loop-invariant preInit register
-(0) on every pass, so out_buf holds x instead of N*x,
-and the result cannot be stored after the loop because rejects any
+loop. Without an accumulator binding the ADD reads the loop-invariant preInit
+register (0) on every pass, so out_buf holds x instead of N*x, and the result
+cannot be stored after the loop because container validation rejects any
 consumer outside the loop reading a block inside it.
 
-Option 3 (docs/loop-carried-data.md, section 4.3) fixes this with:
+The loop block handles this with:
   * loop_block.accumulators: an explicit {preInit, update} binding, so the
     allocator coalesces the ALU block's destination with its preInit
     register (ADD writes back in place, 0 extra cycles per iteration);
@@ -14,8 +14,7 @@ Option 3 (docs/loop-carried-data.md, section 4.3) fixes this with:
     read from outside the loop (exemption), so the store sits AFTER
     the loop instead of inside it.
 
-Design under test (built from tools/pru-llm-corpus/scripts/family_designs.py
-b_repeat_add, with the write moved after the loop):
+Design under test (a repeat-add design with the write moved after the loop):
 
     mv_x (x_buf) --rd_x--> acc(ADD) --\
     k_acc(0, preInit) ---------------> acc   } Loop_0 x N   --> wr(out_buf)

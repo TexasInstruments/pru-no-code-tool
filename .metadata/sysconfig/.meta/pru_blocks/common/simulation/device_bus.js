@@ -2,12 +2,9 @@
  * device_bus.js - the wire between the simulated PRU and attached device models.
  *
  * This is a JavaScript port of the DeviceBus contract in the TI pru-simulator
- * checkout (pru_io/device_model.py, built under and extended through
- *). The semantics are intended to be IDENTICAL, and
- * scripts/sim/test_device_model_crosscheck.js drives both implementations with
- * the same stimulus and diffs them so a drift between the two is a red test,
- * not an opinion. If you change the behaviour here, change it there too, in
- * the same commit series - one bus, two languages.
+ * (pru_io/device_model.py). The semantics are intended to be IDENTICAL: if
+ * you change the behaviour here, change it there too, in the same commit
+ * series - one bus, two languages.
  *
  * WHY A BUS AT ALL
  * pru_core.js models the PRU core and, until now, took its R31 input from a
