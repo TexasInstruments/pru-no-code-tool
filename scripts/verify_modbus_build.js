@@ -6,6 +6,7 @@
 // bitwise Modbus reference (poly 0xA001 reflected, init 0xFFFF).
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm'), child = require('child_process');
+const { findClpru } = require('./dual_oracle_harness');
 
 function makeStub() { const fn = function () { return makeStub(); }; return new Proxy(fn, { get(_t, p) { if (p === 'toString' || p === Symbol.toPrimitive || p === 'valueOf') return () => ''; return makeStub(); }, apply() { return makeStub(); } }); }
 function loadBlock(n, d) {
@@ -20,8 +21,8 @@ const block = loadBlock('modbus_rtu_framer', 'application_specific');
 const opCode = 'm_modbus_rtu_rx_frame_pru1_ch2_8x';
 const macroDef = block.getMacro('', opCode);
 if (!macroDef.includes('.macro') || !macroDef.includes('.endm')) { console.error('FAIL: getMacro("") did not return a macro definition'); process.exit(1); }
-// The rejected first attempt put a numeric literal in the .macro parameter
-// list (clpru [E0004]). Guard against that class of error explicitly.
+// A numeric literal in the .macro parameter list is a clpru error ([E0004]).
+// Guard against that class of error explicitly.
 const declLine = macroDef.split('\n').find(l => l.includes('.macro'));
 if (/\b\d+\s*$/.test(declLine.replace('.macro', '').trim().split(',').pop())) {
     console.error('FAIL: numeric literal in .macro parameter list: ' + declLine); process.exit(1);
@@ -71,9 +72,8 @@ const frame = [0x01, 0x03, 0x00, 0x00, 0x00, 0x0A];
 if (crcTable(frame) !== crcRef(frame)) { console.error('FAIL: table vs reference on Modbus frame'); process.exit(1); }
 console.log('CRC check: table == bitwise reference; CRC-16/MODBUS("123456789") = 0x' + crcTable(vec).toString(16).toUpperCase());
 
-// clpru gate — the toolchain that rejected the previous attempt.
-const clpru = process.env.CLPRU || (fs.existsSync('/opt/ti-cgt-pru/bin/clpru') ?
-    '/opt/ti-cgt-pru/bin/clpru' : 'C:/ti/ti-cgt-pru_2.3.3/bin/clpru.exe');
+// clpru gate: CLPRU, else CGT_TI_PRU_PATH / the default install (findClpru).
+const clpru = process.env.CLPRU || findClpru();
 try {
     child.execSync('"' + clpru + '" --silicon_version=4 -c -o "' +
         path.join(tmpDir, 'modbus_rtu_framer_test.obj') + '" "' + asmPath + '"', { stdio: 'inherit' });

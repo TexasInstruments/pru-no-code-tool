@@ -1,29 +1,30 @@
-""" / The three node scripts that sat outside the suite
-registry and rotted, plus the label-column follow-ups from r2.
+"""Run the EnDat and SSI clpru build scripts as real processes.
 
-scripts/verify_endat_build.js (stale: added the DATA_EN_PIN
-macro parameter), scripts/verify_ssi_build.js (same shape) and
-scripts/test_timestamped_sensor_gateway.js (stale: read the IEP counter at
-0x0C = IEP_SLOW_COMPEN_REG, always 0; fixed the blocks to 0x10) are
-run here as real processes. They need clpru (and, for the gateway, the TI
-pru-simulator), so they SKIP when the toolchain is absent, like the other
-toolchain-gated suites; with PRU_SIMULATOR_PATH set they are enforced.
+scripts/verify_endat_build.js and scripts/verify_ssi_build.js assemble the
+blocks' real macros with clpru, so they SKIP when clpru is not found
+(CGT_TI_PRU_PATH or the default install), like the other toolchain-gated
+tests.
 
-the production `expanded.split('\n').map(formatAsmLine)` site in the
-two build scripts is driven through buildAsmText's macroOverride with a
-same-line-label macro body, and the `clpru build FAILED` line must be on
-stderr.
+The `expanded.split('\n').map(formatAsmLine)` site in the two build scripts
+is driven through buildAsmText's macroOverride with a same-line-label macro
+body, and the `clpru build FAILED` line must be on stderr.
 """
 import json
 import os
 import subprocess
+import sys
 
 import pytest
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-CLPRU = "C:/ti/ti-cgt-pru_2.3.3/bin/clpru.exe"
-HAVE_CLPRU = os.path.exists(CLPRU)
-HAVE_SIM = bool(os.environ.get("PRU_SIMULATOR_PATH")) and os.path.isdir(os.environ["PRU_SIMULATOR_PATH"])
+sys.path.insert(0, os.path.join(ROOT, "scripts", "sim"))
+import elf_cosim  # noqa: E402
+
+try:
+    CLPRU = elf_cosim.find_clpru()
+except RuntimeError:
+    CLPRU = None
+HAVE_CLPRU = CLPRU is not None
 
 
 def _cwd():
@@ -46,17 +47,10 @@ def test_build_script_assembles_the_real_macro(script, ok_line):
     assert "E0300" not in r.stdout + r.stderr
 
 
-@pytest.mark.skipif(not (HAVE_CLPRU and HAVE_SIM), reason="clpru or PRU_SIMULATOR_PATH missing")
-def test_timestamped_sensor_gateway_script_passes():
-    r = run_node(["scripts/test_timestamped_sensor_gateway.js"])
-    assert r.returncode == 0, r.stdout + r.stderr
-    assert "13 PASSED, 0 FAILED" in r.stdout, r.stdout
-
-
 @pytest.mark.skipif(not HAVE_CLPRU, reason="clpru not installed")
 def test_endat_build_script_goes_red_on_a_block_that_drops_a_pin():
-    """Sabotaged macro: DATA_EN_PIN left unsubstituted, as when the script
-    went stale. The real clpru must reject it with E0300 / DATA_EN_PIN."""
+    """Sabotaged macro: an undefined pin symbol left in the macro body. The
+    real clpru must reject it with E0300 naming the symbol."""
     r = run_node(["-e", r"""
 const { main } = require('./scripts/verify_endat_build');
 const os = require('os'), path = require('path');

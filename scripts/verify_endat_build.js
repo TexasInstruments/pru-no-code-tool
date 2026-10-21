@@ -1,4 +1,4 @@
-const fs=require('fs'), path=require('path'), vm=require('vm'), child=require('child_process'), {formatAsmLine}=require('./dual_oracle_harness');
+const fs=require('fs'), path=require('path'), vm=require('vm'), child=require('child_process'), {formatAsmLine, findClpru}=require('./dual_oracle_harness');
 function makeStub(){const fn=function(){return makeStub()}; return new Proxy(fn,{get(_t,p){if(p==='toString')return()=>'';return makeStub()},apply(){return makeStub()}})}
 function loadBlock(n,d){const f=path.join(__dirname,'../.metadata/sysconfig/.meta/pru_blocks',d,n+'.syscfg.js');const s=fs.readFileSync(f,'utf8');const sb={system:makeStub(),exports:{},module:{exports:{}},require:()=>makeStub(),console:{log(){},error(){},warn(){}}};sb.global=sb;vm.createContext(sb);vm.runInContext(s,sb,{filename:f,timeout:5000});return (sb.exports&&Object.keys(sb.exports).length)?sb.exports:sb.module.exports}
 function expand(macroStr,argsMap){const lines=macroStr.split('\n');let idx=-1,params=[];for(let i=0;i<lines.length;i++){const l=lines[i].trim();if(l.includes('.macro')){idx=i;params=l.split('.macro')[1].split(',').map(p=>p.trim());break;}}const mapping={};for(let i=0;i<params.length;i++){const p=params[i];if(argsMap[p]!==undefined)mapping[p]=argsMap[p];}const body=lines.slice(idx+1);const stack=[true];const out=[];for(let line of body){const t=line.trim();if(t.startsWith('.endm'))break;if(t.startsWith('.if ')){let cond=t.substring(4).trim();for(const[k,v]of Object.entries(mapping))cond=cond.split(k).join(v);let isTrue=false;if(cond.includes('==')){const parts=cond.split('==').map(p=>p.trim());isTrue=parts[0]===parts[1]}else isTrue=(cond==='1');const parent=stack[stack.length-1];stack.push(parent&&isTrue);continue}if(t.startsWith('.else')){const p=stack[stack.length-2]??true;stack[stack.length-1]=p&&!stack[stack.length-1];continue}if(t.startsWith('.endif')){stack.pop();continue}if(stack[stack.length-1]){let pl=line;for(const[k,v]of Object.entries(mapping))pl=pl.split(k).join(v);pl=pl.replace(/TEMP_REG1/g,'R28').replace(/TEMP_REG2/g,'R29').replace(/TEMP_REG3/g,'R26').replace(/TEMP_REG4/g,'R27');out.push(pl.replace(/\?/g,'_1'))}}return out.join('\n');}
@@ -31,7 +31,7 @@ function main(io, extraLines){
   mkdir(dir,{recursive:true});
   const asmPath=path.join(dir,'endat_test.asm');
   writeFile(asmPath,asmText);
-  const clpru='C:/ti/ti-cgt-pru_2.3.3/bin/clpru.exe';
+  const clpru=findClpru();
   try{execSync('"'+clpru+'" -v4 --silicon_version=4 -o "'+path.join(dir,'endat_test.obj')+'" "'+asmPath+'"', {stdio:'inherit'}); log('EnDat clpru build OK'); return true;}catch(e){(io&&io.logErr||console.error)('EnDat clpru build FAILED'); return false;}
 }
 if(require.main===module){
