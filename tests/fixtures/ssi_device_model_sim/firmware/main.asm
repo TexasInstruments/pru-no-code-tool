@@ -15,7 +15,7 @@
 ;             - Build the pru project, after which .out (Executable output file) and .h (Firmware header) files gets generated
 ;             - Either .out (Executable output file) can be loaded to PRU using ccs or R5F can write to PRU IRAM using PRUICSS driver
 ;   - Using makefile:
-;             - Use command gmake -all to build PRU project     
+;             - Use command gmake -all to build PRU project
 ;
 ;***************************************************************************************
 
