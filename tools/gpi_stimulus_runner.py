@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""gpi_stimulus_runner.py — run PRU firmware under a cycle-keyed GPI waveform.. This runner attaches the waveform to the simulation through the
-DeviceBus (``io_port.attach_device(WaveformPlayer(...))``) instead of poking
-``set_gpi_word`` / ``io_port.gpi`` past the bus, which is what the previous
-scratch version did. Writing GPI directly meant:
+"""gpi_stimulus_runner.py — run PRU firmware under a cycle-keyed GPI waveform.
+
+This runner attaches the waveform to the simulation through the DeviceBus
+(``io_port.attach_device(WaveformPlayer(...))``) instead of poking
+``set_gpi_word`` / ``io_port.gpi`` past the bus. Writing GPI directly would mean:
 
   * no contention resolution — a stimulus shorted against a device model
     (or against PRU-driven pins) looked identical to a clean one;

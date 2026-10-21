@@ -1,6 +1,6 @@
 """STEP/DIR stepper driver input stage - DeviceModel.
 
-Receives STEP/DIR pulses from the PRU (e.g. NoCodePRU ``stepper_block``) and
+Receives STEP/DIR pulses from the PRU (e.g. a stepper block) and
 tracks shaft position in whole steps. This is the driver-input model: it
 checks the timing contract a real driver (DRV8825-class) imposes, which is
 what rejects wrong firmware.

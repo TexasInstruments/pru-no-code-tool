@@ -5,7 +5,7 @@ two small ones packed into one register (red arm: 30 coefficients 0x1000..0x101D
 LDI Rn.w0 / Rn.w2 with no warning). outputWidth = "4" now reserves a whole register; the default "auto" is
 unchanged, so existing designs generate byte-identical output.
 
-Evidence: SysConfig CLI generation, and the real clpru ELF on TI pru-simulator.
+Checked with SysConfig CLI generation, and with the real clpru ELF on TI pru-simulator.
 """
 import os
 import re

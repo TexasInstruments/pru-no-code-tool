@@ -360,14 +360,29 @@ function toBinding(inst) {
     return binding;
 }
 
+/*
+ * Block registrations. The tables below (READER_BLOCKS, COMPANION_PIN_BLOCKS and the rule lists of
+ * DRIVER_BLOCKS) are the only place a block module is tied to a device kind. A block that reads or
+ * drives a device is registered here in the same change that adds the block; a kind with no
+ * registered block has no entry (READER_BLOCKS, COMPANION_PIN_BLOCKS) or an empty rule list
+ * (DRIVER_BLOCKS).
+ */
+
 /**
- * Which blocks read a bound device. Shared by the manifest's reader record
- * (resolveDeviceReaders in the static module) and the Device Model's own
- * display, so the two cannot disagree about which block reads a device.
+ * Which blocks read a bound device: kind -> [{module, dataPinField}]. Shared by the manifest's
+ * reader record (resolveDeviceReaders in the static module) and the Device Model's own display,
+ * so the two cannot disagree about which block reads a device.
  */
 const READER_BLOCKS = {
-    bissc: [{ module: "/pru_blocks/application_specific/biss_c_initiator_block", dataPinField: "dataPin" }],
-    ssi:   [{ module: "/pru_blocks/application_specific/ssi_initiator_block", dataPinField: "dataPin" }]
+};
+
+/**
+ * Blocks whose pins give a bound device's companion pins a default: kind -> [{module, matchField,
+ * clockField, indexField}]. When an instance of `module` has `matchField` equal to the device's
+ * primary pin, an unset (-1) clock / index pin takes that instance's `clockField` / `indexField`
+ * (either may be omitted). The first matching instance wins.
+ */
+const COMPANION_PIN_BLOCKS = {
 };
 
 function findReaderInstances(kind, primaryPin, modules) {
@@ -447,13 +462,13 @@ const PRU_IO = "/pru_blocks/pru_io_blocks/";
 const SPI_BLOCKS = [PRU_IO + "pru_spi_transfer", PRU_IO + "pru_spi_read", PRU_IO + "pru_spi_write"];
 const DRIVER_BLOCKS = {
     ssi: { noun: "reader", frameBased: true, pads: {
-        clk: { what: "extra clocks", rules: [{ module: "/pru_blocks/application_specific/ssi_initiator_block", via: [["data", "dataPin"]], padField: "clkPin" }] } } },
+        clk: { what: "extra clocks", rules: [] } } },
     bissc: { noun: "reader", frameBased: true, pads: {
-        ma: { what: "extra clocks", rules: [{ module: "/pru_blocks/application_specific/biss_c_initiator_block", via: [["slo", "dataPin"]], padField: "clkPin" }] } } },
+        ma: { what: "extra clocks", rules: [] } } },
     endat: { noun: "reader", frameBased: true, pads: {
-        clock: { what: "extra clocks", rules: [{ module: "/pru_blocks/application_specific/endat_initiator_block", via: [["data", "dataRxPin"]], padField: "clkPin" }] } } },
+        clock: { what: "extra clocks", rules: [] } } },
     sigma_delta: { noun: "reader", pads: {
-        clk: { what: "extra clocks", rules: [{ module: PRU_IO + "pdm_block", via: [["data", "dataPin"]], padField: "clkPin" }] } } },
+        clk: { what: "extra clocks", rules: [] } } },
     // No block in this tool speaks BiSS Line: its MASTER clock can only be a hand-built generator.
     bissline: { noun: "driver", name: "BiSS Line", pads: { master: { what: "extra clocks", rules: [] } } },
     spi_adc: { noun: "driver", pads: {
@@ -461,12 +476,12 @@ const DRIVER_BLOCKS = {
         sdo:  { what: "corrupted data bits", rules: [{ module: SPI_BLOCKS[0] }, { module: SPI_BLOCKS[2] }] },
         cs:   { what: "a toggled chip select", rules: SPI_BLOCKS.map(function (m) { return { module: m, via: [["cs", "CS Signal"]], padField: "CS Signal" }; }) } } },
     step_dir: { noun: "driver", pads: {
-        step: { what: "extra steps", rules: [{ module: PRU_IO + "stepper_block" }, { module: PRU_IO + "multi_axis_motion_block" }] },
-        dir:  { what: "a flipped direction", rules: [{ module: PRU_IO + "stepper_block" }, { module: PRU_IO + "multi_axis_motion_block" }] },
-        en:   { what: "a toggled enable", rules: [{ module: PRU_IO + "multi_axis_motion_block" }] } } },
-    ws2812: { noun: "driver", pads: { data: { what: "extra bits", rules: [{ module: PRU_IO + "ws2812_block" }] } } },
+        step: { what: "extra steps", rules: [] },
+        dir:  { what: "a flipped direction", rules: [] },
+        en:   { what: "a toggled enable", rules: [] } } },
+    ws2812: { noun: "driver", pads: { data: { what: "extra bits", rules: [] } } },
     mdio_phy: { noun: "reader", pads: {
-        mdc: { what: "extra clocks", rules: [{ module: PRU_IO + "mdio_master_block", via: [["mdio", "mdioBit"]], padField: "mdcBit" }] } } }
+        mdc: { what: "extra clocks", rules: [] } } }
 };
 
 /** The device's pin for `key` (a KINDS pin key), from a manifest-shaped binding, or undefined. */
@@ -601,6 +616,7 @@ exports = {
     PIN_MAX,
     KINDS,
     READER_BLOCKS,
+    COMPANION_PIN_BLOCKS,
     DRIVER_BLOCKS,
     pinField,
     paramField,

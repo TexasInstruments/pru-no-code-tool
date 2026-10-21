@@ -263,23 +263,17 @@ function devicePinDefaults(inst, pinNum, kind) {
         return null;
     };
 
-    if (kind === "ssi" && clockPin === -1) {
-        const pins = firstPinOf("/pru_blocks/application_specific/ssi_initiator_block",
-                                ["clkPin", "dataPin"], "dataPin");
-        if (pins && Number.isInteger(pins[0]) && pins[0] >= 0) {
+    // Registered companion-pin sources (device_model_table.js COMPANION_PIN_BLOCKS).
+    for (const entry of deviceModelTable.COMPANION_PIN_BLOCKS[kind] || []) {
+        const pins = firstPinOf(entry.module, [entry.clockField, entry.indexField], entry.matchField);
+        if (!pins) continue;
+        if (entry.clockField && clockPin === -1 && Number.isInteger(pins[0]) && pins[0] >= 0) {
             clockPin = pins[0];
         }
-    } else if (kind === "quadrature") {
-        const pins = firstPinOf("/pru_blocks/pru_io_blocks/quadrature_block",
-                                ["bBit", "zBit"], "aBit");
-        if (pins) {
-            if (clockPin === -1 && Number.isInteger(pins[0]) && pins[0] >= 0) {
-                clockPin = pins[0];
-            }
-            if (indexPin === -1 && Number.isInteger(pins[1]) && pins[1] >= 0) {
-                indexPin = pins[1];
-            }
+        if (entry.indexField && indexPin === -1 && Number.isInteger(pins[1]) && pins[1] >= 0) {
+            indexPin = pins[1];
         }
+        break;
     }
 
     return { clockPin, indexPin };
@@ -769,10 +763,7 @@ function buildDeviceBindingsWithModels(inst, modules) {
  *                     order: instance names in emitted-instruction order }
  */
 function resolveDeviceReaders(manifest, modules, allocation) {
-    const READER_BLOCKS = {
-        bissc: [{ module: "/pru_blocks/application_specific/biss_c_initiator_block", dataPinField: "dataPin" }],
-        ssi:   [{ module: "/pru_blocks/application_specific/ssi_initiator_block", dataPinField: "dataPin" }]
-    };
+    const READER_BLOCKS = deviceModelTable.READER_BLOCKS;
     // Byte ranges [start, end) a notation such as "R1", "R0.b2", "R3.w1" covers.
     function byteRanges(notation) {
         const ranges = [];
@@ -1969,8 +1960,8 @@ function isSequentialBlock(blockName, instCfg) {
 }
 
 // The attached devices (Device Model blocks and Simulation Settings GPI device fields) whose
-// PRU-driven input pads another block also drives. Verdict logic is deviceModelTable.findDeviceInputConflicts,
-// shared with scripts/check_pin_collisions.js.
+// PRU-driven input pads another block also drives. The decision is deviceModelTable.findDeviceInputConflicts,
+// shared with the command-line pin-collision check.
 function reportDeviceInputDrivers(inst, gpoBits, report) {
     const modules = system.modules;
     const devices = [];
@@ -2506,7 +2497,7 @@ function validate(inst, report)
                 // Labelled as the in-GUI JavaScript preview. The CLI
                 // build prints this same warning, and next to a `gmake sim`
                 // run on TI pru-simulator an unlabelled "FAIL" reads as the
-                // verdict. It is not evidence; `gmake sim` is. The preview's own
+                // simulator result. Only `gmake sim` runs the real ELF. The preview's own
                 // PASS/FAIL word is dropped from the message for that reason;
                 // the full verdict stays on simulationData.deviceResults.
                 const previewDetail = result.summary.replace(/^(PASS|FAIL) - /, "");
@@ -2517,7 +2508,7 @@ function validate(inst, report)
                     report.logWarning(realBanner, inst);
                     continue;
                 }
-                report.logWarning(`GUI JS preview only, not evidence - gmake sim gives the TI pru-simulator verdict. ` +
+                report.logWarning(`GUI JS preview only - gmake sim gives the TI pru-simulator result. ` +
                     `Preview of attached device "${result.device}" on GPI${result.pins.primary}: ${previewDetail}`, inst);
             }
         } else {
@@ -2736,7 +2727,7 @@ If the frequencies don't match, timing-sensitive operations (SPI, ADC) may not w
             {
                 name: "tiRunLiveView",
                 displayName: "Open live web view after the run",
-                description: "After the run, open TI pru-simulator's dashboard in your browser on the ELF the button just built, with the bound devices attached. It does not change the verdict, and it is not started when the run was refused or the build failed. The view is simulator-only evidence, not hardware.",
+                description: "After the run, open TI pru-simulator's dashboard in your browser on the ELF the button just built, with the bound devices attached. It does not change the result, and it is not started when the run was refused or the build failed. The view shows the simulator, not hardware.",
                 default: false,
                 onChange: (inst, ui) => {
                     ui.tiRunLivePort.hidden = !inst.tiRunLiveView;

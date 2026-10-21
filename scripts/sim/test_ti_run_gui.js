@@ -261,7 +261,7 @@ test('findPython: PATH python first; skips a Python 2 / failing candidate; null 
     };
     assert.deepStrictEqual(launcher.findPython({}, 'win32', spawn), ['py', '-3']);
     assert.deepStrictEqual(calls.slice(0, 2), ['python', 'py']);
-    assert.deepStrictEqual(launcher.findPython({ NCP_PYTHON: '/srv/py/python.exe' }, 'win32',
+    assert.deepStrictEqual(launcher.findPython({ PRU_SIM_PYTHON: '/srv/py/python.exe' }, 'win32',
         (cmd) => cmd === '/srv/py/python.exe' ? { status: 0, stdout: 'Python 3.11.0', stderr: '' } : { status: 1 }),
         ['/srv/py/python.exe']);
     assert.strictEqual(launcher.findPython({}, 'win32', () => ({ status: 1 })), null);

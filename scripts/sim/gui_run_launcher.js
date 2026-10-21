@@ -17,7 +17,7 @@ const childProcess = require('child_process');
 
 function candidates(env, platform) {
     const list = [];
-    if (env.NCP_PYTHON) list.push([env.NCP_PYTHON]);
+    if (env.PRU_SIM_PYTHON) list.push([env.PRU_SIM_PYTHON]);
     if (platform === 'win32') {
         // per-user python.org installs are found by the py launcher
         list.push(['python'], ['py', '-3']);
@@ -64,7 +64,7 @@ function main(argv) {
     const repo = argValue(argv, '--repo') || path.resolve(__dirname, '..', '..');
     const python = findPython();
     if (!python) {
-        writeRefused(com, 'python 3 not found from the GUI process; set NCP_PYTHON to its full path', digest);
+        writeRefused(com, 'python 3 not found from the GUI process; set PRU_SIM_PYTHON to its full path', digest);
         return 1;
     }
     const wrapper = path.join(repo, 'scripts', 'sim', 'gui_run.py');

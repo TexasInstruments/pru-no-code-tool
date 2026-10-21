@@ -7,7 +7,7 @@ instruction disappeared and the build stayed clean - wrong firmware with no warn
 The allocator records each request it could not place (getAllocationFailures) and validatePruInstructions
 (pru_blocks_static_module.syscfg.js) reports each one with logError, naming the block and the register budget.
 
-Evidence: a design with more live values than the pool holds must FAIL generation with the specific message (the
+Checks: a design with more live values than the pool holds must FAIL generation with the specific message (the
 allocator releases values after their last consumer, so the design here is wider than the 24-stage sum); the 16-stage design must still generate
 with all 16 ADDs and run correctly as the real clpru ELF on TI pru-simulator against a plain-Python sum.
 `assert_every_block_emitted` is a reusable static helper: every block that should emit an instruction appears in the asm.

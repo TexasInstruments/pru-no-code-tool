@@ -13,13 +13,13 @@ returned by the encoder):
   latches on the first active edge and shifts on each return-to-idle edge, so
   a master that samples during the active pulse reads the previous bit and a
   frame missing its F(n+1) terminator is rejected.  It still does not model
-  analogue setup/hold at the sampling instant; edge-placement evidence is the
+  analogue setup/hold at the sampling instant; edge placement is checked by the
   pru-simulator SsiEncoder (gmake sim / scripts/sim/run_bound_devices.py).
 
-* ``protocol="endat"`` - RETIRED by. Its framing (start bit 0, F1/F2
-  always, CRC x^5+x^3+1 preset 0) matched no cited source. EnDat has ONE model:
-  TI pru-simulator's pru_io/endat_encoder.py, framed against HEIDENHAIN ID
-  383942 and TI's EnDat driver (docs/endat-crc-provenance.md). Asking for
+* ``protocol="endat"`` - not supported. A framing of start bit 0, F1/F2
+  always and CRC x^5+x^3+1 preset 0 does not match the EnDat 2.2 specification.
+  EnDat is modelled only by TI pru-simulator's EnDat encoder model, framed
+  against HEIDENHAIN ID 383942 and the CRC of TI's EnDat driver. Asking for
   protocol="endat" here raises ValueError naming it.
 
 Timing faults (this is what rejects wrong firmware):

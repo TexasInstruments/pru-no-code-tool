@@ -253,10 +253,10 @@ def pid_alive(pid):
 
 
 def live_view_command(env):
-    """The argv prefix that starts the live view. NCP_LIVE_VIEW_CMD replaces it
+    """The argv prefix that starts the live view. PRU_SIM_LIVE_VIEW_CMD replaces it
     (test-only: lets tests stand in a stub without TI pru-simulator;
     POSIX quoting, so use forward slashes in paths)."""
-    override = env.get("NCP_LIVE_VIEW_CMD")
+    override = env.get("PRU_SIM_LIVE_VIEW_CMD")
     if override:
         return shlex.split(override)
     return [sys.executable, str(ROOT / "scripts" / "sim" / "live_view.py")]
@@ -435,13 +435,13 @@ def start_live_view(make_dir, elf, manifest, port, env):
                                + (f" ({note})" if note else ""))
             return view
         argv = live_view_command(env) + [str(elf), str(manifest), "--port", str(port)]
-        if env.get("NCP_LIVE_NO_BROWSER") == "1":
+        if env.get("PRU_SIM_LIVE_NO_BROWSER") == "1":
             argv.append("--no-browser")
         log.parent.mkdir(exist_ok=True)
         log.write_text(f"$ {' '.join(argv)}\n", encoding="utf-8")
         proc = spawn_detached(argv, env, log)
         view["pid"] = proc.pid
-        timeout = float(env.get("NCP_LIVE_READY_TIMEOUT") or LIVE_READY_SECONDS)
+        timeout = float(env.get("PRU_SIM_LIVE_READY_TIMEOUT") or LIVE_READY_SECONDS)
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             code = proc.poll()

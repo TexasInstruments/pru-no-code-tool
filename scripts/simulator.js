@@ -1,11 +1,11 @@
 /**
- * simulator.js - Enhanced PRU Simulator with agent-driven validation support
+ * simulator.js - PRU simulator wrapper for scripted validation
  *
  * Provides a modular Simulator class wrapping SysConfig's pru_core.js / pru_dmem0.js /
  * pru_smem.js simulation engines. Adds:
  *
  *   G1 - load_elf(buffer): parse TI COFF PRU firmware binaries, load sections into DMEM/SMEM
- *   G2 - step() / stepPaced(): single-cycle through multi-cycle stepping for multicore orchestration
+ *   G2 - step() / stepPaced(): single-cycle through multi-cycle stepping for lock-step multicore runs
  *   G3 - runUntil({maxCycles, watchpoints}): halt on cycle budget, halt, PC, register, or memory conditions
  *   G4 - exportVcd(filePath): Value Change Dump waveform export
  */
@@ -14,10 +14,10 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 // the same-line label grammar must be the repo's canonical
-// one (asm_label.js splitLabel, [A-Za-z0-9_?$]+). The previous local regex
-// [A-Za-z_$][\w$]* rejected `?` anywhere and leading digits, so e.g.
-// `pb_ws?: add r1,r1,1` never registered pb_ws? as a label and a
-// `qbne pb_ws?, r1, 3` branch silently fell through with errorParsing set.
+// one (asm_label.js splitLabel, [A-Za-z0-9_?$]+). A narrower regex such as
+// [A-Za-z_$][\w$]* rejects `?` anywhere and leading digits, so e.g.
+// `pb_ws?: add r1,r1,1` would not register pb_ws? as a label and a
+// `qbne pb_ws?, r1, 3` branch would silently fall through with errorParsing set.
 const { splitLabel } = require('./asm_label');
 
 /**
@@ -534,7 +534,7 @@ function exportVcd(r30History, r31History, options = {}) {
 const SIM_DIR = path.join(__dirname, '../.metadata/sysconfig/.meta/pru_blocks/common/simulation');
 
 /**
- * Comprehensive PRU Simulator with programmatic agent-driven validation support.
+ * PRU simulator with a programmatic API for scripted validation.
  *
  * Usage:
  *   const sim = new Simulator();
@@ -562,9 +562,8 @@ const SIM_DIR = path.join(__dirname, '../.metadata/sysconfig/.meta/pru_blocks/co
  * hung off pruState like every other device model in this file. Each Simulator
  * compiles its own copy of the memory models into its own vm context, so
  * per-instance state is invisible to a second core BY CONSTRUCTION - a spinlock
- * modelled that way would let both cores "win" the same flag, which is exactly
- * the defect that sank the first attempt at this item. A lock whose state is
- * not shared is not a lock.
+ * modelled that way would let both cores "win" the same flag. A lock whose
+ * state is not shared is not a lock.
  *
  * Keys are subsystem ids ('icssg0' by default); values map flag id -> the core
  * id currently holding it.
@@ -606,7 +605,7 @@ class Simulator {
   // ownership between scenarios; nothing in the hardware corresponds to this.
   static resetSpinlocks() { SPINLOCK_FLAGS.clear(); }
 
-  /** Inspect who holds a flag. Test/debug helper, not a hardware path. */
+  /** Inspect who holds a flag. Simulator inspection API, not a hardware path. */
   static spinlockOwner(flagId, subsystem = 'icssg0') {
     const owner = spinlockSubsystem(subsystem).get(flagId & (SPINLOCK_NUM_FLAGS - 1));
     return owner === undefined ? null : owner;
@@ -839,9 +838,9 @@ class Simulator {
       xfr2tr: null,
       // BS RAM 2KB per-core private 64x32B. Per-core means per-Simulator
       // instance (this._pruState), not per-subsystem like XFR2SPIN. Lazily
-      // allocated; each row is 8 words (32 bytes). Also the flat SPAD fallback
-      // that previously made broadside accesses appear to work is now gated: 48/49 are
-      // no longer handled by _spad, they are BS RAM or unsupported.
+      // allocated; each row is 8 words (32 bytes). Device IDs 48/49 are not
+      // handled by the flat SPAD model (_spad): they are BS RAM or unsupported,
+      // so a broadside access cannot appear to work by accident.
       bsRam: null,
       bsRamAddr: 0,
       fdb: null,
@@ -1939,9 +1938,8 @@ class Simulator {
           this._spinlockRelease(pruState, srcRegN);
           pruState.pc++;
         } else if (bank === BS_RAM_DEVICE_WRITE || bank === BS_RAM_DEVICE_SNOOP) {
-          // BS RAM write (48) and snoop (49) XOUT. Flat SPAD fallback
-          // previously made `xout 48` appear to work by accident; now a real
-          // 64x32B per-core model.
+          // BS RAM write (48) and snoop (49) XOUT, modelled as a 64x32B
+          // per-core RAM rather than the flat SPAD model.
           this._bsRamXout(pruState, bank, srcRegN, count);
           pruState.pc++;
         } else if (bank === FDB_DEVICE_DATA_ADDR || bank === FDB_DEVICE_PATTERN) {

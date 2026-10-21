@@ -269,8 +269,8 @@ function executeSbbo(pruState, src, baseAddr, byteOffset, byteCount) {
         // IEP registers. Offsets per AM243x TRM SPRUIM2J Table 14-10902 (p6902):
         // 0x00 GLOBAL_CFG, 0x10/0x14 COUNT_REG0/1, 0x18/0x1C CAP_CFG/CAP_STATUS,
         // 0x20.. CAPRn, 0x70 CMP_CFG, 0x74 CMP_STATUS, 0x78+8j CMPj_REG0/1.
-        // This file previously used the AM335x-era layout (count at 0x0C, compare
-        // block at 0x40) - 0x0C is SLOW_COMPEN and 0x40-0x6C are capture registers.
+        // This is not the AM335x-era layout (count at 0x0C, compare block at
+        // 0x40): here 0x0C is SLOW_COMPEN and 0x40-0x6C are capture registers.
         const iepOffset = memAddress - 0x0002E000;
         let regVal = 0;
         for (let i = 0; i < count; i++) {
@@ -405,8 +405,8 @@ function executeLBBO(pruState, dest, baseAddr, byteOffset, byteCount) {
         // IEP registers. Offsets per AM243x TRM SPRUIM2J Table 14-10902 (p6902):
         // 0x00 GLOBAL_CFG, 0x10/0x14 COUNT_REG0/1, 0x18/0x1C CAP_CFG/CAP_STATUS,
         // 0x20.. CAPRn, 0x70 CMP_CFG, 0x74 CMP_STATUS, 0x78+8j CMPj_REG0/1.
-        // This file previously used the AM335x-era layout (count at 0x0C, compare
-        // block at 0x40) - 0x0C is SLOW_COMPEN and 0x40-0x6C are capture registers.
+        // This is not the AM335x-era layout (count at 0x0C, compare block at
+        // 0x40): here 0x0C is SLOW_COMPEN and 0x40-0x6C are capture registers.
         const iepOffset = memAddress - 0x0002E000;
         let regVal = 0;
         if (iepOffset === 0x00) {
@@ -1816,7 +1816,7 @@ function executeInstruction(pruState, pruInstructions, labelMap, r30ValueHistory
             // would hand it one giant tick, and a monoflop that should
             // quietly expire mid-idle instead reads as a stalled transfer.
             // Mark halted and let the main loop idle the bus out to
-            // cycleCount, one honest cycle at a time.
+            // cycleCount, one cycle at a time.
             if (pruState.deviceBus) {
                 pruState.halted = true;
                 pruState.pc++;
@@ -1891,16 +1891,15 @@ function executeInstruction(pruState, pruInstructions, labelMap, r30ValueHistory
         // devices' drives and the result is what R31 samples. This runs AFTER
         // the fixed history so a pin under device control is owned by the
         // device - a pre-authored history bit on the same pin would be two
-        // drivers for one wire, and the bus is the only honest arbiter.
+        // drivers for one wire, and the bus is the only arbiter.
         if (pruState.deviceBus) {
             pruState.registers[31] = pruState.deviceBus.settle(pruState.cycles, pruState.registers[30]);
         }
 
         // Update IEP timer state, per TRM SPRUIM2J 6.4.13.
-        // Previously this incremented unconditionally, fired compares without
-        // checking CMP_EN, and auto-reset without checking CMP0_RST_CNT_EN - so
-        // firmware that never configured the IEP appeared to work here and hung
-        // on silicon.
+        // The counter only runs when enabled, compares fire only when CMP_EN
+        // is set, and auto-reset needs CMP0_RST_CNT_EN, so firmware that never
+        // configures the IEP cannot appear to work here and then hang on silicon.
         if (pruState.iepGlobalCfg & 0x1) {                       // [0] CNT_ENABLE
             const inc = (pruState.iepGlobalCfg >> 4) & 0xF;      // [7:4] DEFAULT_INC
             // The counter is 64-bit across COUNT_REG0/REG1. Carrying into the

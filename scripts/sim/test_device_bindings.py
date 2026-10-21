@@ -85,7 +85,7 @@ def test_every_device_offered_by_the_gui_has_a_model():
     That is the worst available outcome: the user picks a device, the run goes
     green, and nothing was ever driven. Read the option list out of the
     SysConfig module rather than restating it here, so adding a GUI option
-    without a model fails this test instead of being noticed in review.
+    without a model fails this test.
     """
     source = open(STATIC_MODULE, encoding="utf-8").read()
     start = source.index("name: `gpi${pinNum}_deviceKind`")

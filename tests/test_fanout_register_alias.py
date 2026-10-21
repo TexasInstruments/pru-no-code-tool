@@ -1,7 +1,7 @@
 """the register allocator must not free a value that still has a data consumer.
 
-Reported by the end-to-end agent: a 5-stage gray-to-binary cascade (g ^= g >> 1, 2, 4, 8, 16) built from
-Bitwise blocks "combined the value with itself". Reproduced 2026-10-07 with the real generated asm:
+A 5-stage gray-to-binary cascade (g ^= g >> 1, 2, 4, 8, 16) built from Bitwise blocks "combined the value with
+itself". Generated asm before the allocator fix:
 
     LDI32 R0, 1515870810        ; G0
     LSR   R0, R0 , R1.b0        ; Shr_1  - destination R0 == G0, G0 is gone
@@ -17,12 +17,11 @@ feeding a 4-byte shift did not show it.
 
 Fix: a release additionally requires dataConsumersRemaining == 0 (exact count of unread data connections), so the
 allocator can only release LESS than before. The same over-decrement also makes single-consumer chains leak
-registers (count goes negative); that is deliberately NOT changed here: read intermediate registers at
-HALT and depend on dead values never being reused. Tracked as a separate follow-up (done in those tests now
-sample each value at the macro that produced it, and the chains release correctly).
+registers (count goes negative); tests of single-consumer chains sample each value at the macro that produced it,
+so they do not depend on dead values never being reused, and those chains release correctly.
 
-Evidence is the real clpru ELF stepped on TI pru-simulator against an independent Python oracle. The harness is
-itself proven able to see the defect (test_harness_detects_aliased_asm): hand-written aliased asm gives 0.
+The tests step the real clpru ELF on TI pru-simulator against an independent Python oracle. The harness is
+itself shown able to see the bug (test_harness_detects_aliased_asm): hand-written aliased asm gives 0.
 Tests skip cleanly when clpru, the SysConfig 1.28 CLI or the pru-simulator checkout is missing.
 """
 
@@ -107,7 +106,7 @@ OPS = {  # name -> (module, SysConfig opCode, python reference of op(G, G >> 1))
 
 # ---------------------------------------------------------------------- designs
 def cascade_syscfg(value=VALUE, shifts=SHIFTS):
-    """The agent's design with NO memory copies: stage k = G_k = G_{k-1} ^ (G_{k-1} >> s_k)."""
+    """The cascade design with NO memory copies: stage k = G_k = G_{k-1} ^ (G_{k-1} >> s_k)."""
     n = len(shifts)
     L = [HEADER, "const g0 = load_constant_block.addInstance();"]
     for i in range(n):
@@ -270,8 +269,8 @@ def test_oracles_agree_with_each_other():
 
 
 @needs_tools
-def test_agents_gray_cascade_runs_correctly_without_memory_copies():
-    """The agent's 5-stage cascade, exactly as it wired it but with NO Memory Access copies."""
+def test_gray_cascade_runs_correctly_without_memory_copies():
+    """The 5-stage cascade wired directly, with NO Memory Access copies."""
     elf, asm, reg = cached("cascade", lambda: cascade_syscfg())
     halted, got = run_elf(elf, reg)
     assert halted

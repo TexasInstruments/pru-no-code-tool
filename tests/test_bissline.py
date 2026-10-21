@@ -55,8 +55,8 @@ def _independent_crc6(bits):
     Because this divides by the polynomial 0x43 explicitly, a wrong
     polynomial baked into the model's shift register is detectable here:
     the two implementations only agree if both compute the remainder of
-    the same G(x). (the previous version of this helper was a
-    line-by-line copy of the model's loop and could not detect that.)
+    the same G(x). (A line-by-line copy of the model's loop could not
+    detect that.)
     """
     dividend = 0
     for b in bits:

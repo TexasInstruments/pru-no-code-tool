@@ -7,7 +7,7 @@ and records the register file the first time the core is about to execute that a
 the macro finished.
 
 Build the firmware with ``DFLAGS=--asm_listing --list_directory=<generated dir>`` (see ``LISTING_DFLAGS``) so
-``pru_syscfg.lst`` sits next to the map. Evidence stays the real clpru ELF running on TI pru-simulator.
+``pru_syscfg.lst`` sits next to the map. The register values come from the real clpru ELF running on TI pru-simulator.
 """
 
 import os

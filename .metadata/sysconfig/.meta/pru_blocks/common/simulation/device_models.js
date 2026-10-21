@@ -1386,8 +1386,8 @@ const DEVICE_MODEL_KINDS = [
       clockLabel: "CH_B", multiPin: true },
     { kind: "bissc",       displayName: "BiSS-C absolute encoder",      ported: true,
       clockLabel: "clock", multiPin: true },
-    // audit of `ported: false` for bissline: INTENTIONAL STAGED
-    // PORT, not a binding gap. Evidence: (1) scripts/sim/test_device_models.js
+    // `ported: false` for bissline is intentional (not yet ported to the
+    // in-tool simulator), not a binding gap: (1) scripts/sim/test_device_models.js
     // ("a kind not yet ported to the in-tool simulator is refused, not
     // faked") REQUIRES createDeviceModel("bissline") to throw, so this
     // flag is load-bearing; flipping it without a faithful JS port breaks

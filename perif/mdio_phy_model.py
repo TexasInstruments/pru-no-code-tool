@@ -16,7 +16,7 @@ the tests exploit as a positive proof of observed-line decoding).
 
 Clause 22 wire contract (the ONLY contract this model enforces):
   preamble  >= preamble_bits clocked 1 bits (default 16, a lenient floor; idle-high MDIO counts, as on wire).
-            IEEE 802.3 22.2.4.5.1 specifies 32; mdio_master_block emits 32. The default stays 16 so
+            IEEE 802.3 22.2.4.5.1 specifies 32; a conforming MDIO master emits 32. The default stays 16 so
             existing 16-bit drivers keep passing; pass preamble_bits=32 for a strict check.
   ST        01, MSB first
   OP        01 = write, 10 = read (00/11 illegal)
@@ -68,7 +68,7 @@ class MdioPhyModel(DeviceModel):
         mdc_bit: int = 0,
         mdio_bit: int = 1,
         min_half_period_cycles: int = 40,   # 200 MHz / 2.5 MHz / 2
-        preamble_bits: int = 16,            # lenient floor; the standard (and mdio_master_block) use 32
+        preamble_bits: int = 16,            # lenient floor; the standard specifies 32
         registers: Optional[Dict[int, int]] = None,
         abort_gap_factor: int = 8,
         **kwargs,

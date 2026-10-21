@@ -1,8 +1,8 @@
 /**
  * The "Run on TI pru-simulator" button, GUI side.
  *
- * The GUI can only execute JavaScript, and its JS simulator is a preview, not
- * evidence. This script is the glue that lets the Simulation Settings panel
+ * The GUI can only execute JavaScript, and its JS simulator is only a
+ * preview. This script is the glue that lets the Simulation Settings panel
  * LAUNCH the real chain (scripts/sim/gui_run_launcher.js -> gui_run.py: generate,
  * clpru build, scripts/sim/run_bound_devices.py) and SHOW what it returned.
  * It decides nothing: the verdict is the exit code of run_bound_devices.py,

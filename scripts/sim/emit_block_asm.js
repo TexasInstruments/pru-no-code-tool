@@ -6,9 +6,9 @@
  *   node scripts/sim/emit_block_asm.js <spec.json>
  *
  * spec = {
- *   "block": "ssi_initiator_block",       // block syscfg module name
- *   "subdir": "application_specific",     // pru_blocks subdirectory
- *   "macroCall": "m_ssi_read",            // getMacro() first argument
+ *   "block": "<name>_block",              // block syscfg module name
+ *   "subdir": "pru_io_blocks",            // pru_blocks subdirectory
+ *   "macroCall": "m_<macro>",             // getMacro() first argument
  *   "macroArgs": {"RES": "R4", ...},      // expansion arguments
  *   "prelude": ["ldi32 R4, 0x1234"],      // optional asm before the macro
  *   "postlude": ["halt"],                 // optional asm after the macro

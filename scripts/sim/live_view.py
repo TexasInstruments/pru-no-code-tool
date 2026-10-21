@@ -428,7 +428,7 @@ def main(argv=None):
     ap.add_argument("--core", help="Override the SysConfig core in the manifest")
     ap.add_argument("--decoded-register", type=int,
                     help="Explicit decoded-value register, hand-built ELFs only")
-    ap.add_argument("--no-browser", action="store_true", help="Do not open a browser (also NCP_LIVE_NO_BROWSER=1)")
+    ap.add_argument("--no-browser", action="store_true", help="Do not open a browser (also PRU_SIM_LIVE_NO_BROWSER=1)")
     args = ap.parse_args(argv)
 
     if args.host not in LOOPBACK and not args.allow_remote:
@@ -454,7 +454,7 @@ def main(argv=None):
             print(f"Attached {len(state.attached)} devices: "
                   + ", ".join(f"{e['kind']} (GPI{e['primaryPin']})" for e, _ in state.attached))
             print(f"Live view: {url}  (Ctrl+C to stop)")
-            if not (args.no_browser or os.environ.get("NCP_LIVE_NO_BROWSER") == "1"):
+            if not (args.no_browser or os.environ.get("PRU_SIM_LIVE_NO_BROWSER") == "1"):
                 threading.Timer(1.0, webbrowser.open, args=(url,)).start()
             uvicorn.run(app, host=args.host, port=args.port, log_level="warning")
     except LiveViewRefused as exc:
