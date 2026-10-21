@@ -1,14 +1,14 @@
 """iep_block and scheduler_block reach the IEP through c26 on TI pru-simulator.
 
-A simulator constant table that maps c26 to shared RAM makes any IEP-using block talk to
-RAM, and a self-written compare-status bit satisfies its wait. With c26 = IEP (TRM SPRUIM2J
-Table 6-65) the block runs against a real counter/compare model. The IEP register map
-(SPRUIM2J 14.3.6.1.25) requires:
-  * iep_block used the AM335x offsets CMP_CFG/CMP_STATUS/CMP0 = 0x40/0x44/0x48 (on the
-    ICSSG those are IEP_CAPR4_REG0/REG1 and IEP_CAPR5_REG0) instead of 0x70/0x74/0x78,
-    and its oneshot wrote CMP_CFG=0x01 (CMP0_RST_CNT_EN) rather than CMP_EN[0] = 0x02;
-  * scheduler_block read the counter at 0x0C (IEP_SLOW_COMPEN_REG) instead of 0x10
-    (IEP_COUNT_REG0).
+c26 is the ICSS IEP0 register block (TRM SPRUIM2J Table 6-65). A simulator constant table that
+maps c26 to shared RAM makes any IEP-using block talk to RAM, and a self-written compare-status
+bit satisfies its wait, so every run maps c26 to the simulator's IEP model
+(elf_cosim.IEP_CONSTANTS) and the tests skip when the checkout has no IEP model.
+The IEP register map (SPRUIM2J 14.3.6.1.25) requires:
+  * CMP_CFG/CMP_STATUS/CMP0 at 0x70/0x74/0x78 (0x40/0x44/0x48 are the AM335x offsets; on the
+    ICSSG they are IEP_CAPR4_REG0/REG1 and IEP_CAPR5_REG0), and a oneshot that sets
+    CMP_EN[0] = 0x02, not CMP0_RST_CNT_EN = 0x01;
+  * the counter read at 0x10 (IEP_COUNT_REG0), not 0x0C (IEP_SLOW_COMPEN_REG).
 Each arm is a real clpru ELF run on the TI pru-simulator.
 """
 import os
@@ -24,10 +24,10 @@ try:
     import elf_cosim
     elf_cosim.find_clpru()
     elf_cosim.find_pru_simulator()
-    HAVE_ELF = True
+    HAVE_ELF = elf_cosim.simulator_iep_base() == 0x0002E000
 except Exception:
     HAVE_ELF = False
-needs_elf = pytest.mark.skipif(not HAVE_ELF, reason="clpru or pru-simulator missing")
+needs_elf = pytest.mark.skipif(not HAVE_ELF, reason="clpru, pru-simulator or its IEP0 model at 0x0002E000 missing")
 
 BUILD_DIR = os.path.join(REPO_ROOT, "build_out", "")
 BLOCKS = os.path.join(REPO_ROOT, ".metadata", "sysconfig", ".meta", "pru_blocks")
@@ -54,7 +54,7 @@ def run(spec, name, max_steps=2000):
         seen["iep"] = (sim.iep.count, sim.iep.cmp_cfg, sim.iep.compare[0], sim.iep.global_cfg)
         seen["shared0"] = int.from_bytes(sim.memory_read(0x00010000, 4), "little")
 
-    res = elf_cosim.run_elf_closed_loop(elf, NoPins(), max_steps=max_steps, on_step=on_step)
+    res = elf_cosim.run_elf_closed_loop(elf, NoPins(), constants=elf_cosim.IEP_CONSTANTS, max_steps=max_steps, on_step=on_step)
     return res, seen
 
 
@@ -86,24 +86,24 @@ def run_scheduler(start_count, steps=3000, name=None):
             "postlude": ["task_0_start:", "add R20, R20, 1", "jmp R29.w0"]}
     name = name or f"sched_{start_count}"
     elf, _ = elf_cosim.build_block_firmware(spec, name, workdir=os.path.join(BUILD_DIR, name))
-    return elf_cosim.run_elf_closed_loop(elf, NoPins(), max_steps=steps).registers[20]
+    return elf_cosim.run_elf_closed_loop(elf, NoPins(), constants=elf_cosim.IEP_CONSTANTS, max_steps=steps).registers[20]
 
 
 @needs_elf
 def test_scheduler_dispatches_when_period_elapsed():
     """The task body counts dispatches in R20. IEP_COUNT_REG0 starts 10 below TASK_0_PERIOD
     (200000), so the first dispatch is due within ~10 cycles and the second 200000 later:
-    exactly one in 3000 steps. At offset 0x0C the macro read IEP_SLOW_COMPEN_REG (always 0)
-    and never saw the period elapse."""
+    exactly one in 3000 steps. A read at offset 0x0C (IEP_SLOW_COMPEN_REG, always 0) would
+    never see the period elapse."""
     n = run_scheduler(199990)
     assert n == 1, f"task 0 dispatched {n} times in 3000 steps, expected exactly 1"
 
 
 @needs_elf
 def test_scheduler_does_not_dispatch_before_period():
-    """Counter at 0, period 200000: nothing is due in 3000 steps. The macro compared with
-    the operands of QBLT swapped (skip when delta > period), so it dispatched on EVERY
-    loop (about 15 times here) and never honoured the period."""
+    """Counter at 0, period 200000: nothing is due in 3000 steps. A compare with the QBLT
+    operands swapped (skip when delta > period) would dispatch on EVERY loop (about 15
+    times here) and never honour the period."""
     n = run_scheduler(0)
     assert n == 0, f"task 0 dispatched {n} times before its 200000-count period elapsed"
 
@@ -136,7 +136,7 @@ def run_scheduler_all(counter, enabled=True, steps=3000, name=None):
                          (f"task_{k}_start:", f"add R{20 + k}, R{20 + k}, 1", "jmp R29.w0")]}
     name = name or f"sched_all_{counter}_{int(enabled)}"
     elf, _ = elf_cosim.build_block_firmware(spec, name, workdir=os.path.join(BUILD_DIR, name))
-    regs = elf_cosim.run_elf_closed_loop(elf, NoPins(), max_steps=steps).registers
+    regs = elf_cosim.run_elf_closed_loop(elf, NoPins(), constants=elf_cosim.IEP_CONSTANTS, max_steps=steps).registers
     return tuple(regs[20:24])
 
 
