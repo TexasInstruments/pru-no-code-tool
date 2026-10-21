@@ -6,13 +6,12 @@
 // a copy - so this test cannot drift from what ships. Complements
 // scripts/sysconfig_arm.sh, which drives the real SysConfig CLI end to
 // end but needs a local TI toolchain; this file has no such dependency and
-// is what runs in a sandbox that does not have one.
+// runs on a machine without one.
 //
-// The task this validator exists for: flag a multi-core shared-memory write
+// What this validator does: flag a multi-core shared-memory write
 // that has no lock held around it. Every check below is a red arm - it
 // asserts the FAIL side and the PASS side of the same fixture, built by one
-// mutation, so a validator that always returns clean (the defect the first
-// rejected attempt shipped) cannot pass this file.
+// mutation, so a validator that always returns clean cannot pass this file.
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
@@ -80,7 +79,7 @@ let checks = 0;
 function check(label, fn) { fn(); checks++; void label; }
 
 // ---------------------------------------------------------------------------
-// Arm 4, RED then GREEN: the exact case the item asks for - a shared-memory
+// Arm 4, RED then GREEN: the main case - a shared-memory
 // write flagged as multi-core, with and without a lock held around it.
 // ---------------------------------------------------------------------------
 check('unlocked cross-core write is flagged (RED: broken input)', () => {
@@ -119,9 +118,9 @@ check('the SAME write, now locked, is clean (GREEN: fixed input)', () => {
 // Mutation red arm on the SAME fixture: start from the clean/locked design
 // above and mutate exactly one field at a time. Each mutation must turn the
 // validator's verdict from clean back to an error - proving the guard is
-// live, not a validator that always returns [] regardless of input (the
-// shape of the first rejected attempt, which passed a design with
-// two unprotected writes and a dangling release on an unrelated lock id).
+// live, not a validator that always returns [] regardless of input (which
+// would pass a design with two unprotected writes and a dangling release on
+// an unrelated lock id).
 // ---------------------------------------------------------------------------
 function lockedDesign() {
     return {

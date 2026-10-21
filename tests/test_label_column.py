@@ -1,14 +1,14 @@
 """asm formatters keep labels in column 1 (bare or same-line).
 
-made the JS macro expanders accept `label: instr` on one line, but
-the asm FORMATTERS that turn expanded lines back into an .asm file still
-decided indentation with `endsWith(':')`, so a same-line `label: instr` line
-was emitted indented -- and clpru rejects ANY indented label (E0003
-'Invalid instruction'), even a bare one.
+The JS macro expanders accept `label: instr` on one line; the asm FORMATTERS
+that turn expanded lines back into an .asm file must not decide indentation
+with `endsWith(':')`, or a same-line `label: instr` line is emitted indented --
+and clpru rejects ANY indented label (E0003 'Invalid instruction'), even a
+bare one.
 
 What these tests prove: scripts/sim/emit_block_asm.js (and the shared
-formatAsmLine in scripts/dual_oracle_harness.js that executeDualOracle and
-scripts/test_timestamped_sensor_gateway.js now use) emits a line carrying a
+formatAsmLine in scripts/dual_oracle_harness.js that executeDualOracle uses)
+emits a line carrying a
 label with the label in column 1, and plain instructions indented. The
 clpru arm assembles the emitted file when clpru is reachable; otherwise it
 skips loudly (never a fake green).

@@ -1,6 +1,6 @@
-"""five new DeviceModels.
+"""Five DeviceModels.
 
-Per model, three layers of evidence:
+Per model, three layers of checks:
 
 (a) Falsification - wrong firmware / out-of-spec bus behaviour is rejected
     (faults non-empty, or decoded result provably wrong), and the same
@@ -288,7 +288,7 @@ class TestSsiModel:
         assert dec[0]["raw"] == mod["raw"] and dec[0]["bits"] == 25
 
     def test_monoflop_holds_data_low_then_releases_high(self):
-        # Vendor pru_io/ssi_encoder.py:190-194: DATA is low for mono_cycles
+        # As in TI pru-simulator's SSI encoder model: DATA is low for mono_cycles
         # after F(n+1) and is then released high, even with no further clocks.
         m = _ssi_model(mono_cycles=30)
         trace = self._clock_frame(m, 26)
@@ -318,7 +318,7 @@ class TestSsiModel:
 
     def test_decode_ssi_requires_expected_bits_and_cpol(self):
         # Without expected_bits the decoder cannot tell F(n+1) from data and
-        # used to return 9 bits (0x14a) for a correct 8-bit 0xA5 frame.
+        # would return 9 bits (0x14a) for a correct 8-bit 0xA5 frame.
         m = _ssi_model(cpol=0, total_width=8, st_bits=4, mt_bits=4,
                        st_value=0x5, mt_value=0xA, parity_enable=False,
                        error_bit_enable=False)
@@ -349,10 +349,9 @@ class TestSsiModel:
 
 
 class TestEndatModel:
-    """retired this model's EnDat half (uncited framing). The EnDat
-    tests now live with the one EnDat model, pru-simulator
-    tests/test_endat_encoder.py, and the closed-loop ELF test
-    tests/test_endat_framing.py."""
+    """This model has no EnDat half: EnDat is modelled only by TI
+    pru-simulator's EnDat encoder model, exercised by the closed-loop ELF
+    test tests/test_endat_framing.py."""
 
     def test_endat_protocol_is_refused_with_a_pointer_to_the_reference(self):
         with pytest.raises(ValueError, match=r"pru_io\.endat_encoder\.EndatEncoder"):
@@ -552,8 +551,8 @@ SPI_CMD = 0xA500
 
 def _spi_model():
     # The repo's four MSB-first SPI controller macros never terminate (loop
-    # exit compares bitId against 0xFF; bitId wraps to 0xFFFFFFFF) - see
-    # research/spi_msb_macro_defect.md. The LSB variant terminates, so
+    # exit compares bitId against 0xFF; bitId wraps to 0xFFFFFFFF). The LSB
+    # variant terminates, so
     # the end-to-end tests run LSB-first.
     return SpiAdc(sclk_pin=0, sdi_pin=1, sdo_pin=2, cs_pin=3, bits=16,
                   conversion=SPI_CONV, msb_first=False)

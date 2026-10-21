@@ -39,7 +39,7 @@ CHECKER = ROOT / "scripts" / "check_pin_collisions.js"
 STATIC_PREFIX = "error: /pru_blocks/common/pru_blocks_static_module: "
 DEVICE_MODEL_LINES = re.compile(r"^.*device_model_block1?\b.*\n", re.M)
 
-# The error for the red design, as the owner of the SSI encoder reads it.
+# The error for the red design, as reported for the SSI encoder.
 RED_FRAGMENTS = [
     "GPO0 feeds the CLK pin of device 'Encoder_Model' (ssi, read by SSI_Encoder_Read, Device Model block)",
     "but 'PRU0_SPI_Write_0' (pru_spi_write) also drives GPO0",
@@ -244,8 +244,8 @@ def test_a_reader_block_with_a_mismatched_data_pin_is_not_a_foreign_driver(tmp_p
 @needs_node
 @needs_sysconfig
 def test_a_second_ssi_block_with_another_data_pin_on_the_devices_clock_is_an_error_in_sysconfig_and_in_ci(tmp_path):
-    """Review of d17d0a8d: exempting every block of the reader's module let SSI_Second clock the device (sim FAILs with
-    'clock continued past the end of the 25-bit word') while SysConfig and CI were clean. At d17d0a8d: GUI rc 0, CI rc 0."""
+    """Exempting every block of the reader's module would let SSI_Second clock the device (the simulator FAILs with
+    'clock continued past the end of the 25-bit word') while SysConfig and CI stayed clean. Both must report an error."""
     design = write(tmp_path, "two_ssi.syscfg", two_ssi_text(3))
     code, log = gui(design, tmp_path)
     assert code != 0, log

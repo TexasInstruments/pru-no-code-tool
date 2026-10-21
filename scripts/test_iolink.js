@@ -2,13 +2,11 @@
  * test_iolink.js — IO-Link Master Block Headless Simulator Test
  *
  * Tests the iolink_master_block for:
- *   1. Module load and metadata (T1)
- *   2. Macro emission and expansion (T2)
- *   3. Validation rules (T3)
- *   4. R30 waveform: wake-up pulse duration, DIR control (T4)
- *   5. Cycle budget measurement and baud accuracy (T5)
- *
- * Maturity target: assembles (Phase 1)
+ *   1. Module load and metadata
+ *   2. Macro emission and expansion
+ *   3. Validation rules
+ *   4. R30 waveform: wake-up pulse duration, DIR control
+ *   5. Cycle budget measurement and baud accuracy
  *
  * Call: node scripts/test_iolink.js
  */

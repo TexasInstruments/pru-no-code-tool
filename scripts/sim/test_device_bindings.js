@@ -65,7 +65,7 @@ const tests = {};
 tests['a manifest is produced even with nothing attached'] = function () {
     // The empty manifest has to be a real, well-formed manifest. A consumer
     // that cannot tell "no devices" from "generation never ran" will treat a
-    // missing file as a pass, which is the failure this item exists to prevent.
+    // missing file as a pass.
     const m = buildDeviceBindings(inst());
     assert.strictEqual(m.version, 1);
     assert.deepStrictEqual(m.bindings, []);

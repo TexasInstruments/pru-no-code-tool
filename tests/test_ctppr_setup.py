@@ -6,9 +6,8 @@ the core's own PRU_CTRL block and resets to 0 (TRM SPRUIM2J Table 6-65 and
 shared PRU-ICSS IP and SPRUIM2J; SPRUJB6 documents only the c28 pointer formula and the local
 control bases, not the register. getConstantTableSetup() in the static
 module emits the write; this file drives it with REAL block modules through
-scripts/ct_setup_runner.js. The end-to-end proof that the write matters
-(samples land in shared RAM, and land at DMEM 0x0 without it) is
-tests/test_logic_analyzer.py::test_ctppr0_setup_removed_red.
+scripts/ct_setup_runner.js. Without the write, c28-relative stores land at
+DMEM 0x0 instead of shared RAM.
 """
 import json
 import pathlib

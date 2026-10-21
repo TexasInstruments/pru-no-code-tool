@@ -2,12 +2,12 @@
 
 Both protocols idle the clock HIGH.  m_biss_c_read ended every bit on `clr`, and
 m_endat_read idled and stopped its clock LOW, so a frame left the line off idle:
-the next transaction then starts with a phantom edge (the defect fixed
-for SSI and the models were taught to ignore for the first sample only).  The
+the next transaction then starts with a phantom edge (the SSI block idles
+correctly; the models ignore an off-idle level only on the first sample).  The
 decode never noticed, because the decode does not look at the clock after the
 last bit.
 
-Evidence is the real clpru ELF on the TI pru-simulator.
+Checked with the real clpru ELF on the TI pru-simulator.
 
   * BiSS-C runs through `gmake sim` (the user-facing path) with ODD positions,
     against pru_io.bissc_device_model.BissCModel.  The runner prints the clock

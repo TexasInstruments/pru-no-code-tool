@@ -1,6 +1,6 @@
-"""part A: the Device Model block - an ADDITIONAL device-binding source next to the GPI device fields.
+"""The Device Model block - an ADDITIONAL device-binding source next to the GPI device fields.
 
-Pratheesh's decision on (option 1): nothing is migrated, the GPI fields keep working, a pin claimed by both
+Nothing is migrated, the GPI fields keep working, a pin claimed by both
 sources is a SysConfig ERROR naming both. What this file proves, each against the real thing:
 
   * the table behind the block agrees with scripts/sim/device_bindings.py: same kinds, every parameter a keyword of the

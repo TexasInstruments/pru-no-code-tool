@@ -3,7 +3,8 @@
  *
  * WHAT THIS BLOCK REALLY DOES
  *   Receives Modbus RTU frames over the PRU-ICSS ENDAT UART character layer
- *   (the same hardware interface the uart_tx / uart_rx blocks drive) and
+ *   (the same hardware interface the UART blocks - uart_config, uart_tx_op,
+ *   uart_rx_op - drive) and
  *   delimits frames by MEASURING the 3.5-character-time inter-frame silence
  *   in PRU cycles. The silence watchdog is a 3-cycle countdown loop that is
  *   restarted after every received character; when it reaches zero without a
@@ -23,17 +24,17 @@
  *   CRC values, so this block ships its own 256-entry reflected table via
  *   the same lutName/getLookUptable mechanism.
  *
- * HONEST SCOPE NOTES (do not oversell this block)
+ * SCOPE NOTES
  *   - A hardware UART plus a well-fed software timer works fine at
  *     9.6-19.2 kbaud, where 3.5 characters is milliseconds of slack.
  *     The PRU case strengthens at 115.2 kbaud and above, and on a loaded
  *     R5F where timer interrupts jitter. This block claims no universal
  *     advantage.
  *   - RS-485 direction control does not exist yet. This block has NO
- *     dependency on it (seam noted): drive the transceiver DE/RE pin from
+ *     dependency on it: drive the transceiver DE/RE pin from
  *     PRU GPO blocks around the response transmission; nothing here touches
  *     the direction pin.
- *   - Transmission of the response is owned by uart_tx block instances
+ *   - Transmission of the response is owned by uart_tx_op block instances
  *     reading the validated frame buffer; this block is the RX delimiting
  *     half. The pre-response 3.5-character gap can be produced with a
  *     Delay block configured from the same silenceTicks value shown below.
@@ -43,7 +44,7 @@
  */
 
 /**
- * Extract PRU number from system context (same helper as uart_rx).
+ * Extract PRU number from system context (same helper as uart_config).
  */
 function getPruNumberFromContext() {
     const common = system.getScript("/common");
@@ -60,7 +61,7 @@ const PRU_USED = getPruNumberFromContext();
 
 /**
  * Oversample encoding (bits[2:0]) -> oversample multiplier.
- * Mirrors uart_rx: 0=1x, 1=2x, 3=4x, 7=8x.
+ * Same encoding as uart_config: 0=1x, 1=2x, 3=4x, 7=8x.
  */
 function oversampleMultiplierOf(enc) {
     if (enc === 0) return 1;
@@ -70,7 +71,7 @@ function oversampleMultiplierOf(enc) {
 }
 
 /**
- * Middle sample bit within the oversampled r31.b{ch} byte (same as uart_rx).
+ * Middle sample bit within the oversampled r31.b{ch} byte (same as the UART RX blocks).
  */
 function middleBitOf(enc) {
     if (enc === 3) return 2;   // 4x
@@ -91,8 +92,8 @@ function silenceTicksOf(inst) {
 }
 
 /**
- * ENDAT RX clock divider for a real-world baud rate. Unlike uart_rx (whose
- * baud config is in MHz and demands exact divisibility), Modbus bauds such
+ * ENDAT RX clock divider for a real-world baud rate. Unlike uart_config (which
+ * demands exact divisibility of the UART clock), Modbus bauds such
  * as 115200 never divide 192/200 MHz exactly. The hardware divider is an
  * integer, so we take the NEAREST divider and enforce the UART-standard
  * ~2% cumulative baud tolerance. Actual baud error is reported by validate().
@@ -152,8 +153,8 @@ function validate(inst, report) {
 }
 
 /**
- * Guarded ICSS_CFG definitions (same workaround as uart_rx — the include
- * files are not available to generated macros).
+ * Guarded ICSS_CFG definitions (as in uart_config: the include files are not
+ * available to generated macros).
  */
 function getIcssCfgDefinitions(pruNum) {
     const gpcfg = pruNum === 0 ? "ICSS_CFG_GPCFG0" : "ICSS_CFG_GPCFG1";
@@ -188,12 +189,11 @@ ${ch2}    .set    0x00${pruNum === 0 ? "F8" : "118"}
 /**
  * Macro body generator.
  *
- * CRITICAL clpru RULE (learned from the rejected first attempt):
+ * clpru RULE:
  * a NUMERIC LITERAL must NEVER appear in a .macro PARAMETER position of the
  * DECLARATION — [E0004] "Substitution symbol operand expected". All
  * configuration values are therefore either
- *   (a) passed at the CALL SITE (values are legal there — same pattern as
- *       uart_rx), or
+ *   (a) passed at the CALL SITE (values are legal there), or
  *   (b) baked into the macro BODY at generation time (channel bit numbers,
  *       register offsets selected from the opCode variant).
  *
@@ -219,7 +219,7 @@ function getMacro(pruInstructionMacro, opCode) {
     const lutSymbol = parts[6] || "lutSymbol";
 
     // Channel-derived hardware facts (selected at generation time from the
-    // opCode variant, exactly like uart_rx does).
+    // opCode variant).
     const pruNum = macroName.includes("_pru0_") ? "0" : "1";
     const channel = macroName.includes("_ch0_") ? "0" : (macroName.includes("_ch1_") ? "1" : "2");
     const gpcfgReg = pruNum === "0" ? "ICSS_CFG_GPCFG0" : "ICSS_CFG_GPCFG1";
@@ -248,14 +248,14 @@ function getMacro(pruInstructionMacro, opCode) {
             "\t;   frameReg     - allocated result register: b0=status, b1=length, w2=CRC-16\n" +
             "\t;   slaveAddr    - this station's Modbus address (0 also accepted = broadcast)\n" +
             "\t;   silenceTicks - 3.5-char-time silence threshold in watchdog iterations (3 cycles each)\n" +
-            "\t;   clockDiv     - ENDAT RX clock divider matching the paired uart_rx/uart_tx config\n" +
+            "\t;   clockDiv     - ENDAT RX clock divider matching the paired uart_config block\n" +
             "\t;   bufSymbol    - label of the 256-byte frame buffer (Memory Variable block, .udmem)\n" +
             "\t;   lutSymbol    - label of the 256-entry reflected CRC-16 lookup table (.initdmem)\n" +
             "\t; Register budget: TEMP_REG1/TEMP_REG2 only, plus frameReg.\n";
     }
 
     body += "\
-    ; ===== character layer init (same ENDAT sequence the uart_rx block emits) =====\n\
+    ; ===== character layer init (ENDAT RX sequence, as the UART blocks program it) =====\n\
     ; TRM sequence: assert tx_global_reinit, wait for busy clear, de-assert rx_en\n\
     set     r31, r31, 19\n\
 mb_wait_reinit?:\n\
@@ -264,7 +264,7 @@ mb_wait_reinit?:\n\
     ldi32   TEMP_REG1, 0x04000000\n\
     ldi     TEMP_REG2.w0, " + gpcfgReg + "\n\
     sbco    &TEMP_REG1, ICSS_CFG, TEMP_REG2.w0, 4\n\
-    ldi     TEMP_REG1.w0, " + (oversampleEncodingFromName(macroName)) + "   ; oversample bits[2:0] (same encoding as uart_rx)\n\
+    ldi     TEMP_REG1.w0, " + (oversampleEncodingFromName(macroName)) + "   ; oversample bits[2:0] (same encoding as uart_config)\n\
     ldi     TEMP_REG1.w2, " + clockDiv + "\n\
     ldi     TEMP_REG2.w0, " + rxcfgReg + "\n\
     sbco    &TEMP_REG1, ICSS_CFG, TEMP_REG2.w0, 4\n\
@@ -288,7 +288,7 @@ mb_gap_loop?:\n\
     qbeq    mb_wait_char?, " + frameReg + ".b1, 0   ; idle line (no frame yet): keep listening\n\
     qba     mb_frame_check?              ; frame boundary declared here\n\
 mb_char_rx?:\n\
-    ; receive one " + frameBits + "-bit UART character (uart_rx-compatible bit loop)\n\
+    ; receive one " + frameBits + "-bit UART character (per-bit valid-flag polling loop)\n\
     ldi     TEMP_REG1, 0\n\
     ldi     TEMP_REG2.b0, 0\n\
 mb_bit_loop?:\n\
@@ -418,7 +418,7 @@ function getLongDescription() {
 
 ### Purpose
 Receives one Modbus RTU frame over the PRU-ICSS ENDAT UART character layer
-(the same hardware the \`uart_tx\` / \`uart_rx\` blocks drive) and delimits it by
+(the same hardware the \`uart_config\` / \`uart_tx_op\` / \`uart_rx_op\` blocks drive) and delimits it by
 **measuring the 3.5-character-time inter-frame silence in PRU cycles**. The
 block then validates the frame with CRC-16 (Modbus parameters) and filters the
 slave address.
@@ -432,17 +432,16 @@ measured silence elapses. The threshold is computed at generation time
 (\`silenceTicks\`, shown in the block table) from the configured baud and PRU
 clock.
 
-**Honest scope of the advantage:** a hardware UART plus a well-fed software
+**Scope of the advantage:** a hardware UART plus a well-fed software
 timer works fine at 9.6–19.2 kbaud, where 3.5 characters is milliseconds. The
 PRU case strengthens at 115.2 kbaud and above, and on a loaded R5F where
 timer interrupts jitter. This block claims no universal advantage.
 
 ### How it works
-1. **Character layer init** — identical ENDAT programming sequence to the
-   \`uart_rx\` block (global reinit, GPCFG peripheral mode, RXCFG clock +
-   oversampling, CHx_CFG0 frame format, RX enable). Character reception uses
-   the same per-bit valid-flag polling as \`uart_rx\`. Response transmission is
-   owned by \`uart_tx\` block instances downstream — this block is the RX
+1. **Character layer init** — the ENDAT RX programming sequence (global
+   reinit, GPCFG peripheral mode, RXCFG clock + oversampling, CHx_CFG0 frame
+   format, RX enable). Character reception uses per-bit valid-flag polling.
+   Response transmission is owned by \`uart_tx_op\` block instances downstream — this block is the RX
    delimiting half.
 2. **Reception** — bytes are appended to a 256-byte frame buffer in DMEM
    (reserved by a paired Memory Variable block using \`bufferSymbol\`).
@@ -466,11 +465,11 @@ timer interrupts jitter. This block claims no universal advantage.
 
 Frames longer than 255 bytes drop the excess bytes; the truncation then fails
 CRC and reports status 1. The block **blocks** until a frame is delimited
-(it waits for silence), exactly like \`uart_rx\` waits for a character.
+(it waits for silence), as a UART RX block waits for a character.
 
-### Dependencies and seams (stated honestly)
+### Dependencies
 - **RS-485 direction control does not exist yet.** This block does not depend
-  on it and does not touch a direction pin. Seam: drive the transceiver DE/RE
+  on it and does not touch a direction pin. Drive the transceiver DE/RE
   pin from PRU GPO blocks around response transmission when that hardware is
   present.
 - **Frame buffer:** add a Memory Variable block with \`labelName\` =
@@ -488,7 +487,7 @@ CRC and reports status 1. The block **blocks** until a frame is delimited
   cycle granularity.
 - CRC: ~13 cycles per byte (two LDI32 bases, LBBO, shift/XOR update).
 - The block's \`noOfCycles\` reports only the deterministic init portion; the
-  reception/wait phase is inherently blocking (like \`uart_rx\`).
+  reception/wait phase is inherently blocking.
 
 ### Register budget
 TEMP_REG1 / TEMP_REG2 only (2-TEMP allocator pattern) plus the allocated
@@ -496,12 +495,12 @@ frame result register. No MULL anywhere; all scaling is done at generation
 time or with shifts.
 
 ### What is NOT claimed
-- No pru-simulator co-simulation of this block yet — the evidence gate for
-  this revision is a clean clpru assembly of the generated macro (see
+- No pru-simulator co-simulation of this block yet — it is checked by a clean
+  clpru assembly of the generated macro (see
   \`scripts/verify_modbus_build.js\`) plus a JS-side check of the generated
   CRC table against the bitwise reference.
 - No TX-side framing (CRC append + gap enforcement) inside this block; build
-  it from uart_tx + crc arithmetic downstream, or wait for a TX framer.
+  it from uart_tx_op + CRC arithmetic downstream.
 `;
 }
 
@@ -525,14 +524,14 @@ const framer1 = modbus.addInstance();
 | pruClockMhz | Integer | 192, 200 | 200 | PRU core clock used for the silence measurement |
 | clockSource | Integer | 0, 1 | 0 | ENDAT RX clock: 0 = 192 MHz UART_CLK, 1 = 200 MHz CORE_CLK (must match paired uart blocks) |
 | channel | Integer | 0, 1, 2 | 2 | ENDAT channel (must match paired uart blocks) |
-| oversampleSize | Integer | 0, 1, 3, 7 | 7 | Oversample encoding (0=1x, 1=2x, 3=4x, 7=8x — same encoding as uart_rx: 7 means 8x) |
+| oversampleSize | Integer | 0, 1, 3, 7 | 7 | Oversample encoding (0=1x, 1=2x, 3=4x, 7=8x — same encoding as uart_config: 7 means 8x) |
 | bufferSymbol | String | identifier | "modbus_rtu_frame_buf" | Label of the 256-byte .udmem frame buffer (Memory Variable block) |
 | lutMemoryLocation | String | "dmem", "smem" | "dmem" | Where the 512-byte CRC table is placed |
 
 ### Required companion blocks
 1. **Memory Variable** with \`labelName\` = \`bufferSymbol\`, \`sizeInBytes\` = 256,
    section \`.udmem\` — the frame buffer this macro writes via SBBO.
-2. **uart_tx instances** for the response path (character layer TX).
+2. **uart_config + uart_tx_op instances** for the response path (character layer TX).
 3. **Loop block** if you want continuous frame reception.
 
 ### Example
@@ -563,7 +562,7 @@ scripting.connect(framer1, "next", next_block, "prev");
    is passed at the call site or baked into the body (clpru [E0004] rejects
    numeric literals in .macro parameter positions).
 2. \`channel\`, \`clockSource\`, \`oversampleSize\` must match the paired
-   uart_tx/uart_rx instances — they describe the same hardware.
+   uart_config instance — they describe the same hardware.
 3. The block blocks until a frame is delimited by measured silence.
 4. Read the frame PDU from the buffer via Memory Access blocks using
    \`bufferSymbol\` after checking status == 0.
@@ -643,7 +642,7 @@ exports = {
         {
             name: "clockSource",
             displayName: "ENDAT Clock Source",
-            description: "Must match the paired uart_rx/uart_tx blocks: 0 = 192 MHz UART_CLK, 1 = 200 MHz CORE_CLK",
+            description: "Must match the paired uart_config block: 0 = 192 MHz UART_CLK, 1 = 200 MHz CORE_CLK",
             default: 0,
             options: [
                 { name: 0, displayName: "192 MHz (UART_CLK)" },
@@ -664,7 +663,7 @@ exports = {
         {
             name: "oversampleSize",
             displayName: "Oversample Size",
-            description: "Samples per bit (encoding shared with uart_rx: 0=1x, 1=2x, 3=4x, 7=8x)",
+            description: "Samples per bit (encoding shared with uart_config: 0=1x, 1=2x, 3=4x, 7=8x)",
             default: 7,
             options: [
                 { name: 0, displayName: "1x" },
@@ -682,7 +681,7 @@ exports = {
         {
             name: "clockDivider",
             displayName: "Clock Divider (Calculated)",
-            description: "ENDAT RX divider = (clockSource / (baudRate * oversample)) - 1, same formula as uart_rx",
+            description: "ENDAT RX divider = (clockSource / (baudRate * oversample)) - 1, rounded to the nearest integer",
             default: 0,
             readOnly: true,
             getValue: (inst) => endatClockDividerOf(inst).div
@@ -752,8 +751,7 @@ exports = {
             displayName: "Number Of Cycles",
             default: 40,
             getValue: (inst) => 40 // deterministic character-layer init portion only;
-            // reception + silence watchdog + CRC are data-dependent (blocking,
-            // like uart_rx)
+            // reception + silence watchdog + CRC are data-dependent (blocking)
         }
     ],
     ports: (inst) => {

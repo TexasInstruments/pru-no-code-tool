@@ -42,8 +42,8 @@ def test_red_arm_parenthesized_if_with_comment_has_exact_shared_and_legacy_count
     got = json.loads(result.stdout)
     assert got == {"shared": 1, "bypassed": 0, "instructions": ["ldi R10, 1"]}
 
-    # Prove the old evaluator fails for the named reason, rather than merely
-    # relying on a non-zero exit code.  This is the committed red arm.
+    # The red arm: an evaluator without this handling must fail for the named
+    # reason, rather than merely with a non-zero exit code.
     red = run_node(NODE_COUNTS + r"""
 const assert = require('assert');
 assert.strictEqual(bypassed.instructions.length, 1,
@@ -78,8 +78,8 @@ const macro = [
   '    .endm',
 ].join('\n');
 const h = require('./scripts/dual_oracle_harness');
-// Round 1 of routed emit through evalCondition without a symbol set: every
-// `!$isdefed` guard went false, the `.set` vanished and uart_tx/modbus faulted on an
+// Routing emit through evalCondition without a symbol set makes every
+// `!$isdefed` guard false, so the `.set` vanishes and UART/Modbus macros fault on an
 // unmapped SBCO. Passing no symbol set reproduces that.
 const noSymbols = (c, m) => h.evalCondition(c, m);
 console.log(JSON.stringify({ shared: expand(macro).instructions,
@@ -207,9 +207,9 @@ console.log(JSON.stringify(bad));
 
 
 def test_every_emitted_label_operand_is_defined_in_its_own_expansion():
-    """Whole-ledger check that would have caught the deleted sine_lut (and the dropped
-    stacked/trailing labels): every ldi32/ldi/jal/qb* symbol operand must be a label or
-    .set/.equ/.asg symbol of the same expansion."""
+    """Whole-library check (catches a deleted lookup-table label or dropped stacked/trailing
+    labels): every ldi32/ldi/jal/qb* symbol operand must be a label or .set/.equ/.asg symbol
+    of the same expansion."""
     bad = node_json(WHOLE_LEDGER)
     # scheduler_block jumps into user task bodies it does not own (`jal task_N_start`);
     # those are external by design, nothing else may be.
@@ -218,7 +218,7 @@ def test_every_emitted_label_operand_is_defined_in_its_own_expansion():
 
 def test_undecidable_guards_are_visible_and_pinned():
     """A guard the shared evaluator cannot decide is reported, never silently pruned.
-    The pinned list is the honest residue: unbound register operands (R13 != 1 ...)."""
+    The pinned list is the remaining undecidable set: unbound register operands (R13 != 1 ...)."""
     got = node_json(r"""
 const e = require('./scripts/emit_all_blocks');
 const out = {};

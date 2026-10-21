@@ -1,5 +1,5 @@
 "use strict";
-// TODO: ENDAT UART framing, CRC, and collision echo handling remain incomplete. The block is metadata-only; no generated ELF behavior is claimed.
+// Scope: ENDAT UART framing, CRC, and collision echo handling are not complete. The block is metadata-only; no generated ELF behavior is claimed.
 // R31 event-generate byte (SPRUIM2J 6.4.5.2.2.2, Table 6-67, PDF p584): bit 5 = vec_valid strobe, bits 3:0 = channel 0..15,
 // channel n drives INTC system event 16+n. So byte = 0x20 | (event - 16); 0xxxxx (bit 5 clear) generates nothing.
 // The config stays a system event number (16..31); the encoding is applied here, once, in constant12.
@@ -13,7 +13,7 @@ function r31EventGenerateByte(systemEvent) {
 }
 
 const serialGatewayModule = {
-    // Read by build_block_docs.js for the test-report verdict line (the generic T5 sentence overstates this block).
+    // Test-status sentence for the generated block reference; the generic sentence would overstate this block.
     docVerdict: "Metadata, SysConfig generation, and `clpru` assembly pass for a minimal connected design. Protocol behavior is unverified.",
     displayName: "Industrial Serial Gateway",
     defaultInstanceName: "SERIAL_GATEWAY_",

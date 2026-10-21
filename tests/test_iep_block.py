@@ -1,10 +1,9 @@
 """iep_block and scheduler_block reach the IEP through c26 on TI pru-simulator.
 
-The simulator used to map c26 to shared RAM, so any IEP-using block talked to RAM and
-a self-written compare-status bit satisfied its wait. With c26 = IEP (TRM SPRUIM2J
-Table 6-65) the block runs against a real counter/compare model, which exposed two
-register-map defects, both fixed here against research/refs/icssg-iep-register-map.md
-(SPRUIM2J 14.3.6.1.25):
+A simulator constant table that maps c26 to shared RAM makes any IEP-using block talk to
+RAM, and a self-written compare-status bit satisfies its wait. With c26 = IEP (TRM SPRUIM2J
+Table 6-65) the block runs against a real counter/compare model. The IEP register map
+(SPRUIM2J 14.3.6.1.25) requires:
   * iep_block used the AM335x offsets CMP_CFG/CMP_STATUS/CMP0 = 0x40/0x44/0x48 (on the
     ICSSG those are IEP_CAPR4_REG0/REG1 and IEP_CAPR5_REG0) instead of 0x70/0x74/0x78,
     and its oneshot wrote CMP_CFG=0x01 (CMP0_RST_CNT_EN) rather than CMP_EN[0] = 0x02;

@@ -4,10 +4,9 @@ made a second driver of an SSI/BiSS-C encoder's clock pad an error. Every other 
 (EnDat CLOCK, sigma-delta CLK, SPI ADC SCLK/MOSI/CS, STEP/DIR/EN, WS2812 DATA, MDIO's MDC, BiSS Line MASTER) was unchecked:
 a Device Model endat on clock 0 with a second block clocking GPO0 was clean in SysConfig and CI and failed on the simulator.
 
-THE RULE (device_model_table.js DRIVER_BLOCKS, one explicit list; the matching rule per kind is stated there and in the
-report): per kind, per PRU-driven pad, the block modules that legitimately drive it. A `via` rule matches an INSTANCE to the
+THE RULE (device_model_table.js DRIVER_BLOCKS, one explicit list; the matching rule per kind is stated there): per kind, per PRU-driven pad, the block modules that legitimately drive it. A `via` rule matches an INSTANCE to the
 device by pin (EnDat: dataRxPin == the device's DATA pin; sigma-delta: the PDM block's dataPin; SPI CS: "CS Signal"; MDIO:
-mdioBit) - not by module, because round 2 showed a second instance of the reader module must still be foreign.
+mdioBit) - not by module, because a second instance of the reader module must still count as a foreign driver.
 A module wildcard is used only where the pad itself names the instance (WS2812, STEP/DIR) or the bus is shared by design (SPI
 SCLK/MOSI; the chip is selected by CS, which is matched exactly). BiSS Line has no block at all, so it is judged by count.
 
@@ -516,7 +515,7 @@ def test_gpi_device_sigma_delta_second_driver_is_an_error_in_sysconfig_and_in_ci
 
 
 # --------------------------------------------------------------------------------------------------------------------
-# round-2 follow-ups: S-A (two readers of one device) and F1 (the reader's own clock is on another pad)
+# two readers of one device, and the reader's own clock on another pad
 # --------------------------------------------------------------------------------------------------------------------
 TWO_READERS_FRAGMENTS = ["2 blocks (SSI_Encoder_Read, SSI_Second) read device 'Encoder_Model' (ssi, Device Model block)",
                          "Put a Delay longer than the encoder's recovery time between them"]

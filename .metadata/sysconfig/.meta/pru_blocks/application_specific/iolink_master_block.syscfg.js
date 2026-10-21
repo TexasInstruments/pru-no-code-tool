@@ -11,12 +11,13 @@
  * Frame format: UART 8N1 (8 data bits, no parity, 1 stop bit).
  * Half-duplex on C/Q line.
  *
- * Maturity: assembles (see feasibility doc for simulator gap analysis).
+ * The in-tool simulator does not model the ENDAT FIFO/TX/RX state machine, so
+ * the transaction itself is not simulated (blockMaturity below).
  */
 
 /**
  * Guarded .set definitions for the ICSS_CFG register symbols needed by the
- * ENDAT TX/RX wrapper.  Copied from uart_tx.syscfg.js / uart_rx.syscfg.js
+ * ENDAT TX/RX wrapper (the same guarded symbols as uart_config.syscfg.js),
  * so the .asm file assembles even without explicit icss_cfg_regs.inc.
  */
 function getIcssCfgDefinitions() {
@@ -89,7 +90,7 @@ var iolinkModule = {
     description: "IO-Link master PHY timing engine (IEC 61131-9).",
 
     longDescription: [
-        "IO-Link master PHY engine that orchestrates a complete master -> device",
+        "IO-Link master PHY engine that runs a complete master -> device",
         "transaction cycle on the C/Q half-duplex line.",
         "",
         "**Protocol flow per transaction:**",
@@ -113,10 +114,10 @@ var iolinkModule = {
         "**BOM:** Requires an external IO-Link transceiver (e.g. TI OL1013, MAX14819)",
         "to convert the PRU's 3.3V ENDAT UART to 24V C/Q levels.",
         "",
-        '**Maturity:** `assembles`. The ENDAT wrapper is accurately modelled on the',
-        'existing `uart_tx` / `uart_rx` blocks, but the headless simulator does NOT',
-        "model the internal ENDAT FIFO/TX/RX state machine. Simulator-tested upgrade",
-        "requires an ENDAT stub."
+        '**Status:** metadata only. The ENDAT programming follows the UART blocks',
+        '(`uart_config`, `uart_tx_op`, `uart_rx_op`), but the in-tool simulator does',
+        "NOT model the internal ENDAT FIFO/TX/RX state machine, so the transaction",
+        "is not simulated; only the R30 wake-up/DIR waveform is checked."
     ].join("\n"),
 
     uiView: "graph",

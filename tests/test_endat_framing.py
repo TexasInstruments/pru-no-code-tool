@@ -1,10 +1,10 @@
-"""EnDat decodes end to end - real clpru ELF against the cited model.
+"""EnDat decodes end to end - real clpru ELF against the pru-simulator EnDat model.
 
-The macro and the pru-simulator EnDat model were both rewritten to one framing,
-every point cited to HEIDENHAIN "EnDat 2.2" Technical Information ID 383942 and
-to TI's shipping EnDat driver (docs/endat-crc-provenance.md has the table).
+The macro and the pru-simulator EnDat model follow one framing, cited to
+HEIDENHAIN "EnDat 2.2" Technical Information ID 383942 and to TI's EnDat driver
+(endat_drv.c endat_make_crc_pos: CRC-5 x^5+x^3+x+1, preset 0x1F, MSB first).
 
-Evidence is the real clpru ELF on TI pru-simulator. EnDat is ported:false in the
+Checked with the real clpru ELF on TI pru-simulator. EnDat is ported:false in the
 SysConfig sim front door, so `gmake sim` cannot bind it; as in the block
 is generated from a one-block design with the real SysConfig CLI, built with
 clpru, and run closed-loop against pru-simulator's pru_io.endat_encoder through
@@ -121,9 +121,8 @@ def build(root, name, settings=""):
 
 
 class _DirectAdapter:
-    """Pre-simulators have no RS-485 transceiver: this is adapter (TX straight onto the model's DATA pin, its drive onto RX). Kept
-    only so this same file can be run against base sim 5822615 for the red
-    evidence; with a current simulator it is never used."""
+    """For a simulator without an RS-485 transceiver model: TX straight onto the model's DATA pin, its drive onto RX.
+    With a simulator that has the transceiver model it is not used."""
 
     def __init__(self, model):
         self.model = model
@@ -246,7 +245,7 @@ RED = {
     # start bit 0 instead of 1
     "start_bit_zero": lambda t: _swap(t, HUNT, HUNT.replace("qbbs", "qbbc")),
     # no start-bit hunt: take the first post-command clock as the start bit (the
-    # fixed-alignment assumption behind the pre- 3/4-bit RES offset)
+    # fixed-alignment variant with a 3/4-bit RES offset)
     "no_start_bit_hunt": lambda t: _swap(t, HUNT, "`    qba   m_endat_sbok?`,"),
     # never release the line after the mode command
     "de_held": lambda t: _swap(t, DE_OFF, DE_OFF.replace(

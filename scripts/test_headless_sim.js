@@ -1535,7 +1535,7 @@ function testEndat(){
             DATA_EN_PIN: String(cfg.dataEnPin)
         });
         // no 'halt': HALT pins pruState.cycles to the cap; running past the end
-        // leaves pruState.cycles at the true executed-cycle count (budget evidence)
+        // leaves pruState.cycles at the true executed-cycle count (for the cycle budget)
         return runSim(exp, 20000, endatR31Map(cfg, frameBits));
     }
 

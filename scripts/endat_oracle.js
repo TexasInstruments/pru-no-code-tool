@@ -1,12 +1,11 @@
 "use strict";
 // JS frame mirror for the EnDat 2.2 initiator.
-// A convenience for the JS-simulator harnesses (test_headless_sim.js,
-// measure_margin.js) - NOT evidence: the authority is pru-simulator's
-// pru_io/endat_encoder.py run against the real clpru ELF
-// (tests/test_endat_framing.py).
+// A convenience for the JS-simulator harness (test_headless_sim.js). The
+// reference check is TI pru-simulator's EnDat encoder model run against the
+// real clpru ELF (tests/test_endat_framing.py).
 //
-// Frame contract, cited in docs/endat-crc-provenance.md (HEIDENHAIN EnDat 2.2
-// Technical Information ID 383942 = H; TI MCU+ Motor Control SDK endat_drv.c = TI):
+// Frame contract (HEIDENHAIN EnDat 2.2 Technical Information ID 383942 = H;
+// TI MCU+ Motor Control SDK endat_drv.c = TI):
 //   Transmission order (first -> last):
 //     S              start bit, 1                          (H p.8; TRM start bit = 1)
 //     F1             error 1, active high                  (H p.8)

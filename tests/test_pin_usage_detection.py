@@ -1,11 +1,9 @@
 """block-module detection must look at declarations, not at a bare 'getPinUsage' substring.
 
 The pin-rule guards (test ZERO_CLAIM_AT_DEFAULTS via check_pin_collisions.js --defaults-report,
-test classifier coverage via block_control_flow.js) used to enrol any .syscfg.js whose text
-contained the token. round 1 put the word in a comment of the GUI validator
-(common/pru_blocks_static_module.syscfg.js) and both guards went red; round 2 reworded the comment and
-spelled the call as 'getPin' + 'Usage'. That workaround is reverted here: the static module now
-mentions and calls getPinUsage in plain text, and must still not be treated as a block.
+test classifier coverage via block_control_flow.js) must not enrol a .syscfg.js just because its
+text contains the token: the GUI validator (common/pru_blocks_static_module.syscfg.js) mentions and
+calls getPinUsage in plain text and must not be treated as a block.
 
 Two independent detectors, which must agree on the real library:
   * scripts/pin_usage_blocks.js  - loads the module; moduleStatic.getPinUsage is a function.

@@ -3,9 +3,9 @@
 The production path is: .syscfg design -> real SysConfig CLI -> pru_syscfg.asm
 -> clpru -> ELF -> TI pru-simulator.  The SSI block's macro takes 14 positional
 arguments, so SysConfig has to pass the block's config fields in the macro's
-order.  The first attempt got the COUNT right and the ORDER wrong
-(TOTAL_WIDTH bound to 0 -> a 256-iteration loop that never halts), and its test
-looked for the frame in ANY of 32 registers, so it could not tell.  This test:
+order.  The right COUNT in the wrong ORDER binds TOTAL_WIDTH to 0 (a 256-iteration
+loop that never halts), and a test that looks for the frame in ANY of 32 registers
+cannot tell.  This test:
 
   * reads the RES register out of the generated ``m_ssi_read`` call (never
     hard-coded), decodes ST/MT from that register and compares them with the
@@ -15,7 +15,7 @@ looked for the frame in ANY of 32 registers, so it could not tell.  This test:
   * carries red arms: two constants swapped in the generated call, and a model
     holding a different position, must each be reported as a decode mismatch.
 
-Evidence is the TI pru-simulator running the clpru-built ELF; the JS simulator
+Checked with the TI pru-simulator running the clpru-built ELF; the JS simulator
 is not used.
 """
 import os
@@ -85,8 +85,7 @@ CASES = {
                    parity_enable=False, error_bit_enable=False, gray_code=False,
                    min_half_period_cycles=4, mono_cycles=60),
         extras=0, faults=[]),
-    # Every field moved off its default, including clockPolarity (which the
-    # first attempt never passed) and both pins.
+    # Every field moved off its default, including clockPolarity and both pins.
     "all_fields_moved": dict(
         inst=dict(totalWidth=27, singleTurnBits=13, multiTurnBits=12, clkPin=3, dataPin=5,
                   clockPolarity=1, halfPeriodCycles=6, monoTimeCycles=70, parityEnable=True,
@@ -308,7 +307,7 @@ def test_red_arm_gray_decode_removed(tmp_path):
         "removing the Gray decode went undetected"
 
 
-# --- EnDat: the other block whose call this item repaired -----------------------------------
+# --- EnDat: the other block with a long positional macro call ------------------------------
 # Static only: the order of the generated call against the macro's parameter list, using a
 # DISTINCT value per field so any transposition shows.  No closed-loop EnDat decode is claimed.
 ENDAT_MACRO = ["MODE_CMD", "TOTAL_BITS", "ST_BITS", "MT_BITS", "CLK_PIN", "DATA_TX_PIN",
