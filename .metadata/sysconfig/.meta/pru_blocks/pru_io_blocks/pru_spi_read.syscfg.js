@@ -1488,7 +1488,7 @@ exports = {
         },
     },
 	getMacro,
-	// Kept private to this module's regression harness; production callers use getMacro.
+	// Exposed for this module's tests; production callers use getMacro.
 	_testInsertReadResultInitialization: insertReadResultInitialization
 }
 

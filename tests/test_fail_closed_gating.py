@@ -116,7 +116,7 @@ def test_validator_fail_closed_source_guards():
     fail-open as `catch (e) {
     available = true;
 }` passes them both while
-    the behavioural arms above correctly go red. Kept as cheap lint; the
+    the behavioural arms above fail. Kept as cheap lint; the
     check that the gate fails closed is the five run_validator arms.
     """
     src = (REPO_ROOT / ".metadata" / "sysconfig" / ".meta" / "pru_blocks" / "common"

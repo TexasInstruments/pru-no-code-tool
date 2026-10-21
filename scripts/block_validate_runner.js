@@ -22,7 +22,7 @@
  *   pru_blocks_static_module  (device-capability static module)
  *
  * instJson: JSON object for the block instance. Extra keys are ignored by
- *           validators that don't read them — keep red/control arms same-shape:
+ *           validators that don't read them — keep error-case/control arms same-shape:
  *           only the field under test should differ.
  *
  * Output (single-block mode): JSON {errors:[], warnings:[], infos:[]}
@@ -30,7 +30,7 @@
  *
  * Output (--sweep): JSON array of {block, file, hasValidate, errorCount, warningCount}
  * Output (--report): same as --sweep plus {validatorsFound, armedCount} summary
- *                   armed = blocks whose error paths have a committed red/control test
+ *                   armed = blocks whose error paths have a committed error-case/control test
  *                   pair (listed in ARMED_BLOCKS below)
  *
  * Exit code 0 on success, 2 on harness error.
@@ -240,7 +240,7 @@ function printSweep(asReport) {
         return;
     }
     // For --report we also emit armed summary based on committed test arms
-    // Blocks whose validator error paths have a committed red/control test pair,
+    // Blocks whose validator error paths have a committed error-case/control test pair,
     // mapped to the number of error paths those tests cover. Kept here so the
     // runner can report without importing Python; add a block when its
     // validator test pair is added.

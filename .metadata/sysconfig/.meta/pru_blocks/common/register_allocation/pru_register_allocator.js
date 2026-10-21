@@ -472,7 +472,7 @@ function outputRegisterNotations(entry) {
  * Register token a consumer reads for input <inputPort> wired to the source port named by `conn`.
  * Returns the source output port's own register; a missing/malformed port name or a port that owns no register is
  * recorded in unroutedConnections (so validation names the block and port) and yields a token that cannot assemble,
- * because substituting output1's register is the silent wrong-code defect this replaces.
+ * because silently substituting output1's register would assemble into wrong code.
  */
 function sourceRegisterToken(consumer, inputPort, conn) {
     const source = conn.inst;
