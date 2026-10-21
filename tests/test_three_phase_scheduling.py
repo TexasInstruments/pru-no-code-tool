@@ -36,6 +36,15 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "sim"))
 import elf_cosim  # noqa: E402
 
+# The macro programs the IEP through c26 and counts in IEP ticks = cycles, so every run maps c26 to the
+# simulator's IEP model, as on the device, and runs the IEP at the core clock.
+IEP_RUN = dict(constants=elf_cosim.IEP_CONSTANTS, lock_iep_to_core=True)
+
+def _require_iep_model():
+    if elf_cosim.simulator_iep_base() != 0x0002E000:
+        pytest.skip("pru-simulator checkout has no IEP0 model at 0x0002E000")
+
+
 W, X, X2, DF = 4, 5, 8, 12
 # class -> (W, X, D): poll iteration, counter sample to write, worst write-to-write when the edge
 # is due on arrival (a fresh read included). Instruction counts of the generated macro, 1 cycle
@@ -115,6 +124,7 @@ def classify(t, m, P, D, duties):
 
 
 def run(tmp_path, P, D, duties, count=None, steps=60000, repeats=None):
+    _require_iep_model()
     args = dict(STATE="R4", DUTY_A="R5", DUTY_B="R6", DUTY_C="R7", PERIOD=str(P), DEADTIME=str(D),
                 AH="0", AL="1", BH="2", BL="3", CH="4", CL="5", TRIGGER="6")
     call = "m_three_phase_pwm_period"
@@ -136,7 +146,7 @@ def run(tmp_path, P, D, duties, count=None, steps=60000, repeats=None):
         if ch:
             writes.append((sim.iep.count, frozenset((PINS[b], (gpo >> b) & 1) for b in range(7) if ch >> b & 1)))
         prev[0] = gpo
-    result = elf_cosim.run_elf_closed_loop(elf, Idle(), max_steps=steps, on_step=watch)
+    result = elf_cosim.run_elf_closed_loop(elf, Idle(), max_steps=steps, on_step=watch, **IEP_RUN)
     return result, writes
 
 
@@ -316,6 +326,7 @@ def test_back_to_back_single_calls_are_182_cycles_apart(tmp_path):
     spec = dict(block="three_phase_pwm_block", subdir="pru_io_blocks", macroCall="m_three_phase_pwm_period",
                 macroArgs=args, macroRepeats=2, postlude=["halt"],
                 prelude=["ldi32 R5, 100", "ldi32 R6, 200", "ldi32 R7, 300"])
+    _require_iep_model()
     elf, _ = elf_cosim.build_block_firmware(spec, "b2b182", str(tmp_path / "b2b182"))
     edges, prev = [], [0]
 
@@ -323,7 +334,7 @@ def test_back_to_back_single_calls_are_182_cycles_apart(tmp_path):
         if gpo != prev[0]:
             edges.append((cycle, gpo))
         prev[0] = gpo
-    result = elf_cosim.run_elf_closed_loop(elf, Idle(), max_steps=60000, on_step=watch)
+    result = elf_cosim.run_elf_closed_loop(elf, Idle(), max_steps=60000, on_step=watch, **IEP_RUN)
     assert result.halted
     all_off = [c for c, g in edges if g == 0]
     high_on = [c for c, g in edges if g & 1 and not prev_g_has_ah(edges, c)]
