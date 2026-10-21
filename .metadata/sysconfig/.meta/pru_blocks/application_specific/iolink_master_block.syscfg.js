@@ -166,21 +166,21 @@ var iolinkModule = {
         },
         {
             name: "txBytes",
-            displayName: "M-Sequence TX bytes",
+            displayName: "M-Sequence TX Bytes",
             description: "Number of data bytes to transmit in the master frame (1..16). Preamble byte is added automatically in OPERATE mode.",
             default: 4,
             displayFormat: "dec"
         },
         {
             name: "rxBytes",
-            displayName: "Response RX bytes",
+            displayName: "Response RX Bytes",
             description: "Number of data bytes expected in the device response (0..16). 0 = receive phase skipped.",
             default: 4,
             displayFormat: "dec"
         },
         {
             name: "frameSizeBits",
-            displayName: "Frame size (bits)",
+            displayName: "Frame Size (bits)",
             description: "Per-byte frame bits (start + 8 data + stop = 10 for IO-Link 8N1)",
             default: 10,
             readOnly: true,
@@ -188,7 +188,7 @@ var iolinkModule = {
         },
         {
             name: "bitPeriodNs",
-            displayName: "Bit period (ns)",
+            displayName: "Bit Period (ns)",
             description: "Calculated bit period from the selected COM rate",
             default: 4340,
             readOnly: true,
@@ -196,13 +196,13 @@ var iolinkModule = {
         },
         {
             name: "dirPin",
-            displayName: "DIR Pin (R30 bit)",
+            displayName: "DIR Pin (R30 Bit)",
             description: "R30 GPIO bit to control transceiver direction (0=RX, 1=TX)",
             default: 2
         },
         {
             name: "wakePin",
-            displayName: "Wake Pin (R30 bit)",
+            displayName: "Wake Pin (R30 Bit)",
             description: "R30 GPIO bit for wake-up pulse drive (driven low for >=80 us)",
             default: 3
         },
@@ -219,19 +219,19 @@ var iolinkModule = {
         },
         {
             name: "wakeLoops",
-            displayName: "Wake-up delay loops",
+            displayName: "Wake-up Delay Loops",
             description: "Number of delay-loop iterations for the wake-up pulse (minimum >=80 us). Each loop ~5 cycles @ 200 MHz = 25 ns.",
             default: 6400
         },
         {
             name: "turnaroundBitPeriods",
-            displayName: "Turnaround (bit periods)",
+            displayName: "Turnaround (Bit Periods)",
             description: "Number of bit periods to wait between TX and RX for bus turnaround (minimum 4 per IO-Link spec)",
             default: 5
         },
         {
             name: "mSeqPreambleBytes",
-            displayName: "M-Seq preamble bytes",
+            displayName: "M-Seq Preamble Bytes",
             description: "Number of preamble bytes to prefix before the M-sequence payload (1 = PREOPPER, 0 = OPERATE with no preamble)",
             default: 0,
             hidden: false

@@ -40,7 +40,7 @@ const ipcSharedMemModule = {
          * also why the default is the SAFE-TO-UNDERSTATE direction: false
          * means "I claim only this core writes it".
          */
-        { name: "crossCoreWriters", displayName: "Also written by another core", default: false,
+        { name: "crossCoreWriters", displayName: "Also Written by Another Core", default: false,
           description: "Set when another PRU core (or the host) also writes this region; such a write needs an XFR2SPIN lock.",
           longDescription: "Assert when a different PRU core (or the host) also WRITES this region. " +
                        "A cross-core write with no XFR2SPIN lock around it is a build error: the " +
