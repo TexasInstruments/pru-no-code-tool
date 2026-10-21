@@ -102,11 +102,11 @@ within/beyond window, boundary cases).
             options: [{name:"metadata-only"},{name:"assembles"},{name:"simulator-tested"},{name:"dual-oracle-tested"},{name:"hardware-validated"}],
             hidden: true
         },
-        { name: "chAPin", displayName: "Channel A R31 pin", default: "0", options: GPIO_SIGNALS },
-        { name: "chBPin", displayName: "Channel B R31 pin", default: "1", options: GPIO_SIGNALS },
-        { name: "discrepancyCycles", displayName: "Discrepancy window (PRU cycles)", default: 500 },
-        { name: "ossdMaxCycles", displayName: "OSSD max pulse width (PRU cycles)", default: 400 },
-        { name: "statusRegister", displayName: "Status output register", default: "R4" },
+        { name: "chAPin", displayName: "Channel A R31 Pin", default: "0", options: GPIO_SIGNALS },
+        { name: "chBPin", displayName: "Channel B R31 Pin", default: "1", options: GPIO_SIGNALS },
+        { name: "discrepancyCycles", displayName: "Discrepancy Window (PRU Cycles)", default: 500 },
+        { name: "ossdMaxCycles", displayName: "OSSD Max Pulse Width (PRU Cycles)", default: 400 },
+        { name: "statusRegister", displayName: "Status Output Register", default: "R4" },
 
         { name: "opCode", default: "m_safety_dual_monitor", hidden: true },
         { name: "numOfInputPorts", default: 0, hidden: true },

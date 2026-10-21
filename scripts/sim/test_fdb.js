@@ -137,7 +137,7 @@ assert.strictEqual(r.errs.length, 0, "read byteCount 1 must be clean");
 
 // externalInitProvided not asserted red
 r = validateErrors({operation:"set_address", fdbAddress:10, r10TransferSize:2, externalInitProvided:false});
-assert.ok(r.errs.some(e=>/Acknowledged: External Initialization Required/.test(e)), "externalInitProvided=false must be refused");
+assert.ok(r.errs.some(e=>/External Initialization Acknowledged/.test(e)), "externalInitProvided=false must be refused");
 r = validateErrors({operation:"set_address", fdbAddress:10, r10TransferSize:2, externalInitProvided:true});
 assert.strictEqual(r.errs.length, 0, "externalInitProvided=true must be clean");
 

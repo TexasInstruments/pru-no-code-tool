@@ -46,25 +46,25 @@ const xfr2psiModule = {
 
         // Shared-pair selection — TRM 6-60: 0x58/0x59 reachable from RTU_PRU only, needs MII_G_RT_ICSS_G_CFG[9]
         { name: "useSharedPair", displayName: "Use Shared Pair (0x58/0x59)", default: false, description: "Broadside IDs 0x58/0x59 — reachable from RTU_PRU ONLY and only when RTU_PRU_PSI_SHARE_EN is set. Silent no-op otherwise." },
-        { name: "rtuPruPsiShareEn", displayName: "RTU_PRU_PSI_SHARE_EN (MII_G_RT_ICSS_G_CFG[9])", default: false, description: "Must be true when useSharedPair is selected; otherwise the access is a silent no-op." },
+        { name: "rtuPruPsiShareEn", displayName: "RTU_PRU_PSI_SHARE_EN", default: false, description: "MII_G_RT_ICSS_G_CFG[9]. Must be true when useSharedPair is selected; otherwise the access is a silent no-op." },
 
         // Table 6-109 sideband header — NAMED booleans + named data_type, not raw hex
-        { name: "txSop", displayName: "tx_sop (start of packet)", default: false },
-        { name: "txEop", displayName: "tx_eop (end of packet)", default: false },
-        { name: "txSol", displayName: "tx_sol (start of line)", default: false },
-        { name: "txEol", displayName: "tx_eol (end of line)", default: false },
-        { name: "txLastw", displayName: "tx_lastw (no more data for this data_type)", default: false },
-        { name: "txDrop", displayName: "tx_drop", default: false },
+        { name: "txSop", displayName: "TX_SOP (Start of Packet)", default: false },
+        { name: "txEop", displayName: "TX_EOP (End of Packet)", default: false },
+        { name: "txSol", displayName: "TX_SOL (Start of Line)", default: false },
+        { name: "txEol", displayName: "TX_EOL (End of Line)", default: false },
+        { name: "txLastw", displayName: "TX_LASTW", description: "No more data for this data_type.", default: false },
+        { name: "txDrop", displayName: "TX_DROP", default: false },
         { name: "txPktError", displayName: "tx_pkt_error[3:0]", default: 0, description: "4-bit packet error field (bits 11:8)" },
         { name: "txDataType", displayName: "tx_data_type[7:0]", default: 0, description: "8-bit data type field (bits 23:16)" },
 
         // Data path geometry — TRM 6.4.6.3.2.1.4.1 byte enables must be contiguous
         { name: "dataWidth", displayName: "PSI-L Data Width (bits)", default: 64, options: [{ name: 64, displayName: "64" }, { name: 128, displayName: "128" }, { name: 256, displayName: "256" }] },
-        { name: "xinByteEnableMask", displayName: "XIN Byte Enable Mask (hex, e.g., 0xFF)", default: "0xFF", description: "XIN byte enables — MUST be contiguous. Non-contiguous masks are a build error; XFRDMA does not account for gaps." },
+        { name: "xinByteEnableMask", displayName: "XIN Byte Enable Mask (Hex)", default: "0xFF", description: "XIN byte enables — MUST be contiguous. Non-contiguous masks are a build error; XFRDMA does not account for gaps." },
 
         // Fault model — SPRUIM2J 6.4.6.3.2.3.1
-        { name: "checkReady", displayName: "Emit tx_ready/rx_ready check (XID 0) before transfer", default: true, description: "When false, the generator must declare the stall in the cycle model (noOfCycles=-1). An XOUT to a full FIFO STALLS; an XIN from empty returns zeros with rx_bytes=0." },
-        { name: "consumeRxBytes", displayName: "Consume rx_bytes / rx_xcnt in receive path", default: true, description: "Receive path must consume rx_bytes/rx_xcnt; zero-filled XIN with rx_bytes=0 is not a real packet." },
+        { name: "checkReady", displayName: "Check TX/RX Ready (XID 0)", default: true, description: "When false, the generator must declare the stall in the cycle model (noOfCycles=-1). An XOUT to a full FIFO STALLS; an XIN from empty returns zeros with rx_bytes=0." },
+        { name: "consumeRxBytes", displayName: "Consume RX_BYTES/RX_XCNT", default: true, description: "Receive path must consume rx_bytes/rx_xcnt; zero-filled XIN with rx_bytes=0 is not a real packet." },
 
         { name: "blockMaturity", displayName: "Block Maturity", default: "metadata-only", options: [{ name: "metadata-only" }, { name: "assembles" }, { name: "simulator-tested" }, { name: "dual-oracle-tested" }, { name: "hardware-validated" }], hidden: true },
 

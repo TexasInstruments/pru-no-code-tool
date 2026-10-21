@@ -219,13 +219,13 @@ const stitchFifoModule = {
         { name: "$topLabel", hidden: true, default: "" },
         { name: "blockMaturity", displayName: "Block Maturity", default: "assembles", hidden: true,
           options: [{name: "metadata-only"}, {name: "assembles"}, {name: "simulator-tested"}, {name: "dual-oracle-tested"}, {name: "hardware-validated"}] },
-        { name: "operation", displayName: "Stitch FIFO operation", default: "push", options: [
+        { name: "operation", displayName: "Stitch FIFO Operation", default: "push", options: [
             { name: "push", displayName: "push - XOUT fragment into FIFO (1-4 bytes)" },
             { name: "pop", displayName: "pop - XIN 32-byte aligned window back" },
             { name: "rewind", displayName: "rewind - back wr_ptr off by 4 bytes" },
             { name: "reset", displayName: "reset - clear rd_ptr and wr_ptr" }
         ] },
-        { name: "byteCount", displayName: "Push byte count (1-4)", default: 4,
+        { name: "byteCount", displayName: "Push Byte Count (1-4)", default: 4,
           description: "Only used when operation = push. Bytes of INPUT (LSB-justified) sent to the FIFO." },
         { name: "opCode", hidden: true, default: "m_stitch_push", getValue: opCode },
         { name: "numOfInputPorts", hidden: true, default: 1 },
@@ -238,7 +238,7 @@ const stitchFifoModule = {
         // pop clobbers the full R2:R9 window (XIN always fills all 8
         // registers); rewind/reset clobber R10.
         { name: "registerClobbers", hidden: true, default: "[]", getValue: (inst) => JSON.stringify(modeInfo(inst).clobbers) },
-        { name: "noOfCycles", displayName: "Peak cycles", default: 3, readOnly: true, getValue: cycleCount }
+        { name: "noOfCycles", displayName: "Peak Cycles", default: 3, readOnly: true, getValue: cycleCount }
     ],
 
     ports: function() {

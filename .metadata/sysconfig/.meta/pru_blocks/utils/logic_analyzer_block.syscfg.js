@@ -74,9 +74,9 @@ exports = {
     config: [
         { name: "$shape", hidden: true, default: "square" },
         { name: "sampleRateHz", displayName: "Sample Rate (Hz)", default: 10000000 },
-        { name: "clkHz", displayName: "PRU clock (Hz)", default: 200000000 },
+        { name: "clkHz", displayName: "PRU Clock (Hz)", default: 200000000 },
         { name: "bufferSize", displayName: "Buffer Size (samples)", default: 1024 },
-        { name: "triggerPin", displayName: "Trigger R31 pin", default: 0 },
+        { name: "triggerPin", displayName: "Trigger R31 Pin", default: 0 },
         { name: "triggerSlope", displayName: "Trigger Slope", default: "rising", options: [
             {name: "none"}, {name: "rising"}, {name: "falling"}
         ]},

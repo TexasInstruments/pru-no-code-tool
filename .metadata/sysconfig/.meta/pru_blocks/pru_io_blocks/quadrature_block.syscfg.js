@@ -31,12 +31,12 @@ const quadratureModule = {
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
 
-        { name: "aBit", displayName: "A input R31 pin", default: "0", options: GPIO_SIGNALS },
-        { name: "bBit", displayName: "B input R31 pin", default: "1", options: GPIO_SIGNALS },
-        { name: "zBit", displayName: "Z input R31 pin", default: "2", options: GPIO_SIGNALS },
-        { name: "useIndex", displayName: "Use Z index", default: false },
-        { name: "sampleCycles", displayName: "Sample delay trips", default: 10 },
-        { name: "countMode", displayName: "Count mode", default: "x4", options: [{name: "x1"}, {name: "x2"}, {name: "x4"}] },
+        { name: "aBit", displayName: "A Input R31 Pin", default: "0", options: GPIO_SIGNALS },
+        { name: "bBit", displayName: "B Input R31 Pin", default: "1", options: GPIO_SIGNALS },
+        { name: "zBit", displayName: "Z Input R31 Pin", default: "2", options: GPIO_SIGNALS },
+        { name: "useIndex", displayName: "Use Z Index", default: false },
+        { name: "sampleCycles", displayName: "Sample Delay Trips", default: 10 },
+        { name: "countMode", displayName: "Count Mode", default: "x4", options: [{name: "x1"}, {name: "x2"}, {name: "x4"}] },
 
         { name: "posRegister", displayName: "Position Register (32-bit)", default: "R4" },
         { name: "edgeRegister", displayName: "Edge Count Register (32-bit)", default: "R5" },

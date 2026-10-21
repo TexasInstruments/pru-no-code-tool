@@ -263,7 +263,7 @@ const xfr2spinModule = {
         // The region this lock protects. Matched by validateXfr2spinGlobal against the
         // variable name of a block that declares a cross-core write, so that "is this
         // buffer locked" is answerable at build time.
-        { name: "protectsVariable", displayName: "Protects shared variable", default: "",
+        { name: "protectsVariable", displayName: "Protects Shared Variable", default: "",
           description: "Name of the shared variable this lock guards (the variable a cross-core writing block stores to). Required to protect a cross-core region." },
 
         { name: "opCode", hidden: true, default: "m_xfr2spin_acquire", getValue: opCode },
@@ -275,7 +275,7 @@ const xfr2spinModule = {
         // `m_xfr2spin_release <constants>` with no output register operand.
         { name: "outputReg", hidden: true, default: "", getValue: (inst) => (hasOutput(inst) ? "" : "None") },
         { name: "constant1", hidden: true, default: 0, getValue: (inst) => Number(inst.lockId) },
-        { name: "noOfCycles", displayName: "Peak cycles", default: -1, readOnly: true, getValue: cycleCount }
+        { name: "noOfCycles", displayName: "Peak Cycles", default: -1, readOnly: true, getValue: cycleCount }
     ],
 
     ports: function (inst) {

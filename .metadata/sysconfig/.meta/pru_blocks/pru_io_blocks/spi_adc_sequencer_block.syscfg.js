@@ -53,11 +53,11 @@ const spiAdcSequencerModule = {
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
 
-        { name: "bits_per_frame", displayName: "Bits per frame", default: 16 },
+        { name: "bits_per_frame", displayName: "Bits Per Frame", default: 16 },
         { name: "spi_mode", displayName: "SPI Mode", default: "MODE0", options: [{name: "MODE0"}] },
         { name: "t_conv", displayName: "Conversion Time (cycles)", default: 200 },
-        { name: "sample_period", displayName: "Sample Period / Grid (cycles)", default: 5000 },
-        { name: "channel_sequence", displayName: "Channel Sequence (CSV of MOSI words)", default: "0xA500" },
+        { name: "sample_period", displayName: "Sample Period/Grid (cycles)", default: 5000 },
+        { name: "channel_sequence", displayName: "Channel Sequence (CSV of MOSI Words)", default: "0xA500" },
 
         { name: "cs_pin", displayName: "CS Signal (R30)", default: "3", options: GPIO_SIGNALS },
         { name: "sclk_pin", displayName: "SCLK Signal (R30)", default: "0", options: GPIO_SIGNALS },
@@ -89,6 +89,7 @@ const spiAdcSequencerModule = {
         ...Array.from({length: 25}, (_, n) => ({ name: `output${n + 1}Size`, hidden: true, default: 4 })),
         {
             name: "numOfConstants",
+            hidden: true,
             getValue: (inst) => {
                 let seq = inst.channel_sequence.split(",").map(x => x.trim()).filter(x => x !== "");
                 return 7 + seq.length; // six fixed values, one command per channel, then PAD_CYCLES

@@ -31,11 +31,11 @@ const i3cModule = {
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
 
-        { name: "sclBit", displayName: "SCL R30/R31 bit", default: "0", options: GPIO_SIGNALS },
-        { name: "sdaBit", displayName: "SDA R30/R31 bit", default: "1", options: GPIO_SIGNALS },
+        { name: "sclBit", displayName: "SCL R30/R31 Bit", default: "0", options: GPIO_SIGNALS },
+        { name: "sdaBit", displayName: "SDA R30/R31 Bit", default: "1", options: GPIO_SIGNALS },
         { name: "targetDa", displayName: "Assigned Dynamic Address", default: "0x08" },
-        { name: "pidRegister", displayName: "PID Output Register (Upper 32 bits)", default: "R7" },
-        { name: "clkHz", displayName: "PRU clock (Hz)", default: 200000000 },
+        { name: "pidRegister", displayName: "PID Output Register (Upper 32 Bits)", default: "R7" },
+        { name: "clkHz", displayName: "PRU Clock (Hz)", default: 200000000 },
 
         { name: "blockMaturity", displayName: "Block Maturity", default: "assembles", options: [{name: "metadata-only"}, {name: "assembles"}, {name: "simulator-tested"}, {name: "dual-oracle-tested"}, {name: "hardware-validated"}], hidden: true },
 

@@ -77,11 +77,11 @@ const manchesterModule = {
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
 
-        { name: "signalPin", displayName: "Signal R30 pin", default: "13", options: GPIO_SIGNALS },
-        { name: "dataRegister", displayName: "Byte to encode (Reg)", default: "R5.b0" },
-        { name: "bitRateHz", displayName: "Bit rate (Hz)", default: 1000000 },
-        { name: "convention", displayName: "Encoding convention", default: "ieee", options: CONVENTIONS },
-        { name: "clkHz", displayName: "PRU clock (Hz)", default: 200000000 },
+        { name: "signalPin", displayName: "Signal R30 Pin", default: "13", options: GPIO_SIGNALS },
+        { name: "dataRegister", displayName: "Byte to Encode (Reg)", default: "R5.b0" },
+        { name: "bitRateHz", displayName: "Bit Rate (Hz)", default: 1000000 },
+        { name: "convention", displayName: "Encoding Convention", default: "ieee", options: CONVENTIONS },
+        { name: "clkHz", displayName: "PRU Clock (Hz)", default: 200000000 },
 
         { name: "opCode", default: "m_manchester_run", hidden: true },
         { name: "numOfInputPorts", default: 0, hidden: true },

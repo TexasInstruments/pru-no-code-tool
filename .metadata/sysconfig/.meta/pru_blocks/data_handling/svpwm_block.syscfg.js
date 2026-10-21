@@ -5,11 +5,11 @@ const svpwmModule={
  uiView:"graph",
  config:[{name:"$shape",hidden:true,default:"square"},{name:"$topLabel",hidden:true,default:""},
   {name:"blockMaturity",hidden:true,default:"metadata-only",options:[{name:"metadata-only"},{name:"assembles"},{name:"simulator-tested"},{name:"dual-oracle-tested"},{name:"hardware-validated"}]},
-  {name:"periodCounts",displayName:"PWM period counts",default:1000},{name:"deadtimeCounts",displayName:"Dead-time margin counts",default:10},
+  {name:"periodCounts",displayName:"PWM Period Counts",default:1000},{name:"deadtimeCounts",displayName:"Dead-time Margin Counts",default:10},
   {name:"opCode",hidden:true,default:"m_svpwm_duty"},{name:"numOfInputPorts",hidden:true,default:2},{name:"input1Size",hidden:true,default:4},{name:"input2Size",hidden:true,default:4},
   {name:"numOfOutputPorts",hidden:true,default:5},{name:"multiOutputMacroArgs",hidden:true,default:true},{name:"output1Size",hidden:true,default:4},{name:"output2Size",hidden:true,default:4},{name:"output3Size",hidden:true,default:4},{name:"output4Size",hidden:true,default:4},{name:"output5Size",hidden:true,default:4},
   {name:"numOfConstants",hidden:true,default:2},{name:"constant1",hidden:true,default:1000,getValue:i=>i.periodCounts},{name:"constant2",hidden:true,default:10,getValue:i=>i.deadtimeCounts},
-  {name:"noOfCycles",displayName:"Conservative instruction bound",default:180,getValue:()=>180}],
+  {name:"noOfCycles",displayName:"Conservative Instruction Bound",default:180,getValue:()=>180}],
  ports:()=>[{name:"input1",type:"input32"},{name:"input2",type:"input32"},{name:"output1",type:"output32"},{name:"output2",type:"output32"},{name:"output3",type:"output32"},{name:"output4",type:"output32"},{name:"output5",type:"output32"},{name:"prev",type:"IO_PREV"},{name:"next",type:"IO_NEXT"}],
  validate(i,v){if(i.periodCounts<32||i.periodCounts>65535)v.logError("periodCounts must be 32..65535",i,"periodCounts");if(i.deadtimeCounts<0||2*i.deadtimeCounts>=i.periodCounts)v.logError("deadtimeCounts must be non-negative and less than half the period",i,"deadtimeCounts");},
  getMacro(_call,opCode){opCode=opCode||"m_svpwm_duty";return [

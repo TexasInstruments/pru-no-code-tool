@@ -42,7 +42,7 @@ const captureModule = {
         { name: "triggerSource", displayName: "Trigger Source", default: "iep", options: [{name:"iep"}, {name:"gpio"}, {name:"internal"}] },
         { name: "pin", displayName: "Target Pin (R31)", default: "5", options: GPIO_SIGNALS },
         { name: "dataRegister", displayName: "Output Register (32-bit)", default: "R4" },
-        { name: "clkHz", displayName: "PRU/IEP clock (Hz)", default: 200000000 },
+        { name: "clkHz", displayName: "PRU/IEP Clock (Hz)", default: 200000000 },
 
         { name: "opCode", default: "m_capture_run", hidden: true },
         { name: "numOfInputPorts", default: 0, hidden: true },

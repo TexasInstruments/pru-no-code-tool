@@ -134,12 +134,12 @@ function axisConfig(a) {
         { name: "stepPin" + S,    displayName: `Axis ${S} - Step Pin (GPO)`,     default: defs[0], options: GPIO_SIGNALS },
         { name: "dirPin" + S,     displayName: `Axis ${S} - Dir Pin (GPO)`,      default: defs[1], options: GPIO_SIGNALS },
         { name: "enablePin" + S,  displayName: `Axis ${S} - Enable Pin (GPO)`,   default: defs[2], options: GPIO_SIGNALS },
-        { name: "homeSwPin" + S,  displayName: `Axis ${S} - Home Switch (GPI, reserved - not used by the macro)`,  default: defs[0], options: GPIO_SIGNALS },
-        { name: "limitPPin" + S,  displayName: `Axis ${S} - Limit+ (GPI, reserved - not used by the macro)`,       default: defs[1], options: GPIO_SIGNALS },
-        { name: "limitNPin" + S,  displayName: `Axis ${S} - Limit- (GPI, reserved - not used by the macro)`,       default: defs[2], options: GPIO_SIGNALS },
+        { name: "homeSwPin" + S,  displayName: `Axis ${S} - Home Switch (Reserved)`, description: "GPI. Reserved: not used by the macro.",  default: defs[0], options: GPIO_SIGNALS },
+        { name: "limitPPin" + S,  displayName: `Axis ${S} - Limit+ (Reserved)`, description: "GPI. Reserved: not used by the macro.",       default: defs[1], options: GPIO_SIGNALS },
+        { name: "limitNPin" + S,  displayName: `Axis ${S} - Limit- (Reserved)`, description: "GPI. Reserved: not used by the macro.",       default: defs[2], options: GPIO_SIGNALS },
         { name: "targetSteps" + S,displayName: `Axis ${S} - Target Steps`,       default: 1000 },
-        { name: "maxSpeedSps" + S,displayName: `Axis ${S} - Speed (steps/s, constant)`, default: 1000 },
-        { name: "accel" + S,      displayName: `Axis ${S} - Acceleration (steps/s^2, reserved - ignored, no ramp)`, default: 5000 },
+        { name: "maxSpeedSps" + S,displayName: `Axis ${S} - Speed (Steps/s)`, description: "Constant step rate in steps per second.", default: 1000 },
+        { name: "accel" + S,      displayName: `Axis ${S} - Acceleration (Reserved)`, description: "Steps/s^2. Reserved: ignored, the macro does not ramp.", default: 5000 },
         { name: "initDir" + S,    displayName: `Axis ${S} - Initial Direction`,  default: "1",
           options: [{name: "0", displayName: "Reverse"}, {name: "1", displayName: "Forward"}] },
     ];
@@ -185,11 +185,11 @@ const multiAxisMotionModule = {
         ...axisConfig(3),
 
         /* --- Global --- */
-        { name: "eStopPin",    displayName: "E-Stop Input (GPI, active high)", default: "15", options: GPIO_SIGNALS },
+        { name: "eStopPin",    displayName: "E-Stop Input (GPI, Active High)", default: "15", options: GPIO_SIGNALS },
         { name: "syncEnable",  displayName: "Synchronized Start",          default: true },
-        { name: "clkHz",       displayName: "PRU clock (Hz)",              default: 200000000 },
-        { name: "dmemBase",    displayName: "DMEM state table base (hex, reserved - not used by the macro)", default: "0x0100" },
-        { name: "pulseWidthCycles", displayName: "Step pulse width (PRU cycles)", default: 10 },
+        { name: "clkHz",       displayName: "PRU Clock (Hz)",              default: 200000000 },
+        { name: "dmemBase",    displayName: "DMEM State Table Base (Hex)", description: "Reserved: not used by the macro.", default: "0x0100" },
+        { name: "pulseWidthCycles", displayName: "Step Pulse Width (PRU Cycles)", default: 10 },
 
         /* --- Hidden generated constants --- */
         { name: "opCode", default: "m_multi_axis_motion_run", hidden: true },

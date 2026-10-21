@@ -142,7 +142,7 @@ const bswapModule = {
         { name: "$topLabel", hidden: true, default: "" },
         { name: "blockMaturity", displayName: "Block Maturity", default: "assembles", hidden: true,
           options: [{name: "metadata-only"}, {name: "assembles"}, {name: "simulator-tested"}, {name: "dual-oracle-tested"}, {name: "hardware-validated"}] },
-        { name: "mode", displayName: "BSWAP function", default: "word_swap", options: [
+        { name: "mode", displayName: "BSWAP Function", default: "word_swap", options: [
             { name: "word_swap", displayName: "0xA0 byte order swap (in place, any register)" },
             { name: "swap_4_8", displayName: "0xA1 4_8 (R2-R5 <-> R6-R9)" },
             { name: "swap_4_16", displayName: "0xA2 4_16 (R2-R5 <-> R14-R17, R6-R9 <-> R10-R13)" }
@@ -156,7 +156,7 @@ const bswapModule = {
         // that mode has no fixed window, so declaring one would reserve
         // registers the hardware does not require.
         { name: "registerClobbers", hidden: true, default: "[]", getValue: (inst) => JSON.stringify(modeInfo(inst).clobbers) },
-        { name: "noOfCycles", displayName: "Peak cycles", default: 2, readOnly: true, getValue: cycleCount }
+        { name: "noOfCycles", displayName: "Peak Cycles", default: 2, readOnly: true, getValue: cycleCount }
     ],
 
     ports: function() {

@@ -51,9 +51,9 @@ exports = {
         { name: "mode", displayName: "Mode", default: "wait", options: [
             {name: "wait"}, {name: "signal"}, {name: "waitThenSignal"}
         ]},
-        { name: "inputEventBit", displayName: "Input event R31 bit", default: 30 },
-        { name: "outputEvent", displayName: "Output system event", default: 16 },
-        { name: "clearAfterWait", displayName: "Clear event after wait", default: true },
+        { name: "inputEventBit", displayName: "Input Event R31 Bit", default: 30 },
+        { name: "outputEvent", displayName: "Output System Event", default: 16 },
+        { name: "clearAfterWait", displayName: "Clear Event After Wait", default: true },
 
         { name: "constant1", hidden: true, default: "0", getValue: (inst) => {
             if (inst.mode === "wait") return "0";

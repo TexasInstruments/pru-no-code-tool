@@ -32,12 +32,12 @@ const sentModule = {
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
 
-        { name: "signalPin", displayName: "Signal R30 pin", default: "10", options: GPIO_SIGNALS },
+        { name: "signalPin", displayName: "Signal R30 Pin", default: "10", options: GPIO_SIGNALS },
         { name: "dataRegister", displayName: "Data Register (32-bit)", default: "R5" },
-        { name: "tickUs", displayName: "Tick / UT (us)", default: 3 },
-        { name: "numDataNibbles", displayName: "Data nibbles", default: 6 },
-        { name: "lowTicks", displayName: "Low-pulse ticks", default: 5 },
-        { name: "clkHz", displayName: "PRU clock (Hz)", default: 200000000 },
+        { name: "tickUs", displayName: "Tick/UT (us)", default: 3 },
+        { name: "numDataNibbles", displayName: "Data Nibbles", default: 6 },
+        { name: "lowTicks", displayName: "Low-pulse Ticks", default: 5 },
+        { name: "clkHz", displayName: "PRU Clock (Hz)", default: 200000000 },
 
         { name: "opCode", default: "m_sent_tx", hidden: true },
         { name: "numOfInputPorts", default: 0, hidden: true },

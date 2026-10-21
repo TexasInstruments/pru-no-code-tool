@@ -104,7 +104,7 @@ const queueEmptyModule = {
         { name: "output1Size", hidden: true, default: 4 },
         { name: "numOfConstants", hidden: true, default: 0 },
         { name: "registerClobbers", hidden: true, default: "[]", getValue: () => "[]" },
-        { name: "noOfCycles", displayName: "Peak cycles", default: 1, readOnly: true, getValue: cycleCount }
+        { name: "noOfCycles", displayName: "Peak Cycles", default: 1, readOnly: true, getValue: cycleCount }
     ],
 
     ports: (inst) => [

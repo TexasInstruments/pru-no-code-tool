@@ -28,12 +28,12 @@ const mailboxModule = {
         { name: "$topLabel", hidden: true, default: "" },
 
         { name: "mode", displayName: "Mode", default: "publish", options: [{name:"publish"}, {name:"consume"}] },
-        { name: "baseOffset", displayName: "Mailbox base offset", default: "0x0000" },
-        { name: "slots", displayName: "Ring slots", default: 16 },
-        { name: "slotBytes", displayName: "Bytes per slot", default: 4, options: [{name:4}, {name:8}, {name:16}, {name:32}] },
-        { name: "memory", displayName: "Memory window", default: "dmem0", options: [{name:"dmem0"}, {name:"shared"}] },
-        { name: "signalEvent", displayName: "Signal host event", default: false },
-        { name: "hostEvent", displayName: "Host system event", default: 16 },
+        { name: "baseOffset", displayName: "Mailbox Base Offset", default: "0x0000" },
+        { name: "slots", displayName: "Ring Slots", default: 16 },
+        { name: "slotBytes", displayName: "Bytes Per Slot", default: 4, options: [{name:4}, {name:8}, {name:16}, {name:32}] },
+        { name: "memory", displayName: "Memory Window", default: "dmem0", options: [{name:"dmem0"}, {name:"shared"}] },
+        { name: "signalEvent", displayName: "Signal Host Event", default: false },
+        { name: "hostEvent", displayName: "Host System Event", default: 16 },
         { name: "dataRegister", displayName: "Value Register", default: "R10" },
 
         // The allocator passes an output wider than 4 bytes as two tokens (first register, second register),

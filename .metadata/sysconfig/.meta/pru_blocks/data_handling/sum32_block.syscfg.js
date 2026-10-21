@@ -164,7 +164,7 @@ const sum32Module = {
             { name: "accumulate", displayName: "Accumulate (LBBO DMEM block, XOUT R2-R9 to SUM32)" },
             { name: "read_and_clear", displayName: "Read and Clear (XIN sum, self-clears)" }
         ] },
-        { name: "bsRamSnoop", displayName: "BS RAM + SUM32 snoop (also writes BS RAM)", default: false,
+        { name: "bsRamSnoop", displayName: "BS RAM & SUM32 Snoop", default: false,
           description: "Only meaningful for the accumulate operation. Uses device 49/38 instead of " +
               "47/39, which ALSO writes the 32-byte block to Broadside (BS) RAM as a side effect " +
               "(TRM 6.4.6.2.5)." },
@@ -183,7 +183,7 @@ const sum32Module = {
         { name: "outputReg", hidden: true, default: "",
           getValue: (inst) => inst.operation === "accumulate" ? "None" : "" },
 
-        { name: "noOfCycles", displayName: "Peak cycles", default: 12, readOnly: true, getValue: cycleCount }
+        { name: "noOfCycles", displayName: "Peak Cycles", default: 12, readOnly: true, getValue: cycleCount }
     ],
 
     ports: (inst) => {

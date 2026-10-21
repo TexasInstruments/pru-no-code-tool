@@ -75,9 +75,9 @@ exports = {
         { name: "func", displayName: "Sub-function", default: "periodic", options: [
             {name: "periodic"}, {name: "oneshot"}, {name: "capture"}
         ]},
-        { name: "clkHz", displayName: "IEP clock (Hz)", default: 200000000 },
+        { name: "clkHz", displayName: "IEP Clock (Hz)", default: 200000000 },
         { name: "periodNs", displayName: "Period (ns)", default: 5000 },
-        { name: "cmpIndex", displayName: "Compare index", default: 0 },
+        { name: "cmpIndex", displayName: "Compare Index", default: 0 },
         { name: "autoReset", displayName: "CMP0 auto-reset", default: true },
 
         { name: "constant1", hidden: true, default: "0", getValue: (inst) => {

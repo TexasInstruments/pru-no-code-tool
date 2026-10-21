@@ -82,10 +82,10 @@ exports = {
     uiView: "graph",
     config: [
         { name: "$shape", hidden: true, default: "square" },
-        { name: "route1", displayName: "Route 1 R31 bit", default: 255 },
-        { name: "route2", displayName: "Route 2 R31 bit", default: 255 },
-        { name: "route3", displayName: "Route 3 R31 bit", default: 255 },
-        { name: "route4", displayName: "Route 4 R31 bit", default: 255 },
+        { name: "route1", displayName: "Route 1 R31 Bit", default: 255 },
+        { name: "route2", displayName: "Route 2 R31 Bit", default: 255 },
+        { name: "route3", displayName: "Route 3 R31 Bit", default: 255 },
+        { name: "route4", displayName: "Route 4 R31 Bit", default: 255 },
 
         { name: "constant1", hidden: true, default: "255", getValue: (inst) => inst.route1 + "" },
         { name: "constant2", hidden: true, default: "255", getValue: (inst) => inst.route2 + "" },

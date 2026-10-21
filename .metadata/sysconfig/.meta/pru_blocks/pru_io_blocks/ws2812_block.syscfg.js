@@ -60,10 +60,10 @@ const ws2812Module = {
         },
         { name: "$topLabel", hidden: true, default: "" },
 
-        { name: "pinId", displayName: "Output R30 pin", default: "5", options: GPIO_SIGNALS },
+        { name: "pinId", displayName: "Output R30 Pin", default: "5", options: GPIO_SIGNALS },
         { name: "dataRegister", displayName: "Data Register (24-bit Color)", default: "R0" },
         { name: "numLeds", displayName: "Number of LEDs", default: 10 },
-        { name: "clkHz", displayName: "PRU clock (Hz)", default: 200000000 },
+        { name: "clkHz", displayName: "PRU Clock (Hz)", default: 200000000 },
 
         { name: "opCode", default: "m_ws2812_tx", hidden: true },
         { name: "numOfInputPorts", default: 0, hidden: true },

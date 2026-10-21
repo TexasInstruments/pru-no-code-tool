@@ -38,11 +38,11 @@ const counterModule = {
 		},
         { name: "$topLabel", hidden: true, default: "" },
 
-        { name: "inputPin", displayName: "Input R31 pin", default: "5", options: GPIO_SIGNALS },
+        { name: "inputPin", displayName: "Input R31 Pin", default: "5", options: GPIO_SIGNALS },
         { name: "dataRegister", displayName: "Count Output Register (32-bit)", default: "R4" },
         { name: "gateMs", displayName: "Gate Duration (ms)", default: 100 },
         { name: "edgeType", displayName: "Edge to Count", default: "rising", options: [{name:"rising"}, {name:"falling"}, {name:"both"}] },
-        { name: "clkHz", displayName: "PRU clock (Hz)", default: 200000000 },
+        { name: "clkHz", displayName: "PRU Clock (Hz)", default: 200000000 },
 
         { name: "opCode", default: "m_counter_run", hidden: true },
         { name: "numOfInputPorts", default: 0, hidden: true },

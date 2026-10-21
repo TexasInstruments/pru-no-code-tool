@@ -136,11 +136,11 @@ const canClassicModule = {
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
 
-        { name: "rxBit", displayName: "RX R31 bit", default: "0", options: GPIO_SIGNALS },
-        { name: "bitRateKbps", displayName: "CAN bit rate (kbit/s)", default: 1000 },
-        { name: "clkHz", displayName: "PRU clock (Hz)", default: 200000000 },
-        { name: "samplePointPercent", displayName: "Sample point (% of bit time)", default: 75 },
-        { name: "sjwCycles", displayName: "Synchronisation jump width (PRU cycles)", default: 3 },
+        { name: "rxBit", displayName: "RX R31 Bit", default: "0", options: GPIO_SIGNALS },
+        { name: "bitRateKbps", displayName: "CAN Bit Rate (kbit/s)", default: 1000 },
+        { name: "clkHz", displayName: "PRU Clock (Hz)", default: 200000000 },
+        { name: "samplePointPercent", displayName: "Sample Point (Percent of Bit Time)", default: 75 },
+        { name: "sjwCycles", displayName: "Sync Jump Width (PRU Cycles)", description: "Synchronisation jump width in PRU cycles.", default: 3 },
 
         { name: "blockMaturity", displayName: "Block Maturity", default: "assembles", options: [{name: "metadata-only"}, {name: "assembles"}, {name: "simulator-tested"}, {name: "dual-oracle-tested"}, {name: "hardware-validated"}], hidden: true },
 

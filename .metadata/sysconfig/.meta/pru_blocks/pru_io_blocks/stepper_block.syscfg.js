@@ -58,12 +58,12 @@ const stepperModule = {
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
 
-        { name: "stepPin", displayName: "Step R30 pin", default: "5", options: GPIO_SIGNALS },
-        { name: "dirPin", displayName: "Direction R30 pin", default: "6", options: GPIO_SIGNALS },
+        { name: "stepPin", displayName: "Step R30 Pin", default: "5", options: GPIO_SIGNALS },
+        { name: "dirPin", displayName: "Direction R30 Pin", default: "6", options: GPIO_SIGNALS },
         { name: "numSteps", displayName: "Target Steps", default: 1000 },
         { name: "profile", displayName: "Velocity Profile", default: "constant", options: [{name: "constant"}, {name: "linear"}] },
         { name: "maxSpeedSps", displayName: "Max Speed (steps/s)", default: 1000 },
-        { name: "clkHz", displayName: "PRU clock (Hz)", default: 200000000 },
+        { name: "clkHz", displayName: "PRU Clock (Hz)", default: 200000000 },
 
         { name: "opCode", default: "m_stepper_run", hidden: true },
         { name: "numOfInputPorts", default: 0, hidden: true },

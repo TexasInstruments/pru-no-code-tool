@@ -33,10 +33,10 @@ const servoModule = {
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
 
-        { name: "signalPin", displayName: "Signal R30 pin", default: "8", options: GPIO_SIGNALS },
-        { name: "pulseUs", displayName: "Pulse width (us)", default: 1500 },
-        { name: "frameUs", displayName: "Frame period (us)", default: 20000 },
-        { name: "clkHz", displayName: "PRU clock (Hz)", default: 200000000 },
+        { name: "signalPin", displayName: "Signal R30 Pin", default: "8", options: GPIO_SIGNALS },
+        { name: "pulseUs", displayName: "Pulse Width (us)", default: 1500 },
+        { name: "frameUs", displayName: "Frame Period (us)", default: 20000 },
+        { name: "clkHz", displayName: "PRU Clock (Hz)", default: 200000000 },
 
         { name: "opCode", default: "m_servo_pulse", hidden: true },
         { name: "numOfInputPorts", default: 0, hidden: true },

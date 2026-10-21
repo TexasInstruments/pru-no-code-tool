@@ -149,7 +149,7 @@ function validate(inst, report) {
         }
         // External initialization requirement
         if (!inst.externalInitProvided) {
-            report.logError("FDB Generic Mode requires MII_G_RT_FDB_GEN_CFG2[7:8] to be enabled by an external application. Check the 'Acknowledged: External Initialization Required' box to confirm you have provided it.", inst, "externalInitProvided");
+            report.logError("FDB Generic Mode requires MII_G_RT_FDB_GEN_CFG2[7:8] to be enabled by an external application. Check the 'External Initialization Acknowledged' box to confirm you have provided it.", inst, "externalInitProvided");
         }
     }
 
@@ -298,26 +298,26 @@ const fdbGpRamModule = {
 
         { name: "fdbAddress", displayName: "FDB Address (0..511, R10[8]=bank)", default: 0,
           description: "9-bit row address. Bit 8 selects the bank (Table 6-103). Bank enable must be asserted." },
-        { name: "r10TransferSize", displayName: "R10 XFER size (must be 2)", default: 2,
+        { name: "r10TransferSize", displayName: "R10 XFER Size (Must Be 2)", default: 2,
           description: "Broadside XFER byte count for R10 (set_address). Must be 2 (Table 6-103)." },
-        { name: "byteCount", displayName: "Byte count (1..32) for write/read", default: 32,
+        { name: "byteCount", displayName: "Byte Count (1..32) for Write/Read", default: 32,
           description: "Number of bytes to XFER on ID 30 via R2..R9 (1..32, LSB-justified)." },
-        { name: "patternBytes", displayName: "Pattern bytes (1..16) for set_pattern", default: 16,
-          description: "Number of pattern bytes to XOUT on ID 31 via R2..R5 (1..16)." },
-        { name: "fdbGenModeByteEn", displayName: "FDB_GEN_MODE_BYTE_EN (16-bit mask, hex)", default: "0xFFFF",
-          description: "Which pattern bytes participate in the compare (bit N enables byte N). Must cover patternBytes." },
+        { name: "patternBytes", displayName: "Pattern Bytes (1..16)", default: 16,
+          description: "For set_pattern. Number of pattern bytes to XOUT on ID 31 via R2..R5 (1..16)." },
+        { name: "fdbGenModeByteEn", displayName: "FDB_GEN_MODE_BYTE_EN (Hex)", default: "0xFFFF",
+          description: "16-bit mask. Which pattern bytes participate in the compare (bit N enables byte N). Must cover patternBytes." },
 
         // CFG enables live in MII_G_RT at CFG2 [7] and [8] (SPRUIM2J 6.4.11.2.3.7.4).
         // The TRM does not specify the exact memory offset for CFG2 or confirm clock/reset gating from MII_G_RT.
         // Therefore, this block requires that external initialization (e.g., from R5F/Linux)
         // configures the generic mode and compare-size fields before the PRU uses it.
-        { name: "externalInitProvided", displayName: "Acknowledged: External Initialization Required", default: false,
+        { name: "externalInitProvided", displayName: "External Initialization Acknowledged", default: false,
           description: "FDB Generic Mode requires MII_G_RT_FDB_GEN_CFG2[7:8] to be enabled by an external application. Check this to acknowledge." },
 
         // Sharing intent: when guarded inter-PRU IPC is wanted, the validator demands a spinlock guard
-        { name: "sharedAcrossPru", displayName: "Shared PRU0<->PRU1 IPC region", default: false,
+        { name: "sharedAcrossPru", displayName: "Shared PRU0<->PRU1 IPC Region", default: false,
           description: "When true, this FDB access is shared between PRU0 and PRU1 and must be guarded by an XFR2SPIN lock in the graph." },
-        { name: "protectedRegion", displayName: "Protected region name", default: "fdb_gp_ram",
+        { name: "protectedRegion", displayName: "Protected Region Name", default: "fdb_gp_ram",
           description: "XFR2SPIN acquire/release instances must use this same protectsVariable value to guard shared FDB access." },
 
         { name: "opCode", hidden: true, default: "m_fdb_set_address", getValue: opCode },
@@ -348,7 +348,7 @@ const fdbGpRamModule = {
             try{ if(typeof m==="string"){m=m.trim(); return m.startsWith("0x")||m.startsWith("0X")?parseInt(m,16):Number(m);} return Number(m);}catch(e){return 0;}
         }},
         { name: "registerClobbers", hidden: true, default: "[]", getValue: (inst) => JSON.stringify(clobbers(inst)) },
-        { name: "noOfCycles", displayName: "Peak cycles", default: 1, readOnly: true, getValue: cycleCount }
+        { name: "noOfCycles", displayName: "Peak Cycles", default: 1, readOnly: true, getValue: cycleCount }
     ],
 
     ports: (inst) => {

@@ -31,13 +31,13 @@ const hallModule = {
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
 
-        { name: "aBit", displayName: "Hall A R31 pin", default: "0", options: GPIO_SIGNALS },
-        { name: "bBit", displayName: "Hall B R31 pin", default: "1", options: GPIO_SIGNALS },
-        { name: "cBit", displayName: "Hall C R31 pin", default: "2", options: GPIO_SIGNALS },
-        { name: "sampleCycles", displayName: "Sample delay trips", default: 10 },
+        { name: "aBit", displayName: "Hall A R31 Pin", default: "0", options: GPIO_SIGNALS },
+        { name: "bBit", displayName: "Hall B R31 Pin", default: "1", options: GPIO_SIGNALS },
+        { name: "cBit", displayName: "Hall C R31 Pin", default: "2", options: GPIO_SIGNALS },
+        { name: "sampleCycles", displayName: "Sample Delay Trips", default: 10 },
 
         { name: "sectorRegister", displayName: "Sector Register (32-bit)", default: "R4" },
-        { name: "velRegister", displayName: "Velocity Register (IEP delta)", default: "R5" },
+        { name: "velRegister", displayName: "Velocity Register (IEP Delta)", default: "R5" },
         { name: "faultRegister", displayName: "Fault Register (0=ok,1=illegal)", default: "R6" },
 
         { name: "opCode", default: "m_hall_decode", hidden: true },

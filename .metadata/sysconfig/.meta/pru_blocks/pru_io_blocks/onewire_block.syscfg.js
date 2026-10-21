@@ -56,15 +56,15 @@ const onewireModule = {
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
 
-        { name: "dataPin", displayName: "Data signal (R30/R31)",
+        { name: "dataPin", displayName: "Data Signal (R30/R31)",
           default: "7", options: GPIO_SIGNALS },
         { name: "operation", displayName: "Operation",
           default: "reset", options: OPERATIONS },
-        { name: "speed", displayName: "Bus speed",
+        { name: "speed", displayName: "Bus Speed",
           default: "standard", options: SPEEDS },
-        { name: "byteValue", displayName: "Byte to write (writeByte)",
+        { name: "byteValue", displayName: "Byte to Write (writeByte)",
           default: 0xCC, displayFormat: "hex" },
-        { name: "clkHz", displayName: "PRU clock (Hz)", default: 200000000 },
+        { name: "clkHz", displayName: "PRU Clock (Hz)", default: 200000000 },
 
         // TI dynamic register allocator fields
         { name: "opCode", default: "m_onewire_reset_standard", hidden: true,

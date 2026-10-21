@@ -106,14 +106,14 @@ const dshotModule = {
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
 
-        { name: "signalPin", displayName: "Signal R30 pin", default: "9", options: GPIO_SIGNALS },
+        { name: "signalPin", displayName: "Signal R30 Pin", default: "9", options: GPIO_SIGNALS },
         { name: "variant", displayName: "DShot Variant", default: "dshot600", options: VARIANTS },
         { name: "throttleMode", displayName: "Throttle Mode", default: "constant",
           options: [{ name: "constant" }, { name: "register" }] },
         { name: "throttleRegister", displayName: "Throttle Register", default: "R14" },
         { name: "throttle", displayName: "Throttle (0..2047)", default: 0 },
         { name: "telemetry", displayName: "Request Telemetry", default: false },
-        { name: "clkHz", displayName: "PRU clock (Hz)", default: 200000000 },
+        { name: "clkHz", displayName: "PRU Clock (Hz)", default: 200000000 },
 
         { name: "opCode", default: "m_dshot_tx", hidden: true,
           getValue: (inst) => isRegMode(inst) ? "m_dshot_tx_reg" : "m_dshot_tx" },
