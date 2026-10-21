@@ -193,7 +193,7 @@ def run_elf_closed_loop(
             raise RuntimeError(f"ELF load errors: {errors}")
         pru = sim.cores[core]
         for index, address in (constants or {}).items():
-            sim.constant_table.set(index, address)
+            pru.constant_table.set(index, address)
 
         result = CosimResult()
         result = _loop(sim, pru, core, model, max_steps, on_step)
