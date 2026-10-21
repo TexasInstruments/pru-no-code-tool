@@ -1,16 +1,16 @@
 """macro expanders accept `label: instr` on one line.
 
 The TI PRU assembler (clpru) accepts a label followed by an instruction on the
-same line (e.g. `pb_ws?: sub r1, r1, 1`). The JS expanders used to treat a line
-as a label only when the whole trimmed line ended with ':', so such a line was
-misread as an instruction string and the label was never defined in the
-expander's `labels` array (a later `qbne pb_ws?, ...` had no resolved target).
+same line (e.g. `pb_ws?: sub r1, r1, 1`). An expander that treats a line as a
+label only when the whole trimmed line ends with ':' misreads such a line as an
+instruction string and never defines the label in its `labels` array (a later
+`qbne pb_ws?, ...` has no resolved target).
 
-What these tests prove: splitLabel splits same-line and bare labels correctly,
+What these tests check: splitLabel splits same-line and bare labels correctly,
 and emit_all_blocks' expand() records the same-line label in `labels` and
-resolves the branch target to it. They do NOT claim a classifier change:
-block_control_flow already accepted `label: instr` before, so a
-synthetic same-line macro grades SEQUENTIAL both before and after.
+resolves the branch target to it. They do not test the classifier:
+block_control_flow accepts `label: instr` on its own, so a synthetic
+same-line macro grades SEQUENTIAL either way.
 """
 import json
 import os
@@ -103,7 +103,7 @@ console.log(JSON.stringify({
 def test_emit_all_blocks_resolves_same_line_branch_target():
     """A synthetic macro using a same-line label as a branch target expands with
     the label defined at that instruction in the expander's `labels` array
-    (the defect fixed: it was 0 there) and no unresolved branch target by an
+    (not at 0) and no unresolved branch target by an
     inline target lookup. It does not exercise the classifier."""
     result = run_node(NODE_EXPAND)
     assert result.returncode == 0, result.stderr

@@ -5,7 +5,7 @@
  *
  * Why this file exists
  * --------------------
- * The item's headline trap -- "submitting N IDs into a ring declared with
+ * The main XFR2TR trap -- "submitting N IDs into a ring declared with
  * tr_rsrc_nums below N-1 is a build error" -- cannot be reached through the
  * per-instance `validate()` that `scripts/block_validate_runner.js` drives,
  * because ringEntries lives on a `configure` instance and submitCount lives
@@ -59,7 +59,7 @@ function loadBlock(coreName) {
 }
 
 // The static module reaches for allocator/SoC services this check never uses.
-// A permissive stub keeps the load honest without faking the validator itself:
+// A permissive stub lets the module load without faking the validator itself:
 // the guard under test runs BEFORE the `try {}` that touches the allocator, so
 // nothing it depends on is stubbed away.
 function deepStub() {

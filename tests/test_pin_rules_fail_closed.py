@@ -121,8 +121,8 @@ def test_red_always_true_self_spin_is_decided_continuous(tmp_path):
 
 @needs_node
 def test_poll_loop_with_external_exit_still_returns(tmp_path):
-    """Pins the owner acceptance: a poll loop on R31 yields control once the pin changes,
-    so it is sequential (consistent with decision 4; PWM never yields)."""
+    """A poll loop on R31 yields control once the pin changes, so it is sequential
+    (unlike PWM, which never yields)."""
     row = _classify(_synth_root(tmp_path, "    set r30, r30, 9\\np?:\\n    qbbc p?, r31, 3"))
     assert row["cls"] == "sequential" and row["decided"] is True, row
 

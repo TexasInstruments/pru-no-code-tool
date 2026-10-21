@@ -1,10 +1,10 @@
 """Manchester half-bits and DShot bit periods must be the nominal number of PRU cycles.
 
-The blocks loaded a delay count tuned to the nominal period and then spent 4-12 more instruction
-cycles around it (set/clr, ldi32, lsr, branches), so every bit ran long - and by a different amount
-on each branch path, so the period depended on the data.
+A delay count tuned to the nominal period, with 4-12 more instruction cycles spent around it
+(set/clr, ldi32, lsr, branches), makes every bit run long - and by a different amount on each
+branch path, so the period depends on the data.
 
-Evidence is the real clpru ELF on the TI pru-simulator. Each case resolves the block the way
+Measured on the real clpru ELF on the TI pru-simulator. Each case resolves the block the way
 SysConfig does (scripts/sim/resolve_block_call.js evaluates the block's own config defaults,
 getValue constants and validate), assembles the block's macro verbatim behind the same `.asg`
 TEMP_REG lines pru_syscfg.asm.xdt emits, calls it with the generated argument order (RES, then
@@ -228,7 +228,7 @@ def assert_dshot(tmp, variant, throttle, telemetry):
 
 # ---------------------------------------------------------------------------
 # 1. The judges themselves (run anywhere): green on an exact synthetic line,
-#    red on the defect's shape (every half-bit / bit a few cycles long).
+#    red on the bug's shape (every half-bit / bit a few cycles long).
 # ---------------------------------------------------------------------------
 
 def _synthetic_manchester(byte, half, extra=0):

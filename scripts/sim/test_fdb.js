@@ -50,7 +50,7 @@ function validateErrors(inst, coreOverride) {
 }
 
 // ---------------------------------------------------------------------------
-// 1. Contract: device IDs, operations, register windows, honest docs
+// 1. Contract: device IDs, operations, register windows, documented limits
 // ---------------------------------------------------------------------------
 assert.strictEqual(block.deviceIds.dataAddr, 30, "BS dataAddr must be 30");
 assert.strictEqual(block.deviceIds.pattern, 31, "BS pattern must be 31");
@@ -60,10 +60,10 @@ assert.ok(macro("m_fdb_write").includes("xout  30, &R2"), "write must XOUT R2..R
 assert.ok(macro("m_fdb_read").includes("xin   30, &R2"), "read must XIN R2..R9 from ID 30");
 assert.ok(macro("m_fdb_set_pattern").includes("xout  31, &R2"), "set_pattern must XOUT R2..R5 on ID 31");
 assert.ok(macro("m_fdb_compare_result").includes("xin   35, &R10"), "compare_result must XIN R10 from ID 35");
-assert.ok(block.longDescription.includes("NOT a search"), "honest docs: compare is not a search");
-assert.ok(block.longDescription.includes("CURRENTLY ADDRESSED ROW"), "honest docs: single-row compare");
-assert.ok(block.longDescription.includes("NO cycle advantage"), "honest docs: no cycle advantage claim");
-assert.ok(block.longDescription.includes("arbitrated inter-PRU IPC") && block.longDescription.includes("XFR2SPIN"), "honest value: table memory + arbitrated IPC");
+assert.ok(block.longDescription.includes("NOT a search"), "docs: compare is not a search");
+assert.ok(block.longDescription.includes("CURRENTLY ADDRESSED ROW"), "docs: single-row compare");
+assert.ok(block.longDescription.includes("NO cycle advantage"), "docs: no cycle advantage claim");
+assert.ok(block.longDescription.includes("arbitrated inter-PRU IPC") && block.longDescription.includes("XFR2SPIN"), "docs: table memory + arbitrated IPC");
 const bs = getBlockSource();
 assert.ok(bs.includes("GO with caveat") && bs.includes("Table 6-60"), "header must contain GO/NO-GO with TRM section/table citation");
 

@@ -1,15 +1,15 @@
-"""redo: RTU_PRU XFR2TR ring — closure of the four gaps.
+"""RTU_PRU XFR2TR ring: placement and size bounds.
 
-Gap 1: sourceBase/ringBase outside PRU_ICSSG Shared RAM / Data RAM2 (0x00010000-0x0001FFFF)
-       and >18-bit truncation (R6[17:0]) were silently aliased. Now refused.
-Gap 2: 4KB source-TR ceiling missing. Now enforced, keyed on sourceTrCount*trSize <=4096
-       (the SOURCE TR list), not ringEntries (the destination ring, which Table 6-112 allows
-       up to 4096 entries in its own right).
-Gap 3: no-doorbell / no-hardware-ring-completion undocumented. Now documented.
-Gap 4: getCoreType used loose includes("rtu") matching artu/virtual. Now tight rtu_pru.
+1. sourceBase/ringBase outside PRU_ICSSG Shared RAM / Data RAM2 (0x00010000-0x0001FFFF)
+   or beyond 18 bits (R6[17:0] would truncate and silently alias) are refused.
+2. The 4KB source-TR ceiling is enforced, keyed on sourceTrCount*trSize <=4096
+   (the SOURCE TR list), not ringEntries (the destination ring, which Table 6-112 allows
+   up to 4096 entries in its own right).
+3. The absence of a doorbell / hardware ring completion is documented.
+4. getCoreType matches the tight rtu_pru token, not a loose includes("rtu") that would match
+   artu/virtual.
 
-Beyond the four gaps, the item's own asks that the gap list did not cover are armed too:
-the ring-vs-submit TRAP (cross-instance, via scripts/global_runner.js against the
+Also covered: the ring-vs-submit TRAP (cross-instance, via scripts/global_runner.js against the
 SHIPPED validateXfr2trGlobal), the N-1 tr_rsrc_nums encoder, and the hole in the
 left-packed ID list.
 
@@ -51,12 +51,11 @@ def test_xfr2tr_docs_mention_no_doorbell_and_no_completion():
 def test_xfr2tr_getcoretype_is_tight():
     """Behavioural, not textual.
 
-    The previous version of this test grepped the source for the literal
-    `includes("rtu_pru")`, but the deliberate fix tightens the check
-    to `includes("_rtu_pru")` (leading underscore, so "icss_g0_rtu_pru0"
-    still matches while a hypothetical "icss_g0_artu_pru0" does not) -- so
-    the grepped literal is not a substring of the real source and the test
-    failed at its own commit even though the implementation was correct.
+    Grepping the source for a literal such as `includes("rtu_pru")` is
+    fragile: the check is `includes("_rtu_pru")` (leading underscore, so
+    "icss_g0_rtu_pru0" still matches while a hypothetical "icss_g0_artu_pru0"
+    does not), and any respelling would break a textual test while the
+    behaviour stayed correct.
 
     Drive validate() with every real core-name string that occurs in this
     repo's device topology (pru_blocks_am64x/am243x.syscfg.js) and assert

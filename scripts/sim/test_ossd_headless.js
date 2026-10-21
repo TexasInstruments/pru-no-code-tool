@@ -70,15 +70,14 @@ function runMonitor(chAVal, chBVal, disc, ossdMax){
     const r31 = (chAVal?1:0) | (chBVal?2:0);
     // History: keep constant for enough cycles to let loops finish (500 cycles)
     const cycles = 800;
-    const result = runSim(raw, cycles, {0: r31<<0}); // naive: single entry. Better to use map with cycle->word? pru_core expects map cycle->word? Check simulator interface: r31HistoryMap is object mapping ?. We'll just set constant via empty map and rely on default 0? Let's instead drive via repeated cycles using r31HistoryMap array? Actually pru_core simulatePruInstructions takes r31HistoryMap as {cycle:word}. We'll supply all cycles.
-    // Quick hack: build map for every cycle
+    const result = runSim(raw, cycles, {0: r31<<0}); // single entry: sets R31 at cycle 0 only
+    // simulatePruInstructions takes r31HistoryMap as {cycle: word}: hold the word for every cycle.
     const map={}; for(let i=0;i<cycles;i++) map[i]=r31;
     const r2 = runSim(raw, cycles, map);
     return r2.pruState.registers[4] & 0xFFFFFFFF;
 }
 
-// But runMonitor above redo is cleaner: we need map param correctly.
-// Call with proper map
+// Same run with independent channel A/B levels held for every cycle.
 function runWithMap(chAVal,chBVal){
     const args={ RES:'R4', CH_A:'0', CH_B:'1', DISC_CYCLES:'50', OSSD_MAX:'40' };
     let raw = expand(macro, args);

@@ -1,7 +1,7 @@
 """
 SUM32 one's-complement checksum accelerator (ICSSG).
 
-TRM SPRUIM2J 6.4.6.2.6 evidence, quoted verbatim:
+TRM SPRUIM2J 6.4.6.2.6, quoted verbatim:
     "The SUM32 module is a simple hardware accelerator which is used to help generate UDP checksum
     (User Datagram Protocol) for data integrity. The operation takes 2 clock cycles, read pipe is
     another 1 clock cycle. The operation is pipelined. The PRUn or RTU_PRUn core (where n = 0 or 1)

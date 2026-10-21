@@ -326,7 +326,7 @@ function validate(inst, report) {
             checkBase("sourceBase", "sourceBase", sourceTrCount, "sourceTrCount");
             checkBase("ringBase", "ringBase", entries, "ringEntries");
             // Distinctness: source and ring must not overlap (they are separate windows).
-            // Same defect-3 correction as checkBase: the source list spans
+            // As in checkBase: the source list spans
             // sourceTrCount descriptors and the ring spans ringEntries, so
             // sizing both off ringEntries would miss an overlap whenever the
             // two counts diverge (e.g. a 512-entry source list under a

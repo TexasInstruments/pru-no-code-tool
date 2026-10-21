@@ -113,7 +113,7 @@ def wide_consume_design(slot_bytes):
 
     With an output1 starting at R0, the addend must start immediately after its
     reservation: R4 for 16 bytes and R8 for 32 bytes.  That allocation boundary
-    is independent evidence that the metadata width reached the allocator.
+    shows independently that the metadata width reached the allocator.
     """
     return "".join([
         T.HEADER, MAILBOX_MODULE,

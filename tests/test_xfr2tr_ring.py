@@ -1,10 +1,10 @@
-"""redo: RTU_PRU XFR2TR ring accelerator (SPRUIM2J 6.4.6.3.3, Table 6-112).
+"""RTU_PRU XFR2TR ring accelerator (SPRUIM2J 6.4.6.3.3, Table 6-112).
 
 The heavy lifting (macro/allocator/simulator/validator arms, capacity/hold/drain
 second-engine coverage, mutation arms) lives in scripts/sim/test_xfr2tr_ring.js,
 which runs against the real production module -- not a copy. This file adds the
 catalogue/capability guardrails plus a thin, independent invocation of the node
-arm so a `pytest` run surfaces the same evidence.
+arm so a `pytest` run surfaces the same results.
 """
 import json
 import subprocess

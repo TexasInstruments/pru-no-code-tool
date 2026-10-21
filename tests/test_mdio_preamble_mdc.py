@@ -153,7 +153,7 @@ def _needed_trips(clk_hz, is_read=0):
 
 
 # Low clocks (50..87 MHz) are where the 160 ns phase terms, not the 400 ns period term, set the minimum; the fast clocks
-# are where the period term does. Odd/non-round values keep a constant that is only right by coincidence honest.
+# are where the period term does. Odd/non-round values expose a constant that is only right by coincidence.
 CLOCKS_HZ = [50e6, 62.5e6, 75e6, 80e6, 87.5e6, 100e6, 125e6, 150e6, 175e6, 200e6, 225e6, 250e6, 300e6, 333e6]
 
 

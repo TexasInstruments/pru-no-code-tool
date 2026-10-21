@@ -70,7 +70,7 @@ const configureText = macro("m_xfr2tr_configure");
 const submitText = macro("m_xfr2tr_submit");
 const statusText = macro("m_xfr2tr_status");
 
-// Defect 1: an earlier implementation's expression could double-shift tr_rsrc_nums.
+// tr_rsrc_nums must be shifted exactly once.
 // R7[19:8]=tr_rsrc_nums means "<< 8" exactly once; R7[1]=tr_rscr_reset means "<< 1".
 assert.ok(configureText.includes("RING_NUMS << 8"), "tr_rsrc_nums must be shifted into R7[19:8], i.e. << 8");
 assert.ok(!/RING_NUMS\s*<<\s*(?!8\b)\d+/.test(configureText), "tr_rsrc_nums must not be shifted by anything other than 8");
@@ -84,7 +84,7 @@ assert.ok(statusText.includes("xin   113, &R7, 8"), "status must XIN BS ID 0x71 
 assert.ok(!configureText.includes("xin") && !submitText.includes("xin"), "configure/submit are XOUT-only flows");
 assert.ok(!statusText.includes("xout"), "status is an XIN-only flow");
 
-// Defect 2: signature/argument-count mismatch. Each op's macro signature must
+// Signature/argument count. Each op's macro signature must
 // match EXACTLY what the allocator will pass: RES + inputs + constants.
 function macroParamCount(text) {
     const sig = text.split("\n")[0];
@@ -110,8 +110,8 @@ assert.deepStrictEqual(clobbersJson.configure, [[6, 2]]);
 assert.deepStrictEqual(clobbersJson.submit, [[2, 4]]);
 assert.deepStrictEqual(clobbersJson.status, [[7, 2]]);
 
-// Defect 6: noOfCycles must be honest -- submit can hold on the 8-level FIFO,
-// so its bound is declared unknown, not the stale fixed "2" from an earlier implementation.
+// noOfCycles: submit can hold on the 8-level FIFO, so its bound is declared
+// unknown (-1), not a fixed cycle count.
 assert.strictEqual(cfg("noOfCycles").getValue({ operation: "submit" }), -1, "submit can block; cycle bound must be -1 (unknown), not fixed");
 assert.strictEqual(cfg("noOfCycles").getValue({ operation: "status" }), 2);
 assert.strictEqual(cfg("noOfCycles").getValue({ operation: "configure" }), 7);
@@ -321,8 +321,8 @@ allocated = runAllocator({ "/pru_blocks/pru_io_blocks/xfr2tr_block": { $instance
 assert.strictEqual(allocated[0].split(",").length, 1, `status must emit RES only: ${allocated[0]}`);
 
 // submit: the normal allocator path with 4 real producers feeding input1..4 --
-// this is the exact "exercise the allocator, not a hand-written call" check
-// that an earlier implementation's arg-count mismatch failed.
+// this exercises the allocator, not a hand-written call, so an argument-count
+// mismatch between the allocator and the macro fails here.
 const submitInst = instFromConfig("SUB", "submit", { submitCount: 3 });
 const loads = ["L1", "L2", "L3", "L4"].map((n, i) => makeLoadInst(n, i + 1));
 for (let i = 0; i < 4; i++) { submitInst["input" + (i + 1)] = [{ inst: loads[i] }]; loads[i].output1 = [{ inst: submitInst }]; }

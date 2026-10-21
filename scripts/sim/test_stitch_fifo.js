@@ -282,7 +282,7 @@ const opIndex = liveAcross.summary.pruInstructionInstances.findIndex((i) => i &&
 assert.ok(opIndex > 0 && opIndex < liveAcross.summary.pruInstructions.length - 1,
     `the pop must be scheduled between a producer and a consumer, got ${JSON.stringify(liveAcross.summary.pruInstructions)}`);
 // Guard the arm itself: if no live producer actually lands in R2-R9 the check
-// below would pass vacuously, which is the failure mode this item is about.
+// below would pass vacuously.
 const offenders = acrossDesign.loadNames.filter((n) => {
     const m = /^R(\d+)/.exec(liveAcross.alloc.getBlockRegisterAllocation(n) || "");
     return m && Number(m[1]) >= 2 && Number(m[1]) <= 9;

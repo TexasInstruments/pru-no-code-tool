@@ -3,7 +3,7 @@
  * ai_guidance_served.js - is each block's AI guidance what SysConfig 1.28's MCP serves?
  *
  * SysConfig 1.28's getModuleDescription returns the module's longDescription and never calls
- * getAIContext. A module that defines getAIContext therefore only reaches an agent if the text
+ * getAIContext. A module that defines getAIContext therefore only reaches an AI assistant if the text
  * it returns is contained in its longDescription. Each module is LOADED (not regexed); the
  * values are the ones the real module exports.
  *

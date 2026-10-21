@@ -1,15 +1,16 @@
 """pdm_block must hand the captured word to output1 and clock at the configured rate.
 
-Two defects, both found by running block-built routines on the TI pru-simulator:
+Two bugs, both found by running block-built routines on the TI pru-simulator:
 
-  (a) the macro shifts the samples into its own data register (dataRegister, R5 by default) but
-      the allocated output1 (RES) was never written, so a downstream block read whatever the
-      register held before - `00040000` for both static levels;
-  (b) the clock half-period was loaded as round(clkHz / (2 * clkRate)) loop passes of a 2-cycle
-      loop with ~10 more instructions around it, so the clock ran 11-20 % slow (109 / 108 cycles
-      against 97.66 at 2.048 MHz, 77 against 64 at 3.125 MHz) - the defect class.
+  (a) the macro shifts the samples into its own data register (dataRegister, R5 by default); if
+      the allocated output1 (RES) is not written, a downstream block reads whatever the register
+      held before - `00040000` for both static levels;
+  (b) loading the clock half-period as round(clkHz / (2 * clkRate)) loop passes of a 2-cycle loop
+      with ~10 more instructions around it makes the clock run 11-20 % slow (109 / 108 cycles
+      against 97.66 at 2.048 MHz, 77 against 64 at 3.125 MHz): loop overhead not subtracted
+      from the delay count.
 
-Evidence is the real clpru ELF on the TI pru-simulator. Each case resolves the block the way
+Measured on the real clpru ELF on the TI pru-simulator. Each case resolves the block the way
 SysConfig does (scripts/sim/resolve_block_call.js), assembles the block's macro verbatim behind
 the same `.asg` TEMP_REG lines pru_syscfg.asm.xdt emits, calls it with the generated argument
 order (RES, then constant1..N) and runs it to `halt`. The line model drives the data pin
@@ -155,7 +156,7 @@ def check_clock(name, rises, falls, rate, num_bits):
 
 
 # ---------------------------------------------------------------------------
-# 1. The judge itself (runs anywhere): exact line green, the defect's shape red.
+# 1. The judge itself (runs anywhere): exact line green, the bug's shape red.
 # ---------------------------------------------------------------------------
 
 def test_clock_judge_green_and_red():

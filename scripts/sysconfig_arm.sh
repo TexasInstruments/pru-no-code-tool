@@ -5,9 +5,8 @@
 # fixtures, then assemble the generated firmware with the REAL clpru.
 #
 # Why this exists instead of a node harness that calls getMacro() directly:
-# the rejected attempt at this item shipped a production macro that expanded to
-# nothing, and passed its own tests because those tests called a non-production
-# branch. The only way to prove the firmware a user actually gets contains the
+# a production macro that expands to nothing still passes tests that call a
+# non-production branch. The only way to show the firmware a user actually gets contains the
 # spinlock access is to run the generator that produces that firmware and grep
 # its output. Everything here reads generated artifacts, never block source.
 #
@@ -127,7 +126,7 @@ fi
 # --------------------------------------------------------------------------
 # 2. clpru must assemble the generated firmware, and the LISTING must show
 #    encoded instruction words for the spinlock ops. An empty macro assembles
-#    fine (that is how rejection #2 hid), so text alone is not enough.
+#    fine, so text alone is not enough.
 # --------------------------------------------------------------------------
 if [ -f "$ASM" ]; then
   ( cd "$OUTDIR/locked_ok" && "$CLPRU" --silicon_version=3 -i. --asm_listing -c pru_syscfg.asm >clpru.log 2>&1 )

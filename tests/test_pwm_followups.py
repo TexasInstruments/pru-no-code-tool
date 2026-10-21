@@ -1,6 +1,6 @@
-"""PWM block follow-up checks (S1-S5).
+"""PWM block checks.
 
-S1/F5  design-level golden for a default pwm design (SysConfig CLI, digest line stripped).
+S1     design-level golden for a default pwm design (SysConfig CLI, digest line stripped).
 S2     a counted pwm_block hands control on, so a same-pin GPO after it is not a duplicate driver
        (CI script and the SysConfig GUI warning agree); a default pwm_block still is.
 S3     a counted pwm_block scales noOfCycles by N, so the generated header is not a false 5 cycles.

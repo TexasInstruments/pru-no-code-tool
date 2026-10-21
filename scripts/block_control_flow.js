@@ -20,11 +20,11 @@
  * end, no instructions). `reason` says which and names the mnemonic.
  *
  * "Returns" means the end of the macro is reachable and NO path halts. A poll loop with a
- * conditional exit (qbbc/qbbs on R31, qbne on a counter) counts as returning: the * owner decision accepted that, and it does not contradict decision 4 (a poll loop yields
- * control once its external condition arrives, unlike PWM which never does). An always-true
+ * conditional exit (qbbc/qbbs on R31, qbne on a counter) counts as returning: a poll loop yields
+ * control once its external condition arrives, unlike PWM which never does. An always-true
  * self-compare (qbeq L, r1, r1) is the degenerate unconditional spin and is CONTINUOUS.
  * Reachability is not a termination proof. Classification is at the block's config DEFAULTS
- * only (a separate follow-up moves it to per-block bindings).
+ * only.
  *
  * No hand list of block names: the verdict is derived per block from its .syscfg.js.
  */

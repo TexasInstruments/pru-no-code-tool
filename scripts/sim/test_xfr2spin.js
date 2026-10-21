@@ -112,8 +112,8 @@ check('selector is written with a plain LDI to R1.b0, not XOUT-ed', () => {
 // ---------------------------------------------------------------------------
 // 2. The production path is not empty.
 //
-// Rejection #2 of this item shipped a macro that returned only .macro/.endm on
-// the ("", opCode) path. clpru compiles that happily. Assert real instructions.
+// A macro that returns only .macro/.endm on the ("", opCode) path compiles
+// happily with clpru but contains no spinlock access. Assert real instructions.
 // ---------------------------------------------------------------------------
 check('production getMacro("", opCode) returns a real body', () => {
     for (const [name, text] of [['acquire', acquireText], ['try_acquire', tryText], ['release', releaseText]]) {
@@ -173,8 +173,8 @@ check('a lost arbitration publishes exactly 0 even with dirty bits', () => {
 // ---------------------------------------------------------------------------
 // 4. Mutual exclusion: a second core must BLOCK while the lock is held.
 //
-// Requirement (e). If both cores fall through their spin loops, the model is
-// per-core state pretending to be a lock - the defect in rejection #1.
+// If both cores fall through their spin loops, the model is per-core state
+// pretending to be a lock.
 // ---------------------------------------------------------------------------
 function runAcquireLoop(id, flag, cycles) {
     const sim = new Simulator({ id });

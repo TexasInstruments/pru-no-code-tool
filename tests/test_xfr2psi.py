@@ -1,7 +1,7 @@
 """
 XFR2PSI / XFRDMA packet-streaming block — PRU to PSI-L with no memory hop.
 
-TRM SPRUIM2J evidence:
+TRM SPRUIM2J references:
   Table 6-60  broadside IDs 0x50/0x51/0x52/0x53 (four copies, RTU_PRU+PRU) + shared pair 0x58/0x59 (RTU only, needs MII_G_RT_ICSS_G_CFG[9])
   6.4.6.3.2   XFRDMA XID 0=status, XID N=thread N, up to 32 threads, 64/128/256 bits
   Table 6-108 XIN XID 0: word0 rx_ready[3:0], word1 tx_ready[3:0]

@@ -37,7 +37,7 @@ function validateErrors(inst, coreName) {
 function ok(msg) { console.log("  ok:", msg); }
 
 // ---------------------------------------------------------------------------
-// Gap 1: sourceBase/ringBase 18-bit and Shared/Data2 window
+// sourceBase/ringBase 18-bit and Shared/Data2 window
 // ---------------------------------------------------------------------------
 // Happy: defaults inside window (0x10000-0x1FFFF) with 18-bit fit.
 assert.deepStrictEqual(validateErrors({ operation: "configure", sourceBase: 0x10000, ringBase: 0x10800, ringEntries: 16, trSize: 8 }), []);
@@ -132,10 +132,10 @@ assert.ok(errs.some(e => /overlap/i.test(e)), "overlapping bases must be refused
 ok("gap1 red: overlapping bases refused");
 
 // ---------------------------------------------------------------------------
-// Gap 2: 4 KB source-TR ceiling (sourceTrCount*trSize <=4096)
+// 4 KB source-TR ceiling (sourceTrCount*trSize <=4096)
 // The ceiling is a property of the SOURCE TR list, so every arm here states
-// sourceTrCount explicitly. Arms phrased in ringEntries alone would be
-// asserting the very coupling the defect-5 fix below removes.
+// sourceTrCount explicitly. Arms phrased in ringEntries alone would assert a
+// coupling between ring size and source-list size that the block does not have.
 // ---------------------------------------------------------------------------
 assert.deepStrictEqual(validateErrors({ operation: "configure", sourceBase: 0x10000, ringBase: 0x11000, ringEntries: 512, trSize: 8, sourceTrCount: 512 }), [], "512*8=4096 must pass");
 ok("gap2 happy: 512*8=4096 passes");
@@ -203,7 +203,7 @@ assert.ok(sourceText.includes("sourceTrCount"), "source must contain the decoupl
 ok("defect5 mutation: sourceTrCount present in source");
 
 // ---------------------------------------------------------------------------
-// Gap 3: no-doorbell / no-hardware-ring-completion documented
+// no-doorbell / no-hardware-ring-completion documented
 // ---------------------------------------------------------------------------
 const longDesc = block.longDescription || "";
 assert.ok(/no doorbell/i.test(longDesc) && /XOUT 0x72/i.test(longDesc), `longDescription must document no-doorbell (got ${longDesc.slice(0,120)}...)`);
@@ -226,7 +226,7 @@ assert.ok(sourceText.includes("No doorbell") && sourceText.includes("No hardware
 ok("gap3: top comment documents both facts");
 
 // ---------------------------------------------------------------------------
-// Gap 4: getCoreType tightened from includes("rtu") to includes("rtu_pru")
+// getCoreType matches includes("rtu_pru"), not a loose includes("rtu")
 // ---------------------------------------------------------------------------
 // Real RTU core must still be accepted
 assert.deepStrictEqual(validateErrors({ operation: "status" }, "icss_g0_rtu_pru0"), [], "real RTU_PRU must pass");

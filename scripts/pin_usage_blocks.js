@@ -3,10 +3,10 @@
  * pin_usage_blocks.js - which block modules DECLARE moduleStatic.getPinUsage.
  *
  * The pin-collision report (check_pin_collisions.js --defaults-report) and the control-flow
- * classifier (block_control_flow.js) used to pick their blocks by a bare text match on the token
- * 'getPinUsage'. A comment or string that merely mentions the word (the GUI validator in
- * common/pru_blocks_static_module.syscfg.js calls the function and documents it) made a non-block
- * look like a block. A module is a pin-usage block here only when it loads and its exported
+ * classifier (block_control_flow.js) pick their blocks with this module rather than a bare text
+ * match on the token 'getPinUsage': a comment or string that merely mentions the word (the GUI
+ * validator in common/pru_blocks_static_module.syscfg.js calls the function and documents it)
+ * would make a non-block look like a block. A module is a pin-usage block here only when it loads and its exported
  * moduleStatic.getPinUsage is a function - the same test both tools apply to an instance.
  *
  * The token match survives only as a prefilter: a module whose text never contains the token

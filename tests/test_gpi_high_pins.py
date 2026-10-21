@@ -5,7 +5,7 @@ immediate holds 0-255, so any pin >= 8 does not assemble
 (``[E0003] Invalid instruction``) and 12 of the 20 R31 pins are unusable
 as block inputs.
 
-Evidence is the block's own SysConfig generation assembled with the real
+Checked with the block's own SysConfig generation assembled with the real
 clpru and run on TI pru-simulator: for pins 0, 7, 8, 13 and 19 the
 generated firmware must assemble, and with R31 bit N set the block's
 output register must read exactly (1 << N), with it clear exactly 0

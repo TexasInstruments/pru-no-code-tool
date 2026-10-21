@@ -3,7 +3,7 @@
 Heavy lifting lives in scripts/sim/test_fdb.js (real module, real
 allocator, real simulator, mutation-coupled red arms). This file adds
 catalogue/capability guardrails plus a thin invocation so `pytest` surfaces
-the same evidence. Mirrors tests/test_xfr2tr_ring.py shape.
+the same results. Same shape as tests/test_xfr2tr_ring.py.
 """
 import json
 import subprocess
@@ -43,7 +43,7 @@ def test_fdb_device_ids_match():
     ))
     assert ids == {"dataAddr": 30, "pattern": 31, "compareResult": 35}
 
-def test_fdb_docs_honest():
+def test_fdb_docs_state_limits():
     long_desc = node(
         "const fs=require('fs'),vm=require('vm');"
         "const src=fs.readFileSync('.metadata/sysconfig/.meta/pru_blocks/pru_io_blocks/fdb_gp_ram_block.syscfg.js','utf8');"

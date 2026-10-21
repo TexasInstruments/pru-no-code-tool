@@ -1,8 +1,8 @@
 """bs_ram_block write/read designs generate correct macro calls and build with the real clpru.
 
-Evidence stops at build: TI pru-simulator has no model for broadside device ID 48 (0x30), so running the ELF raises
-"XOUT XFR device ID 48 (0x30) is not modelled". That refusal is recorded in the report, not asserted here, so a
-future simulator model for ID 48 does not turn this file red.
+Checks stop at build: TI pru-simulator has no model for broadside device ID 48 (0x30), so running the ELF raises
+"XOUT XFR device ID 48 (0x30) is not modelled". That refusal is not asserted here, so a future simulator model for
+ID 48 does not turn this file red.
 """
 import os
 import shutil
