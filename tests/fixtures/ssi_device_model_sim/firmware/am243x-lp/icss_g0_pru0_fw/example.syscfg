@@ -1,0 +1,36 @@
+/**
+ * @cliArgs --device "AM243x_ALX_beta" --package "ALX" --part "ALX" --context "icss_g0_pru0" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @exampleMaturity simulator-tested
+ */
+
+// Simulation Settings holds the Run button, the live-view checkbox and the result panel. The Device
+// Model block depends on it, but SysConfig does not show a dependency-loaded module, so add it explicitly.
+const sim = scripting.addModule("/pru_blocks/common/pru_blocks_static_module");
+const ssiModule = scripting.addModule("/pru_blocks/application_specific/ssi_initiator_block", {}, false);
+const ssi = ssiModule.addInstance();
+ssi.$name = "Read_SSI_Position";
+ssi.clkPin = 0;
+ssi.dataPin = 1;
+
+const flowModule = scripting.addModule("/pru_blocks/program_control/flow_control_block", {}, false);
+const halt = flowModule.addInstance();
+halt.$name = "Halt_After_Read";
+halt.opCode = "HALT";
+
+// The attached encoder, as a block. Simulation Settings carries no device fields here.
+const deviceModelModule = scripting.addModule("/pru_blocks/utils/device_model_block", {}, false);
+const encoder = deviceModelModule.addInstance();
+encoder.$name = "SSI_Encoder_Model";
+encoder.deviceKind = "ssi";
+encoder.ssi_dataPin = 1;
+encoder.ssi_clkPin = 0;
+encoder.ssi_bits = 25;
+encoder.ssi_position = 4321;
+encoder.ssi_gray = true;
+
+// Connections between modules: one 25-bit read, then stop with its result register intact.
+scripting.connect(ssi, "next", halt, "prev");
+
+ssi.$position = [-100, 0];
+halt.$position = [100, 0];
+encoder.$position = [0, 150];

@@ -43,7 +43,9 @@ GMAKE = Path(str(TI_TOOLS / "ccs2100" / "ccs" / "utils" / "bin" / "gmake.exe"))
 SIM = Path(os.environ.get("PRU_SIMULATOR_PATH", ""))
 SYSCONFIG_NODE = Path(str(TI_TOOLS / "sysconfig_1.28.0" / "nodejs" / "node.exe"))
 SYSCONFIG_CLI = Path(str(TI_TOOLS / "sysconfig_1.28.0" / "dist" / "cli.js"))
-SOURCE = ROOT / "examples" / "ssi_encoder_sim"
+# A one-block SSI design (gmake all / gmake sim project), shipped as a test fixture. Runs are made on a copy at
+# examples/<name> depth, which its makefile paths assume.
+SOURCE = ROOT / "tests" / "fixtures" / "ssi_encoder_sim"
 DESIGN = Path("firmware/am243x-lp/icss_g0_pru0_fw/example.syscfg")
 SCRATCH = ROOT / ".tmp" / "clock_idle"
 BLOCKS = Path(".metadata/sysconfig/.meta/pru_blocks/application_specific")
@@ -132,8 +134,7 @@ def _biss_design(position):
 
 
 def run_gmake_sim(root, position):
-    if not SOURCE.is_dir():
-        pytest.skip("needs the examples/ssi_encoder_sim example project")
+    assert SOURCE.is_dir(), "tests/fixtures/ssi_encoder_sim is part of the repository"
     path = root / "examples" / ("_case_" + uuid.uuid4().hex[:8])
     try:
         shutil.copytree(SOURCE, path, ignore=shutil.ignore_patterns(

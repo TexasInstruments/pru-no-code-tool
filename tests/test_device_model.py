@@ -40,7 +40,9 @@ TI_TOOLS = Path(os.environ.get("TOOLS_PATH", (os.environ.get("SystemDrive", "C:"
 
 META = ROOT / ".metadata" / "sysconfig" / ".meta"
 TABLE_JS = META / "pru_blocks" / "common" / "device_model_table.js"
-SOURCE = ROOT / "examples" / "ssi_device_model_sim"
+# An SSI read whose encoder is attached only through a Device Model block (gmake all / gmake sim project),
+# shipped as a test fixture. Runs are made on a copy at examples/<name> depth, which its makefile paths assume.
+SOURCE = ROOT / "tests" / "fixtures" / "ssi_device_model_sim"
 FW = Path("firmware/am243x-lp/icss_g0_pru0_fw")
 DESIGN = FW / "example.syscfg"
 FW_MAKE = FW / "ti-pru-cgt" / "makefile"
@@ -603,7 +605,6 @@ def decoded_and_model(out):
     return int(m.group(1)), int(m.group(2))
 
 
-@pytest.mark.skipif(not (SOURCE / DESIGN).exists(), reason="the ssi_device_model_sim example is not in this repository")
 def test_the_example_attaches_its_device_only_through_the_block():
     text = (SOURCE / DESIGN).read_text(encoding="utf-8")
     assert "device_model_block" in text and 'encoder.deviceKind = "ssi"' in text
