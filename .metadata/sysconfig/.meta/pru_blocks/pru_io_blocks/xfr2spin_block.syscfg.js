@@ -260,11 +260,11 @@ const xfr2spinModule = {
         ] },
         { name: "lockId", displayName: "Lock ID (0-63)", default: 0,
           description: "Which of the 64 ICSSG ownership flags to use (own_req_vector[5:0])." },
-        // The region this lock protects. Matched against ipc_shared_mem_block's
-        // variableName by validateXfr2spinGlobal so that "is this buffer locked"
-        // is answerable at build time.
+        // The region this lock protects. Matched by validateXfr2spinGlobal against the
+        // variable name of a block that declares a cross-core write, so that "is this
+        // buffer locked" is answerable at build time.
         { name: "protectsVariable", displayName: "Protects shared variable", default: "",
-          description: "variableName of the IPC Shared Memory block this lock guards. Required to protect a cross-core region." },
+          description: "Name of the shared variable this lock guards (the variable a cross-core writing block stores to). Required to protect a cross-core region." },
 
         { name: "opCode", hidden: true, default: "m_xfr2spin_acquire", getValue: opCode },
         { name: "numOfInputPorts", hidden: true, default: 0 },

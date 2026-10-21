@@ -73,7 +73,7 @@ def test_stepper_period_matches_configured_speed(requested):
         ),
         postlude=["halt"],
     )
-    workdir = ROOT / "build_out" / "" / str(requested)
+    workdir = ROOT / "build_out" / "stepper_timing" / str(requested)
     elf, _ = elf_cosim.build_block_firmware(spec, "stepper_timing", str(workdir))
     result = elf_cosim.run_elf_closed_loop(elf, _IdlePins(), max_steps=200_000)
     assert result.halted, "Stepper firmware did not halt"

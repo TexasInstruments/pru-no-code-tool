@@ -2208,16 +2208,25 @@ function validateXfr2trGlobal(inst, report) {
  *
  * Scope note: a SysConfig design covers ONE
  * core. Nothing in this tool can open the peer core's design, so the fact that
- * a region is written by a second core is taken from the user's
- * `crossCoreWriters` assertion on ipc_shared_mem_block. What is checked here is
- * that, having said so, the design actually locks it.
+ * a region is written by a second core is taken from the user's assertion on
+ * the writing block (a block registered in CROSS_CORE_WRITER_BLOCKS). What is
+ * checked here is that, having said so, the design actually locks it.
  */
+// Blocks that write a region another core may also write: the instance field that names the
+// region and the field that asserts a second writer. A block is registered here in the same
+// change that adds it.
+const CROSS_CORE_WRITER_BLOCKS = [
+];
+
 function validateXfr2spinGlobal(inst, report) {
     const spinMod = system.modules["/pru_blocks/pru_io_blocks/xfr2spin_block"];
-    const ipcMod = system.modules["/pru_blocks/application_specific/ipc_shared_mem_block"];
     const spinInstances = (spinMod && spinMod.$instances) ? spinMod.$instances : [];
-    const ipcInstances = (ipcMod && ipcMod.$instances) ? ipcMod.$instances : [];
-    if (spinInstances.length === 0 && ipcInstances.length === 0) return;
+    const writers = [];
+    for (const w of CROSS_CORE_WRITER_BLOCKS) {
+        const mod = system.modules[w.module];
+        for (const i of (mod && mod.$instances) || []) writers.push({ inst: i, spec: w });
+    }
+    if (spinInstances.length === 0 && writers.length === 0) return;
 
     const opOf = (i) => (i && i.operation) || "acquire";
     const isAcquire = (i) => opOf(i) === "acquire" || opOf(i) === "try_acquire";
@@ -2294,21 +2303,22 @@ function validateXfr2spinGlobal(inst, report) {
     }
 
     // ---- Arm 4: a declared cross-core region must actually be protected ----
-    for (const ipc of ipcInstances) {
-        if (!ipc.crossCoreWriters) continue;
-        const varName = String(ipc.variableName || "").trim();
+    for (const writer of writers) {
+        const ipc = writer.inst, crossField = writer.spec.crossCoreField;
+        if (!ipc[crossField]) continue;
+        const varName = String(ipc[writer.spec.variableField] || "").trim();
         const guards = spinInstances.filter((s) => varOf(s) === varName && varName !== "");
         const guardAcquires = guards.filter(isAcquire);
         const guardReleases = guards.filter(isRelease);
 
         if (guardAcquires.length === 0 || guardReleases.length === 0) {
             report.logError(
-                "IPC Shared Memory '" + ipc.$name + "' writes '" + varName + "' and declares that " +
+                writer.spec.label + " '" + ipc.$name + "' writes '" + varName + "' and declares that " +
                 "another core writes it too, but no XFR2SPIN acquire/release pair names it in " +
                 "'Protects shared variable'. Two cores writing one region with no hardware lock is " +
                 "a silent race. The ICSSG spinlock (SPRUIM2J Table 6-60, XFR2SPIN 0x90) exists for " +
                 "exactly this case: add an acquire before the write and a release after it.",
-                ipc, "crossCoreWriters");
+                ipc, crossField);
             continue;
         }
 
@@ -2320,7 +2330,7 @@ function validateXfr2spinGlobal(inst, report) {
                 "Shared region '" + varName + "' is guarded by more than one lock id (" +
                 ids.sort((x, y) => x - y).join(", ") + "). Mutual exclusion requires every writer of " +
                 "a region to contend for the SAME one of the 64 ownership flags.",
-                ipc, "crossCoreWriters");
+                ipc, crossField);
         }
 
         // ---- Arm 5: placement - acquire before the write, release after ---
@@ -2338,13 +2348,13 @@ function validateXfr2spinGlobal(inst, report) {
                 report.logError(
                     "XFR2SPIN acquire for '" + varName + "' does not execute BEFORE the write in '" +
                     ipc.$name + "'. A lock taken after the store protects nothing.",
-                    ipc, "crossCoreWriters");
+                    ipc, crossField);
             }
             if (!releasedAfter) {
                 report.logError(
                     "XFR2SPIN release for '" + varName + "' does not execute AFTER the write in '" +
                     ipc.$name + "'. Releasing before the store leaves the store unprotected.",
-                    ipc, "crossCoreWriters");
+                    ipc, crossField);
             }
         }
     }
