@@ -32,8 +32,8 @@ const BLOCK = path.join(ROOT, '.metadata', 'sysconfig', '.meta', 'pru_blocks', '
 // pru_core.js is a SysConfig script: it pulls its siblings through the `system`
 // global rather than require(), so it has to be run in a sandbox that provides
 // system.getScript. Loading it with plain require/new Function fails with
-// "system is not defined". Kept self-contained here rather than importing the
-// workspace's tools/bus-cosim/ti-cosim.js, so this repo stays standalone.
+// "system is not defined". Kept self-contained so the script has no
+// dependency outside this repository.
 function loadCore() {
   const cache = {};
   function loadScript(scriptPath) {

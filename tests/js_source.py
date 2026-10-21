@@ -9,8 +9,7 @@ property ({ name }) or a function declaration. `x.name(...)` and `x.name = ...` 
 declarations.
 
 This is deliberately independent of scripts/pin_usage_blocks.js, which loads the module and checks
-moduleStatic.getPinUsage is a function; tests/test_pin_usage_detection.py asserts the two agree
-on the real library.
+moduleStatic.getPinUsage is a function, so the two methods can be compared on the real library.
 """
 import re
 

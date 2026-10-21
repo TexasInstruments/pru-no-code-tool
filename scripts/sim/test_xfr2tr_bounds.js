@@ -278,9 +278,8 @@ ok("regression: happy paths still pass inside valid window");
 // instance, submitCount on a submit instance, so it lives in
 // validateXfr2trGlobal and the per-instance validate() above cannot see it.
 //
-// Driven through the committed runner, which loads the SHIPPED static module.
-// Measured before these arms existed: dead-coding the whole guard left
-// `node scripts/run_all_tests.js` reporting ALL TESTS PASSED.
+// Driven through the committed runner, which loads the SHIPPED static module,
+// so dead-coding the whole guard turns these arms red.
 // ---------------------------------------------------------------------------
 const globalRunner = require(path.join(root, "scripts", "global_runner.js"));
 

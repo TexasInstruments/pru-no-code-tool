@@ -47,15 +47,14 @@ const LITERAL = {
   BAUD_CYCLES: 16, POLARITY: 0, EDGE: 0, WIDTH: 8, COUNT: 4, DELAY: 10,
   THRESHOLD: 100, MASK: 0xFF, SHIFT: 1, VALUE: 1, OFFSET: 0, INDEX: 0,
   SIZE: 4, LEN: 4, CHANNEL: 0, SLOT: 0, MODE: 0, ENABLE: 1, INVERT: 0,
-  // Operands tested by `.if` guards. Every value below is the block's DEFAULT configuration
-  //, so a ledger row describes the default firmware. The macro operand name is
+  // Operands tested by `.if` guards. Every value below is the block's DEFAULT configuration,
+  // so an emitted row describes the default firmware. The macro operand name is
   // not always the config name: constantN = getValue(config), shown after each group.
   //   scheduler_block task1..4 = task1_id..task4_id defaults 0, 1, 255, 255
   //   trigger_router_block route1..4 = 255 (unused sentinel)
   //   multi_axis_motion_block NUM_AXES 2, pulseWidthCycles 10 -> PULSE_K 4, PULSE_NOPS 0
-  //   iolink_master_block TX_BYTES/RX_BYTES 4/4
   //   pdm_block SAMPLE_HIGH = constant7 getValue (channel mono -> 1)
-  //   vibration_edge_block FEAT_EN = timestampEnable default true -> 1
+  //   TX_BYTES/RX_BYTES 4/4 and FEAT_EN 1 are the defaults of application blocks that test these operands
   task1: 0, task2: 1, task3: 255, task4: 255, route1: 255, route2: 255, route3: 255, route4: 255,
   NUM_AXES: 2, PULSE_K: 4, PULSE_NOPS: 0, TX_BYTES: 4, RX_BYTES: 4,
   SAMPLE_HIGH: 1, FEAT_EN: 1,
@@ -261,7 +260,7 @@ function literalOf(v) {
 // instance, so evaluation happens in dependency order whatever the declaration order. An option
 // whose getValue throws, or that is part of a dependency cycle, is UNRESOLVED: reading it throws
 // in every dependent, so a value that rests on a guess is never produced; the reason is kept
-// for the ledger. `overrides` are user-set values (the SysConfig `inst[k] = v` assignments).
+// in the result. `overrides` are user-set values (the SysConfig `inst[k] = v` assignments).
 function evaluateOptions(cfg, overrides = {}) {
   const values = {};
   const unresolved = {};
@@ -378,7 +377,7 @@ function blockBindings(mod, macro) {
 }
 
 // Expand a loaded block's default macro with its own defaults bound (the production path for
-// the CLI, the ledger and the tests). `literal` is the global fallback table. A key the caller
+// the CLI and the tests). `literal` is the global fallback table. A key the caller
 // changed in `literal` (value differs from LITERAL, or key removed) is the caller's decision
 // and beats the block default, so red arms can still steer one operand.
 function expandWithBlockDefaults(mod, macro, literal = LITERAL, evaluator = sharedHarness.evalConditionDetailed) {
@@ -401,7 +400,7 @@ function expandWithBlockDefaults(mod, macro, literal = LITERAL, evaluator = shar
   return r;
 }
 
-// Ledger text: which operand values are the block's own defaults and which fell back to the
+// Human-readable note: which operand values are the block's own defaults and which fell back to the
 // global LITERAL table. Empty when the macro binds no literal operand at all.
 function bindingDisclosure(bindings) {
   const parts = [];
@@ -441,35 +440,27 @@ function defaultMacro(mod, id) {
   return { name, macro: mod.getMacro('', name), source };
 }
 
-// The evidence run's per-block policy: the block's DECLARED kind and its cycle
-// budget. Kind comes from scripts/block_control_flow.js (continuous = no next port / never
-// returns; sequential = hands control back). A block the classifier cannot decide is treated as
-// sequential: it must halt to earn `executes` (fail closed). Budgets live in ONE file,
-// scripts/fixtures/cycle_budgets.json; a continuous block is never budgeted there and runs
-// to the file's `default`. scripts/sim/maturity.py (_grade_execute) holds the rule that turns
-// kind + halted into a state.
-const BUDGETS_FILE = path.join(__dirname, 'fixtures', 'cycle_budgets.json');
-function evidencePolicy(id) {
+// The block's control-flow kind, recorded in the manifest. Kind comes from
+// scripts/block_control_flow.js (continuous = no next port / never returns; sequential = hands
+// control back). A block the classifier cannot decide is recorded as sequential, so a run that
+// does not halt is visible as such (fail closed).
+function blockKind(id) {
   const cf = require('./block_control_flow').classify(id);
   const continuous = cf.cls === 'continuous' && cf.decided;
-  const budgets = JSON.parse(fs.readFileSync(BUDGETS_FILE, 'utf8'));
-  const decl = !continuous && budgets.blocks[id] ? budgets.blocks[id] : null;
   return {
     kind: continuous ? 'continuous' : 'sequential',
     kindBasis: cf.decided ? cf.reason : `${cf.reason} -- undecided, treated as sequential`,
-    cycleBudget: decl ? decl.budget : budgets.default,
-    budgetDeclared: !!decl,
   };
 }
 
-// Expand one block's default macro by id (tests and the ledger share this path).
+// Expand one block's default macro by id (tests and the CLI share this path).
 function expandBlock(id, literal = LITERAL) {
   const b = allBlocks().find((x) => x.id === id);
   const mod = loadBlock(b.file);
   return expandWithBlockDefaults(mod, defaultMacro(mod, id).macro, literal);
 }
 
-module.exports = { expand, expandBlock, expandWithBlockDefaults, defaultMacro, evidencePolicy, blockBindings, evaluateOptions, bindingDisclosure, allBlocks, loadBlock, LITERAL };
+module.exports = { expand, expandBlock, expandWithBlockDefaults, defaultMacro, blockKind, blockBindings, evaluateOptions, bindingDisclosure, allBlocks, loadBlock, LITERAL };
 
 if (require.main === module) {
   fs.mkdirSync(OUT, { recursive: true });
@@ -512,10 +503,9 @@ if (require.main === module) {
       js = { ok: true, unknown: r.pruState.unknownInstruction, parseErr: r.pruState.errorParsing };
     } catch (e) { js = { ok: false, error: e.message.slice(0, 80) }; }
 
-    const policy = evidencePolicy(b.id);
+    const policy = blockKind(b.id);
     rec = { ...rec, operands: operands.length, instructions: instructions.length, bindings, js,
-      macro: macroName, macroSource, kind: policy.kind, kindBasis: policy.kindBasis,
-      cycle_budget: policy.cycleBudget, budgetDeclared: policy.budgetDeclared };
+      macro: macroName, macroSource, kind: policy.kind, kindBasis: policy.kindBasis };
     manifest.push(rec);
     emitted++;
   }

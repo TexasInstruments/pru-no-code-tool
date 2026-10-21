@@ -1,7 +1,6 @@
 """MAC operand write-to-access gap check.
 
-On LP-AM261 silicon (measured, tools/pru-jpeg-decode/docs/results/e2-latency-am261x.md),
-the MAC broadside interface does not see an operand written in the instruction
+On LP-AM261 silicon (measured on the board), the MAC broadside interface does not see an operand written in the instruction
 immediately before XIN 0 or XOUT 0.
 The last write to R28 (TEMP_REG1) or R29 (TEMP_REG2) must be at least ONE
 instruction before XIN 0 / XOUT 0 (e.g. an independent instruction or a NOP).

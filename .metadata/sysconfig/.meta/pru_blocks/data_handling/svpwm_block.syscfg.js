@@ -1,8 +1,8 @@
 "use strict";
 const svpwmModule={
  displayName:"SVPWM Duty Calculator",requiresWidget:["mac"],defaultInstanceName:"SVPWM_",description:"Compute three centered space-vector PWM duties from Q12 alpha/beta commands.",
- longDescription:"Applies zero-sequence/common-mode injection to Q12 alpha/beta commands, returns phase A/B/C duty counts, sector 1..6, and a center-period current-sampling trigger. Duties are clamped to the configured dead-time margins. This slice computes synchronized duty contracts; six-pin complementary waveform emission remains follow-up work.",
- assemblyEvidence:"node scripts/test_new_block_assembly.js (TI clpru 2.3.3)",uiView:"graph",
+ longDescription:"Applies zero-sequence/common-mode injection to Q12 alpha/beta commands, returns phase A/B/C duty counts, sector 1..6, and a center-period current-sampling trigger. Duties are clamped to the configured dead-time margins. This block computes the duties only; the Three-phase complementary PWM block emits the six-pin complementary waveform.",
+ uiView:"graph",
  config:[{name:"$shape",hidden:true,default:"square"},{name:"$topLabel",hidden:true,default:""},
   {name:"blockMaturity",hidden:true,default:"metadata-only",options:[{name:"metadata-only"},{name:"assembles"},{name:"simulator-tested"},{name:"dual-oracle-tested"},{name:"hardware-validated"}]},
   {name:"periodCounts",displayName:"PWM period counts",default:1000},{name:"deadtimeCounts",displayName:"Dead-time margin counts",default:10},

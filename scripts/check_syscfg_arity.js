@@ -6,15 +6,14 @@
  *     node scripts/check_syscfg_arity.js [<.meta root>] [--list]
  *       --list also prints every reached block as 'reached <module>'
  *
- * Common/pru_blocks_static_module.syscfg.js rejects a generated macro call whose argument
+ * common/pru_blocks_static_module.syscfg.js rejects a generated macro call whose argument
  * count differs from the macro definition ("Macro arity mismatch: generated call has N args but
  * definition expects M"). About a dozen blocks hit it and could not be used in the GUI at all.
  * This adds a default instance of every pru_blocks module through the REAL SysConfig CLI and fails
  * on any such error.
  *
  * It checks the COUNT only. The ORDER of the arguments is not visible to it; a block whose count was
- * fixed still needs a test that runs the generated firmware (tests/test_ssi_syscfg.py does
- * that for the SSI initiator).
+ * fixed still needs a test that runs the generated firmware.
  *
  * Each block is probed TWICE, both with every input port wired to a load_constant.
  *   standalone  - only the block (and whatever static module the block itself declares). A block that

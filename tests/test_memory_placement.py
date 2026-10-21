@@ -7,8 +7,7 @@ linker.cmd and runs the checker; the red arm builds the SAME example with the
 `.usmem`/`.udmem` rules stripped from its linker.cmd and runs the SAME
 checker, asserting the specific failure text.
 
-Static, no ELF run: this reads the linker map only. (The IPC-address check in
-test_drone_esc_dshot.py is likewise static, see its docstring.)
+Static, no ELF run: this reads the linker map only.
 """
 import os
 import shutil

@@ -4,12 +4,10 @@
  *
  * Emits each block's generated macro as standalone .asm plus a JS-core R30
  * trace, so the same firmware can be replayed on TI's pru-simulator and the two
- * pin waveforms compared. Run the Python side with
- * scripts/timing_block_dual_oracle.py.
+ * pin waveforms compared.
  *
  * The JS PRU core ships inside this tool, so it is not an independent oracle for
- * its own blocks. pru-simulator is, once it has an IEP model
- * (TexasInstruments/pru-simulator#13, PR #14).
+ * its own blocks. pru-simulator is, in a revision that models the IEP timer.
  *
  * KNOWN SYSTEMATIC OFFSET - do not read it as a block defect: the JS core
  * executes LDI32 in one cycle, but on silicon LDI32 assembles to two LDI, which

@@ -24,10 +24,9 @@ const GPIO_SIGNALS = Array.from({ length: 20 }, (_, i) => ({
 }));
 
 /**
- * Multi-Axis Motion Controller Block (rewrite of the macro)
+ * Multi-Axis Motion Controller Block
  *
- * What this block REALLY does (proved on TI pru-simulator, see
- * tests/test_multi_axis_example.py):
+ * What this block does (checked on TI pru-simulator):
  *
  *   - Up to 4 axes of step/dir/enable on R30, driven from ONE fixed-length
  *     scheduler tick. Every tick performs the same instruction sequence, so a
@@ -47,7 +46,7 @@ const GPIO_SIGNALS = Array.from({ length: 20 }, (_, i) => ({
  *     HALTs. Worst-case latency is one tick plus the clamp (measured).
  *   - Constant speed per axis, steps counted down to targetSteps.
  *
- * What it does NOT do (the previous macro text claimed all of these):
+ * What it does NOT do:
  *   - No trapezoidal acceleration: accel0..3 are accepted but ignored.
  *   - No IEP timebase: timing is the fixed-length tick above, not the IEP.
  *   - No home/limit switch handling: homeSwPin/limitPPin/limitNPin are ignored.
@@ -82,8 +81,7 @@ function pulseDelay(pulseCycles) {
 }
 
 /**
- * Exact PRU cycles of one scheduler tick (measured on TI pru-simulator and
- * pinned by tests/test_multi_axis_example.py).
+ * Exact PRU cycles of one scheduler tick (measured on TI pru-simulator).
  *
  * tick = 1 (mask clear) + 1 (e-stop test) + 9 per axis + 1 (broadside or)
  *      + pulse delay + 1 (broadside and) + 1 (mov of axis 0 remaining count)

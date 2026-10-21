@@ -21,9 +21,8 @@
  *     blocks may share a pin;
  *   - malformed pin usage (including non-array results), unparseable pins, and blocks whose getPinUsage throws.
  *
- * Pins come from each block's moduleStatic.getPinUsage(inst); a guard test
- * (tests/test_pin_collisions.py) fails for any R30/R31-touching block that
- * neither has getPinUsage nor an explicit exemption.
+ * Pins come from each block's moduleStatic.getPinUsage(inst); a block that touches
+ * R30/R31 should declare getPinUsage (--defaults-report lists what each block claims).
  *
  * Exit codes: 0 = every file evaluated and clean; 1 = a collision/error was found;
  * 2 = cannot run (SysConfig device data missing) - this script never exits 0
@@ -398,7 +397,7 @@ function relPath(file) {
 
 // --defaults-report: instantiate every block that declares getPinUsage at its config defaults
 // (exactly as the loader does for a .syscfg that sets nothing) and print the claims as JSON.
-// Needs no SysConfig device data. Used by the behavioural guard in tests/test_pin_collisions.py.
+// Needs no SysConfig device data.
 function defaultsReport() {
     const blocksRoot = path.join(ROOT, '.metadata', 'sysconfig', '.meta', 'pru_blocks');
     const report = {};
