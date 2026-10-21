@@ -1,10 +1,10 @@
 """pin the `i.bidi` conjunct of the cross-instance exemption in check_pin_collisions.js.
 
-A mutation test showed that deleting `i.bidi &&` from rule (b) (scripts/check_pin_collisions.js,
-the o.inst !== i.inst branch) survives all 54 pin tests: no test has the SAME block module on
-DIFFERENT instances with a bidi GPO against a NON-bidi GPI on one pad. The existing non-bidi-GPI
-arm (tests/test_pin_rules_fail_closed.py, test_red_bidi_pad_shared_with_a_non_bidi_gpi_fails) uses a
-different module, so the `o.block === i.block` conjunct masks the mutant there.
+Deleting `i.bidi &&` from rule (b) (scripts/check_pin_collisions.js, the o.inst !== i.inst branch) is
+only visible to a design with the SAME block module on DIFFERENT instances, a bidi GPO against a NON-bidi
+GPI on one pad. The non-bidi-GPI case in tests/test_pin_rules_fail_closed.py
+(test_red_bidi_pad_shared_with_a_non_bidi_gpi_fails) uses a different module, so the
+`o.block === i.block` conjunct already rejects it there.
 
 No shipped block can produce that shape (a module's getPinUsage claims the same pad either as an
 open-drain bidi pair or not, uniformly), so this builds a synthetic sequential block whose

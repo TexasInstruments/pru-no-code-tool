@@ -1,11 +1,12 @@
-"""harden the duplicate-GPO rule added.
+"""Hardening of the duplicate-GPO rule.
 
   1. block_control_flow.js is FAIL-CLOSED over an allow-list of straight-line PRU instructions:
      slp, an unknown mnemonic, an unexpanded macro call, a halt on one path, and a getMacro that
      throws for some candidate configuration are all UNDECIDED (treated continuous), and an
      always-true self-compare is a decided spin. Each arm asserts classification AND reason.
   2. The cross-instance bidi exemption in check_pin_collisions.js is pinned on both conjuncts.
-  3. the baseline may only shrink: surviving entries are a subset of the set.
+  3. the baseline may only shrink: surviving entries are a subset of the reference set. TI's examples have no
+     findings, so the shipped baseline and reference are empty; the subset logic is checked on a sample.
 """
 import glob
 import json
@@ -232,13 +233,32 @@ def _load():
     return (json.load(open(BASELINE, encoding="utf8")), json.load(open(REFERENCE, encoding="utf8")))
 
 
+SAMPLE_BASE = {"examples/sample/example.syscfg": {"reason": "sample", "errors": ["has colliding GPO/GPI indices: 0",
+                                                                               "    a.GPO vs b.GPI on 0"]}}
+SAMPLE_REF = {"examples/sample/example.syscfg": 2}
+
+
 def test_baseline_entries_are_a_subset_of_the_set_and_never_grow():
     base, ref = _load()
     assert _baseline_violations(base, ref) == []
+    assert _baseline_violations(SAMPLE_BASE, SAMPLE_REF) == []
+
+
+def test_every_baseline_entry_names_an_existing_design():
+    base, ref = _load()
+    missing = [k for k in set(base) | set(ref) if not os.path.isfile(os.path.join(ROOT, k))]
+    assert missing == [], missing
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not on PATH")
+def test_the_examples_pass_the_pin_check_with_the_shipped_baseline():
+    res = subprocess.run(["node", os.path.join(ROOT, "scripts", "check_pin_collisions.js"), "--baseline", BASELINE],
+                         cwd=ROOT, capture_output=True, text=True)
+    assert res.returncode == 0, res.stdout + res.stderr
 
 
 def test_red_swapping_a_baseline_entry_for_a_new_one_of_equal_count_is_caught():
-    base, ref = _load()
+    base, ref = SAMPLE_BASE, SAMPLE_REF
     victim = sorted(base)[0]
     swapped = {k: v for k, v in base.items() if k != victim}
     swapped["examples/brand_new/example.syscfg"] = base[victim]      # same finding count
@@ -248,7 +268,7 @@ def test_red_swapping_a_baseline_entry_for_a_new_one_of_equal_count_is_caught():
 
 
 def test_red_a_baseline_entry_gaining_findings_is_caught():
-    base, ref = _load()
+    base, ref = SAMPLE_BASE, SAMPLE_REF
     victim = sorted(base)[0]
     grown = json.loads(json.dumps(base))
     grown[victim]["errors"] = grown[victim]["errors"] + ["    one more"]

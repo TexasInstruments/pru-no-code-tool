@@ -1,9 +1,0 @@
-/**
- * @cliArgs --device "AM261x_ZFG" --part "AM2612" --package "ZFG" --context "icss_m1_pru0" --product "PRU_NO_CODE_TOOL@01.00.01"
- */
-const spin = scripting.addModule("/pru_blocks/pru_io_blocks/xfr2spin_block", {}, false);
-const acq = spin.addInstance();
-const rel = spin.addInstance();
-acq.$name = "lock_acquire"; acq.operation = "acquire"; acq.lockId = 7;
-rel.$name = "lock_release"; rel.operation = "release"; rel.lockId = 7;
-scripting.connect(acq, "next", rel, "prev");
