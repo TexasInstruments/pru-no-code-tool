@@ -10,7 +10,7 @@ const sdfmModule = {
     config: [
         { name: "$shape", hidden: true, default: "square" },
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "filterChannel", displayName: "Filter Channel", default: 0, options: [{name: 0}, {name: 1}, {name: 2}, {name: 3}] },
         { name: "osr", displayName: "Over Sampling Ratio (OSR)", default: 64 },
 
@@ -19,14 +19,14 @@ const sdfmModule = {
         { name: "numOfOutputPorts", default: 1, hidden: true },
         { name: "output1Size", default: 4, hidden: true },
         { name: "numOfConstants", default: 1, hidden: true },
-        
+
         { name: "constant1", hidden: true, default: 0, getValue: (inst) => inst.filterChannel },
-        
+
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 10, default: 10 },
         { name: "blockMaturity", displayName: "Block Maturity", default: "simulator-tested", options: [{name: "metadata-only"}, {name: "assembles"}, {name: "simulator-tested"}, {name: "dual-oracle-tested"}, {name: "hardware-validated"}], hidden: true }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         return [
             { name: "prev", type: "IO_PREV" },
             { name: "next", type: "IO_NEXT" },

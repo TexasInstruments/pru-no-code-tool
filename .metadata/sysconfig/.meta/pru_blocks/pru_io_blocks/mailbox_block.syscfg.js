@@ -26,7 +26,7 @@ const mailboxModule = {
     config: [
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "mode", displayName: "Mode", default: "publish", options: [{name:"publish"}, {name:"consume"}] },
         { name: "baseOffset", displayName: "Mailbox base offset", default: "0x0000" },
         { name: "slots", displayName: "Ring slots", default: 16 },
@@ -41,7 +41,7 @@ const mailboxModule = {
         { name: "numOfOutputPorts", default: 1, hidden: true },
         { name: "output1Size", default: 1, hidden: true, getValue: (inst) => inst.mode === "consume" ? (Number(inst.slotBytes) || 4) : 1 },
         { name: "numOfConstants", default: 8, hidden: true },
-        
+
         { name: "constant1", hidden: true, default: 0, getValue: (inst) => {
             let offset = parseInt(inst.baseOffset, 16);
             if (isNaN(offset)) offset = parseInt(inst.baseOffset);
@@ -54,13 +54,13 @@ const mailboxModule = {
         { name: "constant6", hidden: true, default: 0, getValue: (inst) => inst.mode === 'publish' ? 1 : 0 },
         { name: "constant7", hidden: true, default: 0, getValue: (inst) => inst.signalEvent ? (inst.hostEvent + 16) : 0 },
         { name: "constant8", hidden: true, default: "", getValue: (inst) => inst.dataRegister },
-        
+
         // Non-empty consume expansion: 21 instructions (both memory-mode branches
         // are assembled conditionally; the selected consume path executes 21).
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 21, default: 21 }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         return [
             { name: "output1", type: "output32" },
             { name: "prev", type: "IO_PREV" },

@@ -47,7 +47,7 @@ def decode_ws2812_pixels(trace, pin=5, clk_hz=200_000_000):
     - Inter-LED gap (low after a LED's last bit) obeys the same T0L/T1L
       window and must stay <= 5 us (reset is >= 50 us)
     - Decision threshold between 0 and 1: 600 ns (midpoint of [550, 650] ns)
-    
+
     Each pixel consists of 24 bits transmitted MSB-first in GRB order.
     """
     ns_per_cycle = 1e9 / clk_hz

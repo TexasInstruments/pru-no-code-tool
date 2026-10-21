@@ -11,7 +11,7 @@ const macHwModule = {
     config: [
         { name: "$shape", hidden: true, default: "square" },
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "blockMaturity", displayName: "Block Maturity", default: "dual-oracle-tested", options: [{name: "metadata-only"}, {name: "assembles"}, {name: "simulator-tested"}, {name: "dual-oracle-tested"}, {name: "hardware-validated"}], hidden: true },
 
         { name: "opCode", default: "m_mac_hw", hidden: true },
@@ -19,12 +19,12 @@ const macHwModule = {
         { name: "numOfOutputPorts", default: 1, hidden: true },
         { name: "output1Size", default: 4, hidden: true },
         { name: "numOfConstants", default: 0, hidden: true },
-        
+
         // Default generated macro evidence: 9 cycles (including the emitted HALT).
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 9, default: 9 }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         return [
             { name: "prev", type: "IO_PREV" },
             { name: "next", type: "IO_NEXT" },

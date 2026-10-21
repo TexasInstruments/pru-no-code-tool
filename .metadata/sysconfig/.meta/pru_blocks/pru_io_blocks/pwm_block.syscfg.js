@@ -37,7 +37,7 @@ const pwmModule = {
 			hidden: true
 		},
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "clkHz", displayName: "IEP clock (Hz)", default: 200000000 },
         { name: "periodNs", displayName: "Period (ns)", default: 5000 },
         { name: "dutyPct", displayName: "Duty (%)", default: 25 },
@@ -53,7 +53,7 @@ const pwmModule = {
         { name: "numOfOutputPorts", default: 0, hidden: true }, /* Continuous block when periodCount is 0 */
         { name: "output1Size", default: 0, hidden: true },
         { name: "numOfConstants", default: 7, hidden: true, getValue: (inst) => (inst.periodCount > 0 ? 8 : 7) },
-        
+
         { name: "constant1", hidden: true, default: "", getValue: (inst) => inst.pin },
         { name: "constant2", hidden: true, default: 0, getValue: (inst) => Math.round((inst.periodNs * inst.clkHz) / 1e9) },
         { name: "constant3", hidden: true, default: 0, getValue: (inst) => {
@@ -65,7 +65,7 @@ const pwmModule = {
         { name: "constant6", hidden: true, default: "", getValue: (inst) => inst.compPin },
         { name: "constant7", hidden: true, default: 0, getValue: (inst) => Math.round((inst.deadbandNs * inst.clkHz) / 1e9) },
         { name: "constant8", hidden: true, default: 0, getValue: (inst) => inst.periodCount || 0 },
-        
+
         { name: "noOfCycles", displayName: "Number Of Cycles", default: 1,
           // Continuous mode never returns, so its 1 is a placeholder. A counted run is finite: each period
           // measures ~2x the IEP period count in the TI pru-simulator, plus a
@@ -77,7 +77,7 @@ const pwmModule = {
           } }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         const p = [
             { name: "prev", type: "IO_PREV" }
         ];

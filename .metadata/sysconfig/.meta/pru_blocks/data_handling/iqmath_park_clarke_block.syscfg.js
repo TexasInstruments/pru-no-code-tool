@@ -11,7 +11,7 @@ const parkClarkeModule = {
     config: [
         { name: "$shape", hidden: true, default: "square" },
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "transformType", displayName: "Transform Type", default: "Forward", options: [{name: "Forward"}, {name: "Inverse"}] },
 
         { name: "opCode", default: "m_iqmath_transform", hidden: true },
@@ -20,16 +20,16 @@ const parkClarkeModule = {
         { name: "output1Size", default: 8, hidden: true }, // D and Q are 8 bytes total
         { name: "output2Size", default: 4, hidden: true },
         { name: "numOfConstants", default: 1, hidden: true },
-        
+
         { name: "constant1", hidden: true, default: 0, getValue: (inst) => inst.transformType === "Forward" ? 1 : 0 },
-        
+
         // Default forward macro evidence executes in 97 cycles (109 assembled instructions).
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 97, default: 97 },
 
         { name: "blockMaturity", displayName: "Block Maturity", default: "simulator-tested", options: [{name: "metadata-only"}, {name: "assembles"}, {name: "simulator-tested"}, {name: "dual-oracle-tested"}, {name: "hardware-validated"}], hidden: true }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         return [
             { name: "prev", type: "IO_PREV" },
             { name: "next", type: "IO_NEXT" },

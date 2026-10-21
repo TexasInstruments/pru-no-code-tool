@@ -37,7 +37,7 @@ const captureModule = {
             hidden: true
         },
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "measurementType", displayName: "Measurement Type", default: "pulseWidth", options: [{name:"pulseWidth"}, {name:"frequency"}, {name:"timeBetweenEdges"}] },
         { name: "triggerSource", displayName: "Trigger Source", default: "iep", options: [{name:"iep"}, {name:"gpio"}, {name:"internal"}] },
         { name: "pin", displayName: "Target Pin (R31)", default: "5", options: GPIO_SIGNALS },
@@ -49,7 +49,7 @@ const captureModule = {
         { name: "numOfOutputPorts", default: 1, hidden: true },
         { name: "output1Size", default: 1, hidden: true },
         { name: "numOfConstants", default: 4, hidden: true },
-        
+
         { name: "constant1", hidden: true, default: 0, getValue: (inst) => {
             if (inst.triggerSource === 'iep') return 0;
             if (inst.triggerSource === 'gpio') return 1;
@@ -62,11 +62,11 @@ const captureModule = {
         }},
         { name: "constant3", hidden: true, default: "", getValue: (inst) => inst.pin },
         { name: "constant4", hidden: true, default: "", getValue: (inst) => inst.dataRegister },
-        
+
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 1, default: 1 }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         return [
             { name: "output1", type: "output32" },
             { name: "prev", type: "IO_PREV" },

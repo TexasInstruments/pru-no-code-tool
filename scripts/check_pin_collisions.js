@@ -139,11 +139,11 @@ function loadSyscfg(f, source) {
             let configDefaults = {};
             const isStatic = name === '/pru_blocks/common/pru_blocks_static_module';
             let moduleExports = null;
-            
+
             if (fs.existsSync(modulePath)) {
                 try {
                     const content = fs.readFileSync(modulePath, 'utf8');
-                    const sb = { 
+                    const sb = {
                         system: new Proxy({}, {
                             get(_t, p) {
                                 if (p === "getScript") return () => stub();
@@ -153,11 +153,11 @@ function loadSyscfg(f, source) {
                                 if (p === "modules") return isStatic ? designModules : {};
                                 return stub();
                             }
-                        }), 
-                        exports: {}, 
-                        module: { exports: {} }, 
+                        }),
+                        exports: {},
+                        module: { exports: {} },
                         require: () => stub(),
-                        console: { log() {}, warn() {}, error() {} } 
+                        console: { log() {}, warn() {}, error() {} }
                     };
                     sb.global = sb;
                     vm.createContext(sb);
@@ -185,7 +185,7 @@ function loadSyscfg(f, source) {
                     const inst = Object.assign({ $module: { $name: name, moduleStatic: moduleStatic } }, configDefaults);
                     instances.push(inst);
                     (designModules[name] = designModules[name] || { $instances: [] }).$instances.push(inst);
-                    
+
                     return new Proxy(inst, {
                         get(target, prop) {
                             if (prop in target) return target[prop];

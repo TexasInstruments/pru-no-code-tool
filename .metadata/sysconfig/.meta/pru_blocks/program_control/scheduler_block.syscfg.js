@@ -57,7 +57,7 @@ scheduler_loop?:
     ldi32 R5, TASK_0_PERIOD
     qbgt  skip_task_0?, R3, R5
     mov   R10, R2                ; last_0 = current
-    
+
     ; Dispatch Task (cooperative subroutine call)
 ${generateTaskJal('task1')}
 skip_task_0?:
@@ -70,7 +70,7 @@ skip_task_0?:
     ldi32 R5, TASK_1_PERIOD
     qbgt  skip_task_1?, R3, R5
     mov   R11, R2                ; last_1 = current
-    
+
 ${generateTaskJal('task2')}
 skip_task_1?:
     .endif
@@ -82,7 +82,7 @@ skip_task_1?:
     ldi32 R5, TASK_2_PERIOD
     qbgt  skip_task_2?, R3, R5
     mov   R12, R2                ; last_2 = current
-    
+
 ${generateTaskJal('task3')}
 skip_task_2?:
     .endif
@@ -94,7 +94,7 @@ skip_task_2?:
     ldi32 R5, TASK_3_PERIOD
     qbgt  skip_task_3?, R3, R5
     mov   R13, R2                ; last_3 = current
-    
+
 ${generateTaskJal('task4')}
 skip_task_3?:
     .endif
@@ -108,7 +108,7 @@ yield_delay?:
 `;
 
     if(pruInstructionMacro == "") {
-        macroBody += "\n    .endm\n";	
+        macroBody += "\n    .endm\n";
     }
     return macroBody;
 }
@@ -127,12 +127,12 @@ exports = {
         { name: "task2_id", displayName: "Task 2 ID", default: 1 },
         { name: "task3_id", displayName: "Task 3 ID", default: 255 },
         { name: "task4_id", displayName: "Task 4 ID", default: 255 },
-        
+
         { name: "constant1", hidden: true, default: "0", getValue: (inst) => inst.task1_id + "" },
         { name: "constant2", hidden: true, default: "1", getValue: (inst) => inst.task2_id + "" },
         { name: "constant3", hidden: true, default: "255", getValue: (inst) => inst.task3_id + "" },
         { name: "constant4", hidden: true, default: "255", getValue: (inst) => inst.task4_id + "" },
-        
+
         { name: "numOfConstants", hidden: true, default: 4 },
         { name: "opCode", hidden: true, default: "m_scheduler_block" },
         { name: "numOfInputPorts", hidden: true, default: 0 },

@@ -71,7 +71,7 @@ evaluation_delay?:
 `;
 
     if(pruInstructionMacro == "") {
-        macroBody += "\n    .endm\n";	
+        macroBody += "\n    .endm\n";
     }
     return macroBody;
 }
@@ -86,12 +86,12 @@ exports = {
         { name: "route2", displayName: "Route 2 R31 bit", default: 255 },
         { name: "route3", displayName: "Route 3 R31 bit", default: 255 },
         { name: "route4", displayName: "Route 4 R31 bit", default: 255 },
-        
+
         { name: "constant1", hidden: true, default: "255", getValue: (inst) => inst.route1 + "" },
         { name: "constant2", hidden: true, default: "255", getValue: (inst) => inst.route2 + "" },
         { name: "constant3", hidden: true, default: "255", getValue: (inst) => inst.route3 + "" },
         { name: "constant4", hidden: true, default: "255", getValue: (inst) => inst.route4 + "" },
-        
+
         { name: "numOfConstants", hidden: true, default: 4 },
         { name: "opCode", hidden: true, default: "m_trigger_router_block" },
         { name: "numOfInputPorts", hidden: true, default: 0 },

@@ -29,13 +29,13 @@ function validate(inst, validation) {
     if (inst.spi_mode !== "MODE0") {
         validation.logError("Only MODE0 is supported by this block", inst, "spi_mode");
     }
-    
+
     const pins = [inst.cs_pin, inst.sclk_pin, inst.mosi_pin, inst.miso_pin];
     const uniquePins = new Set(pins);
     if (uniquePins.size !== pins.length) {
         validation.logError("CS, SCLK, MOSI, and MISO pins must be distinct", inst);
     }
-    
+
     const noOfCycles = inst.noOfCycles;
     if (inst.sample_period < noOfCycles) {
         validation.logError(`Sequence takes ${noOfCycles} cycles, but sample_period is ${inst.sample_period}. Cannot fit sequence in period.`, inst, "sample_period");
@@ -52,25 +52,25 @@ const spiAdcSequencerModule = {
     config: [
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "bits_per_frame", displayName: "Bits per frame", default: 16 },
         { name: "spi_mode", displayName: "SPI Mode", default: "MODE0", options: [{name: "MODE0"}] },
         { name: "t_conv", displayName: "Conversion Time (cycles)", default: 200 },
         { name: "sample_period", displayName: "Sample Period / Grid (cycles)", default: 5000 },
         { name: "channel_sequence", displayName: "Channel Sequence (CSV of MOSI words)", default: "0xA500" },
-        
+
         { name: "cs_pin", displayName: "CS Signal (R30)", default: "3", options: GPIO_SIGNALS },
         { name: "sclk_pin", displayName: "SCLK Signal (R30)", default: "0", options: GPIO_SIGNALS },
         { name: "mosi_pin", displayName: "MOSI Signal (R30)", default: "2", options: GPIO_SIGNALS },
         { name: "miso_pin", displayName: "MISO Signal (R31)", default: "1", options: GPIO_SIGNALS },
-        
+
         { name: "base_data_reg", displayName: "Base Data Register", default: "R4" },
-        
+
         { name: "bug_inject", hidden: true, default: "none", options: [{name: "none"}, {name: "clocks_while_cs_deasserted"}, {name: "wrong_clock_count"}] },
-        
-        { 
-            name: "opCode", 
-            default: "m_spi_adc_seq", 
+
+        {
+            name: "opCode",
+            default: "m_spi_adc_seq",
             hidden: true,
             getValue: (inst) => {
                 let seq = inst.channel_sequence.split(",").map(x => x.trim()).filter(x => x !== "");
@@ -87,8 +87,8 @@ const spiAdcSequencerModule = {
         },
         { name: "multiOutputMacroArgs", hidden: true, default: true },
         ...Array.from({length: 25}, (_, n) => ({ name: `output${n + 1}Size`, hidden: true, default: 4 })),
-        { 
-            name: "numOfConstants", 
+        {
+            name: "numOfConstants",
             getValue: (inst) => {
                 let seq = inst.channel_sequence.split(",").map(x => x.trim()).filter(x => x !== "");
                 return 7 + seq.length; // six fixed values, one command per channel, then PAD_CYCLES
@@ -105,10 +105,10 @@ const spiAdcSequencerModule = {
                 return Math.max(0, inst.sample_period - inst.noOfCycles);
             }
         })),
-        
-        { 
-            name: "noOfCycles", 
-            displayName: "Worst-case Cycles (calculated)", 
+
+        {
+            name: "noOfCycles",
+            displayName: "Worst-case Cycles (calculated)",
             getValue: (inst) => {
                 const seq = inst.channel_sequence.split(",").map(x => x.trim()).filter(x => x !== "");
                 const bits = inst.bits_per_frame;
@@ -117,12 +117,12 @@ const spiAdcSequencerModule = {
                     actual += 13 + inst.t_conv + (17 * bits);
                 }
                 return actual;
-            }, 
-            default: 1 
+            },
+            default: 1
         }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         const n = Math.max(1, inst.channel_sequence.split(",").map(x => x.trim()).filter(Boolean).length);
         return [
             ...Array.from({length: Math.min(n, 25)}, (_, i) => ({ name: `output${i + 1}`, type: "output32" })),
@@ -135,12 +135,12 @@ const spiAdcSequencerModule = {
 
     getMacro(pruInstructionMacro, opCode) {
         opCode = opCode || pruInstructionMacro.split(",")[0];
-        
+
         // opCode format: m_spi_adc_seq_2_none
         let parts = opCode.split("_");
         let numChannels = 1;
         let bugInject = "none";
-        
+
         if (parts.length >= 6) {
             numChannels = parseInt(parts[4]);
             bugInject = parts.slice(5).join("_");
@@ -203,21 +203,21 @@ const spiAdcSequencerModule = {
             lines.push(`    qbne ${lbl}_bit_loop?, TEMP_REG2.b0, 0xFF`);
 
             lines.push(`    mov ${destReg}, TEMP_REG3`);
-            
+
             if (bugInject === "wrong_clock_count") {
                 lines.push(`    set R30, R30, SCLK_PIN`);
                 lines.push(`    nop`);
                 lines.push(`    clr R30, R30, SCLK_PIN`);
             }
-            
+
             lines.push(`    set R30, R30, CS_PIN`);
-            
+
             if (bugInject === "clocks_while_cs_deasserted") {
                 lines.push(`    set R30, R30, SCLK_PIN`);
                 lines.push(`    nop`);
                 lines.push(`    clr R30, R30, SCLK_PIN`);
             }
-            
+
             lines.push(`    nop`);
             lines.push(`    nop`);
             lines.push(`    nop`);

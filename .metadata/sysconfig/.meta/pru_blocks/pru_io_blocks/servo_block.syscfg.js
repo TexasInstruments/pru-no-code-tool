@@ -32,7 +32,7 @@ const servoModule = {
     config: [
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "signalPin", displayName: "Signal R30 pin", default: "8", options: GPIO_SIGNALS },
         { name: "pulseUs", displayName: "Pulse width (us)", default: 1500 },
         { name: "frameUs", displayName: "Frame period (us)", default: 20000 },
@@ -43,15 +43,15 @@ const servoModule = {
         { name: "numOfOutputPorts", default: 1, hidden: true },
         { name: "output1Size", default: 1, hidden: true },
         { name: "numOfConstants", default: 3, hidden: true },
-        
+
         { name: "constant1", hidden: true, default: "", getValue: (inst) => inst.signalPin },
         { name: "constant2", hidden: true, default: 0, getValue: (inst) => cyc(inst.pulseUs, inst.clkHz) },
         { name: "constant3", hidden: true, default: 0, getValue: (inst) => cyc(inst.frameUs - inst.pulseUs, inst.clkHz) },
-        
+
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 1, default: 1 }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         return [
             { name: "output1", type: "output32" },
             { name: "prev", type: "IO_PREV" },

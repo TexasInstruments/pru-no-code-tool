@@ -30,14 +30,14 @@ const quadratureModule = {
     config: [
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "aBit", displayName: "A input R31 pin", default: "0", options: GPIO_SIGNALS },
         { name: "bBit", displayName: "B input R31 pin", default: "1", options: GPIO_SIGNALS },
         { name: "zBit", displayName: "Z input R31 pin", default: "2", options: GPIO_SIGNALS },
         { name: "useIndex", displayName: "Use Z index", default: false },
         { name: "sampleCycles", displayName: "Sample delay trips", default: 10 },
         { name: "countMode", displayName: "Count mode", default: "x4", options: [{name: "x1"}, {name: "x2"}, {name: "x4"}] },
-        
+
         { name: "posRegister", displayName: "Position Register (32-bit)", default: "R4" },
         { name: "edgeRegister", displayName: "Edge Count Register (32-bit)", default: "R5" },
 
@@ -46,7 +46,7 @@ const quadratureModule = {
         { name: "numOfOutputPorts", default: 0, hidden: true }, /* continuous block */
         { name: "output1Size", default: 0, hidden: true },
         { name: "numOfConstants", default: 8, hidden: true },
-        
+
         { name: "constant1", hidden: true, default: "", getValue: (inst) => inst.aBit },
         { name: "constant2", hidden: true, default: "", getValue: (inst) => inst.bBit },
         { name: "constant3", hidden: true, default: "", getValue: (inst) => inst.zBit },
@@ -55,12 +55,12 @@ const quadratureModule = {
         { name: "constant6", hidden: true, default: 0, getValue: (inst) => inst.sampleCycles },
         { name: "constant7", hidden: true, default: "", getValue: (inst) => inst.posRegister },
         { name: "constant8", hidden: true, default: "", getValue: (inst) => inst.edgeRegister },
-        
+
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 1, default: 1 },
         { name: "blockMaturity", displayName: "Block Maturity", default: "dual-oracle-tested", options: [{name: "metadata-only"}, {name: "assembles"}, {name: "simulator-tested"}, {name: "dual-oracle-tested"}, {name: "hardware-validated"}], hidden: true }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         return [
             { name: "prev", type: "IO_PREV" }
         ];

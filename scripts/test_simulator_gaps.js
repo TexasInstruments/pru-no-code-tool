@@ -49,12 +49,12 @@ console.log('\n=== G1: load_elf() ===');
   //   [140-176) Symbol table: 2 entries × 18 bytes = 36 bytes
   //   [176-192) .text content (16 bytes / 4 instructions)
   //   [192-200) .data content (8 bytes)
-  
+
   const HDR_SZ = 20;
   const SEC_SZ = 40;
   const SYM_SZ = 18;
   const buf = Buffer.alloc(256);
-  
+
   // File header
   buf.writeUInt16LE(0x00C2, 0);          // magic (COFF PRU)
   buf.writeUInt16LE(3, 2);               // nscns = 3
@@ -310,7 +310,7 @@ console.log('\n=== G2: stepPaced() ===');
     'halt'
   ]);
 
-  // Core 1 toggles R30.1 on/off  
+  // Core 1 toggles R30.1 on/off
   core1.loadInstructions([
     'ldi R30, 0x0002',
     'ldi R30, 0x0000',
@@ -434,7 +434,7 @@ console.log('\n=== G3: runUntil() ===');
 // G3.e: runUntil with memory watchpoint
 (function testG3eMemoryWatchpoint() {
   const sim = new Simulator();
-  
+
   // Write to DMEM0 at address 0x100 and watch for it
   sim.loadInstructions([
     'ldi R0, 0x42',

@@ -24,7 +24,7 @@ function getMacro(pruInstructionMacro, opCode) {
 
     macroBody += `
     .asg c28, CONST_SHARED_RAM          ; c28 = CTPPR0.C28_POINTER << 8 (reset 0 = own DMEM); the static module sets it to shared RAM 0x10000 at startup
-    
+
     .if (${triggerSlope} == 1) ; rising
 wait_trigger_low?:
     qbbs  wait_trigger_low?, R31, ${triggerPin}
@@ -46,11 +46,11 @@ wait_trigger_low?:
 sample_loop?:
     ; Read R31 pins
     mov   R0, R31                       ; Capture entire register state
-    
+
     ; Write sample to Shared RAM buffer
     sbco  &R0, CONST_SHARED_RAM, R2, 4  ; Write 32-bit sample
     add   R2, R2, 4                     ; Increment write offset
-    
+
     ; Sample period timing delay
     ldi   R6, ${periodCycles}
 delay_loop?:
@@ -62,7 +62,7 @@ delay_loop?:
 `;
 
     if(pruInstructionMacro == "") {
-        macroBody += "\n    .endm\n";	
+        macroBody += "\n    .endm\n";
     }
     return macroBody;
 }
@@ -80,7 +80,7 @@ exports = {
         { name: "triggerSlope", displayName: "Trigger Slope", default: "rising", options: [
             {name: "none"}, {name: "rising"}, {name: "falling"}
         ]},
-        
+
         { name: "constant1", hidden: true, default: "7", getValue: (inst) => {
             // Between successive samples: 7 fixed cycles plus 2 per delay trip.
             return Math.max(1, Math.round((inst.clkHz / inst.sampleRateHz - 7) / 2)) + "";
@@ -92,7 +92,7 @@ exports = {
             if (inst.triggerSlope === "rising") return "1";
             return "2";
         }},
-        
+
         { name: "numOfConstants", hidden: true, default: 4 },
         { name: "opCode", hidden: true, default: "m_logic_analyzer_block" },
         { name: "numOfInputPorts", hidden: true, default: 0 },

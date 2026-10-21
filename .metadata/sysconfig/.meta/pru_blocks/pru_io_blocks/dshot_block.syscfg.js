@@ -105,7 +105,7 @@ const dshotModule = {
     config: [
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "signalPin", displayName: "Signal R30 pin", default: "9", options: GPIO_SIGNALS },
         { name: "variant", displayName: "DShot Variant", default: "dshot600", options: VARIANTS },
         { name: "throttleMode", displayName: "Throttle Mode", default: "constant",
@@ -167,11 +167,11 @@ const dshotModule = {
         } },
         { name: "constant11", hidden: true, default: 1, getValue: (inst) => dshotLoops(inst, "low0") },
         { name: "constant12", hidden: true, default: 0, getValue: (inst) => dshotPad(inst, "low0") },
-        
+
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 1, default: 1 }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         return [
             { name: "output1", type: "output32" },
             { name: "prev", type: "IO_PREV" },

@@ -37,7 +37,7 @@ const counterModule = {
 			hidden: true
 		},
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "inputPin", displayName: "Input R31 pin", default: "5", options: GPIO_SIGNALS },
         { name: "dataRegister", displayName: "Count Output Register (32-bit)", default: "R4" },
         { name: "gateMs", displayName: "Gate Duration (ms)", default: 100 },
@@ -49,7 +49,7 @@ const counterModule = {
         { name: "numOfOutputPorts", default: 1, hidden: true },
         { name: "output1Size", default: 4, hidden: true },
         { name: "numOfConstants", default: 3, hidden: true },
-        
+
         { name: "constant1", hidden: true, default: "", getValue: (inst) => inst.inputPin },
         { name: "constant2", hidden: true, default: 0, getValue: (inst) => Math.round((inst.gateMs * inst.clkHz) / 1000) },
         { name: "constant3", hidden: true, default: 0, getValue: (inst) => {
@@ -57,11 +57,11 @@ const counterModule = {
             if (inst.edgeType === 'falling') return 1;
             return 2;
         }},
-        
+
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 1, default: 1 }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         return [
             { name: "output1", type: "output32" },
             { name: "prev", type: "IO_PREV" },

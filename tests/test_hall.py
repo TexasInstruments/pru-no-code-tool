@@ -160,23 +160,23 @@ class TestHallElf:
         # 1. Drive with illegal code 000
         m = HallSensorModel(cycles_per_sector=200, response_window_cycles=40)
         m.schedule_illegal(start_cycle=100, code=0, duration_cycles=100)
-        
+
         # run the simulation
         r = elf_cosim.run_elf_closed_loop(built["hall"], m, max_steps=150)
-        
+
         # Check that it trapped: FAULT_REG should be 1
         fault_val = r.registers[7]
         assert fault_val == 1, f"FAULT_REG was {fault_val}, expected 1 on illegal code 000"
-        
+
         # SECTOR_REG should be 0xFFFFFFFF
         sector_val = r.registers[5] & 0xFFFFFFFF
         assert sector_val == 0xFFFFFFFF, f"SECTOR_REG was {sector_val}, expected 0xFFFFFFFF on trap"
-        
+
         # 2. Drive with illegal code 111
         m2 = HallSensorModel(cycles_per_sector=200, response_window_cycles=40)
         m2.schedule_illegal(start_cycle=100, code=7, duration_cycles=100)
         r2 = elf_cosim.run_elf_closed_loop(built["hall"], m2, max_steps=150)
-        
+
         assert r2.registers[7] == 1, "FAULT_REG not set on illegal code 111"
         assert r2.registers[5] & 0xFFFFFFFF == 0xFFFFFFFF, "SECTOR_REG not set to 0xFFFFFFFF on illegal code 111"
 
@@ -185,11 +185,11 @@ class TestHallElf:
         m = HallSensorModel(cycles_per_sector=100, response_window_cycles=40)
         m.set_rotation(100, sectors=6, direction=1)
         r = elf_cosim.run_elf_closed_loop(built["hall"], m, max_steps=800)
-        
+
         # No fault should be registered
         fault_val = r.registers[7]
         assert fault_val == 0, f"FAULT_REG was {fault_val}, expected 0 on legal sequence"
-        
+
         # SECTOR_REG should be updated. At the end, we should be in a valid sector (0-5)
         sector_val = r.registers[5] & 0xFFFFFFFF
         assert sector_val in [0, 1, 2, 3, 4, 5], f"SECTOR_REG was {sector_val}, expected 0-5"

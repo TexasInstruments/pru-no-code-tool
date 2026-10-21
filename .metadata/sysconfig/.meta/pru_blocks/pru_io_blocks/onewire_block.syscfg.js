@@ -55,7 +55,7 @@ const onewireModule = {
         { name: "blockMaturity", displayName: "Block Maturity", default: "dual-oracle-tested", options: [{name: "metadata-only"}, {name: "assembles"}, {name: "simulator-tested"}, {name: "dual-oracle-tested"}, {name: "hardware-validated"}], hidden: true },
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "dataPin", displayName: "Data signal (R30/R31)",
           default: "7", options: GPIO_SIGNALS },
         { name: "operation", displayName: "Operation",
@@ -69,18 +69,18 @@ const onewireModule = {
         // TI dynamic register allocator fields
         { name: "opCode", default: "m_onewire_reset_standard", hidden: true,
           getValue: (inst) => opCodeOf(inst) },
-        { name: "numOfInputPorts", default: 1, hidden: true, 
+        { name: "numOfInputPorts", default: 1, hidden: true,
           getValue: (inst) => inst.operation === "writeByte" ? 1 : 0 },
-        { name: "numOfOutputPorts", default: 1, hidden: true, 
+        { name: "numOfOutputPorts", default: 1, hidden: true,
           getValue: (inst) => inst.operation !== "writeByte" ? 1 : 0 },
-        { name: "output1Size", default: 1, hidden: true, 
+        { name: "output1Size", default: 1, hidden: true,
           getValue: (inst) => inst.operation !== "writeByte" ? 1 : 0 },
         { name: "numOfConstants", default: 4, hidden: true,
           getValue: (inst) => {
               if (inst.operation === "reset") return 4;
               if (inst.operation === "writeByte") return 5;
               return 4; // readByte
-          } 
+          }
         },
         // Constants exposed to macro call
         { name: "constant1", hidden: true, default: "", getValue: (inst) => inst.dataPin },
@@ -108,7 +108,7 @@ const onewireModule = {
         }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         let ports = [];
         if (inst.operation === "writeByte") {
             ports.push({ name: "input1", type: "input32" });
@@ -132,7 +132,7 @@ const onewireModule = {
     getMacro(pruInstructionMacro, opCode) {
         opCode = opCode || pruInstructionMacro.split(",")[0];
         const op = opCode.includes("_reset_") ? "reset" : opCode.includes("_writeByte_") ? "writeByte" : "readByte";
-        
+
         let out = [];
         if (op === "reset") {
             out = [
@@ -193,7 +193,7 @@ const onewireModule = {
             ];
             // BUGFIX: We need TWO registers for write loop state (VAL/shift register and bit count).
             // But TEMP_REG1 is overwritten inside the loop for delays!
-            // Let's use TEMP_REG2 for VAL, but we still need a loop counter. 
+            // Let's use TEMP_REG2 for VAL, but we still need a loop counter.
             // Wait, we can't use TEMP_REG1 for both loop counter and delay counter.
             // TI provides TEMP_REG1 (R28) and TEMP_REG2 (R29).
             // If we use TEMP_REG2 for VAL (shift register), and TEMP_REG1 for delays, where does bit counter go?
@@ -203,10 +203,10 @@ const onewireModule = {
             // But `VAL` is an input register! The allocator might share it with other branches. We should NOT mutate `VAL`.
             // Let's define `TEMP_REG2` as the shift register (copy `VAL` to `TEMP_REG2`).
             // What about the bit counter? Let's use `r27.b0` or `r27` (some safe scratch)?
-            // Wait, let's just use `TEMP_REG2` for both! 
+            // Wait, let's just use `TEMP_REG2` for both!
             // R29 (TEMP_REG2) has 4 bytes. We can use R29.b0 for the shift register, and R29.b1 for the bit counter!
         }
-        
+
         if (op === "writeByte") {
             out = [
                 // The generator always passes an output register, even for writeByte.
@@ -264,7 +264,7 @@ const onewireModule = {
                 `    .endm`,
             ];
         }
-        
+
         return out.join("\n");
     },
 

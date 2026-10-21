@@ -30,14 +30,14 @@ function getMacro(pruInstructionMacro, opCode) {
     .asg 0x78, IEP_CMP0
     .asg 0x11, INCR_1_ENABLE
     .asg c26, CONST_IEP
-    
+
     .if (${func} != 2) ; Not capture
 iep_init?:
     ldi   R0, INCR_1_ENABLE
     sbco  &R0, CONST_IEP, IEP_GLOBAL_CFG, 4
     ldi32 R2, ${counts}
     sbco  &R2, CONST_IEP, IEP_CMP0, 4
-    
+
     .if (${func} == 0)
         .if (${autoReset} == 1)
             ldi   R0, 0x03 ; periodic CMP0 en+reset
@@ -50,7 +50,7 @@ iep_init?:
     sbco  &R0, CONST_IEP, IEP_CMP_CFG, 4
     ldi   R0, 1
     sbco  &R0, CONST_IEP, IEP_CMP_STATUS, 4
-    
+
 iep_wait_cmp?:
 wait_loop?:
     lbco  &R1, CONST_IEP, IEP_CMP_STATUS, 4
@@ -61,7 +61,7 @@ wait_loop?:
 `;
 
     if(pruInstructionMacro == "") {
-        macroBody += "\n    .endm\n";	
+        macroBody += "\n    .endm\n";
     }
     return macroBody;
 }
@@ -79,7 +79,7 @@ exports = {
         { name: "periodNs", displayName: "Period (ns)", default: 5000 },
         { name: "cmpIndex", displayName: "Compare index", default: 0 },
         { name: "autoReset", displayName: "CMP0 auto-reset", default: true },
-        
+
         { name: "constant1", hidden: true, default: "0", getValue: (inst) => {
             if (inst.func === "periodic") return "0";
             if (inst.func === "oneshot") return "1";
@@ -90,7 +90,7 @@ exports = {
         }},
         { name: "constant3", hidden: true, default: "0", getValue: (inst) => inst.cmpIndex + "" },
         { name: "constant4", hidden: true, default: "1", getValue: (inst) => inst.autoReset ? "1" : "0" },
-        
+
         { name: "numOfConstants", hidden: true, default: 4 },
         { name: "opCode", hidden: true, default: "m_iep_block" },
         { name: "numOfInputPorts", hidden: true, default: 0 },

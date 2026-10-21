@@ -21,7 +21,7 @@ const pidModule = {
     config: [
         { name: "$shape", hidden: true, default: "square" },
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "blockMaturity", displayName: "Block Maturity", default: "simulator-tested", options: [{name: "metadata-only"}, {name: "assembles"}, {name: "simulator-tested"}, {name: "dual-oracle-tested"}, {name: "hardware-validated"}], hidden: true },
 
         { name: "kp", displayName: "Proportional Gain (Kp)", default: "1.0" },
@@ -33,18 +33,18 @@ const pidModule = {
         { name: "numOfOutputPorts", default: 1, hidden: true },
         { name: "output1Size", default: 4, hidden: true },
         { name: "numOfConstants", default: 4, hidden: true },
-        
+
         { name: "constant1", hidden: true, default: "", getValue: (inst) => String(Math.round(parseFloat(inst.kp) * 4096)) },
         { name: "constant2", hidden: true, default: "", getValue: (inst) => String(Math.round(parseFloat(inst.ki) * 4096)) },
         { name: "constant3", hidden: true, default: "", getValue: (inst) => String(Math.round(parseFloat(inst.kd) * 4096)) },
         { name: "constant4", hidden: true, default: "", getValue: (inst) => inst.$name + "_pid_state" },
-        
+
         // Counted from the default generated macro/evidence run: 50 cycles,
         // including the three operand-latency NOPs (LDI32 expands to two PRU instructions).
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 50, default: 50 }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         return [
             { name: "prev", type: "IO_PREV" },
             { name: "next", type: "IO_NEXT" },

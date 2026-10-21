@@ -88,4 +88,3 @@ class TestSpiAdcSequencerElf:
         r = elf_cosim.run_elf_closed_loop(built["seq_red_b"], m, max_steps=4000)
         faults = m.faults()
         assert any("more than 16 clocks in frame" in f for f in faults), "Red arm B failed to catch wrong clock count"
-

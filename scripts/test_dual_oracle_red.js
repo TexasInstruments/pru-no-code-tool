@@ -194,4 +194,3 @@ m_faulty_multiply .macro OUT, IN1, IN2
 }
 
 testRedDiscrimination();
-

@@ -26,7 +26,7 @@ const pruSpadModule = {
     config: [
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "role", displayName: "Role", default: "producer", options: [{name:"producer"}, {name:"consumer"}] },
         { name: "bank", displayName: "Scratchpad bank", default: 0, options: [{name:0}, {name:1}, {name:2}] },
         { name: "baseReg", displayName: "First transfer register (R#)", default: 5 },
@@ -41,7 +41,7 @@ const pruSpadModule = {
         { name: "numOfOutputPorts", default: 0, hidden: true },
         { name: "output1Size", default: 0, hidden: true },
         { name: "numOfConstants", default: 7, hidden: true },
-        
+
         { name: "constant1", hidden: true, default: 0, getValue: (inst) => inst.role === 'producer' ? 1 : 0 },
         { name: "constant2", hidden: true, default: 0, getValue: (inst) => inst.handshake === 'seq' ? 1 : 0 },
         { name: "constant3", hidden: true, default: 0, getValue: (inst) => 10 + inst.bank },
@@ -49,11 +49,11 @@ const pruSpadModule = {
         { name: "constant5", hidden: true, default: 0, getValue: (inst) => (inst.wordCount + (inst.handshake === 'seq' ? 1 : 0)) * 4 },
         { name: "constant6", hidden: true, default: 0, getValue: (inst) => inst.signalEvent ? (inst.pruEvent + 16) : 0 },
         { name: "constant7", hidden: true, default: 0, getValue: (inst) => inst.demoValue },
-        
+
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 1, default: 1 }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         return [
             { name: "prev", type: "IO_PREV" },
             { name: "next", type: "IO_NEXT" }

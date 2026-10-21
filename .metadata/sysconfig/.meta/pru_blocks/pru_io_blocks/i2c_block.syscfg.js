@@ -37,7 +37,7 @@ const i2cModule = {
             hidden: true
         },
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "sclBit", displayName: "SCL R30 bit", default: "0", options: GPIO_SIGNALS },
         { name: "sdaBit", displayName: "SDA R30 bit", default: "1", options: GPIO_SIGNALS },
         { name: "bitRateKhz", displayName: "Bit rate (kHz)", default: "400", options: [{name:"100"}, {name:"400"}, {name:"1000"}] },
@@ -52,7 +52,7 @@ const i2cModule = {
         { name: "numOfOutputPorts", default: 1, hidden: true },
         { name: "output1Size", default: 1, hidden: true },
         { name: "numOfConstants", default: 7, hidden: true },
-        
+
         { name: "constant1", hidden: true, default: "", getValue: (inst) => inst.sclBit },
         { name: "constant2", hidden: true, default: "", getValue: (inst) => inst.sdaBit },
         { name: "constant3", hidden: true, default: 0, getValue: (inst) => {
@@ -69,7 +69,7 @@ const i2cModule = {
         { name: "constant5", hidden: true, default: 0, getValue: (inst) => inst.rw === "read" ? 1 : 0 },
         { name: "constant6", hidden: true, default: "", getValue: (inst) => inst.dataRegister },
         { name: "constant7", hidden: true, default: "", getValue: (inst) => inst.nackRegister || "TEMP_REG1" },
-        
+
         // Nominal frame time: write (~9 clocks + START/STOP, 11 bit times) or
         // read (~18 clocks + START/STOP, 20 bit times). It is speed-dependent
         // because the macro deliberately delays every phase; this is not a raw
@@ -87,7 +87,7 @@ const i2cModule = {
         }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         if (inst.rw === 'read') {
             return [
                 { name: "output1", type: "output32" },

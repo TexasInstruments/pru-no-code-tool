@@ -30,11 +30,11 @@ const encoderSpeedModule = {
     config: [
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "aBit", displayName: "A input R31 pin", default: "3", options: GPIO_SIGNALS },
         { name: "bBit", displayName: "B input R31 pin", default: "4", options: GPIO_SIGNALS },
         { name: "velocityMethod", displayName: "Velocity Method", default: "iep", options: [{name:"iep"}, {name:"pulse-count"}] },
-        
+
         { name: "posRegister", displayName: "Position Register (32-bit)", default: "R4" },
         { name: "velRegister", displayName: "Velocity Register (32-bit)", default: "R5" },
         { name: "dirRegister", displayName: "Direction Register (32-bit)", default: "R8" },
@@ -44,18 +44,18 @@ const encoderSpeedModule = {
         { name: "numOfOutputPorts", default: 0, hidden: true },
         { name: "output1Size", default: 0, hidden: true },
         { name: "numOfConstants", default: 6, hidden: true },
-        
+
         { name: "constant1", hidden: true, default: "", getValue: (inst) => inst.aBit },
         { name: "constant2", hidden: true, default: "", getValue: (inst) => inst.bBit },
         { name: "constant3", hidden: true, default: 0, getValue: (inst) => inst.velocityMethod === 'iep' ? 1 : 0 },
         { name: "constant4", hidden: true, default: "", getValue: (inst) => inst.posRegister },
         { name: "constant5", hidden: true, default: "", getValue: (inst) => inst.velRegister },
         { name: "constant6", hidden: true, default: "", getValue: (inst) => inst.dirRegister },
-        
+
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 1, default: 1 }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         return [
             { name: "prev", type: "IO_PREV" }
         ];

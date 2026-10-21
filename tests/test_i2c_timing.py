@@ -174,4 +174,3 @@ def test_i2c_no_of_cycles_within_tolerance_of_measured_frame(rate_khz, rw, is_re
     assert (measured_cycles - expected_cycles) / measured_cycles <= tolerance, (
         f"noOfCycles {expected_cycles} is a lower bound by "
         f"{(measured_cycles - expected_cycles) / measured_cycles:.1%}, exceeding tolerance {tolerance:.0%}")
-

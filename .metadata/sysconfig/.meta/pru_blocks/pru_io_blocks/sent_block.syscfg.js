@@ -31,7 +31,7 @@ const sentModule = {
         { name: "blockMaturity", displayName: "Block Maturity", default: "simulator-tested", options: [{name: "metadata-only"}, {name: "assembles"}, {name: "simulator-tested"}, {name: "dual-oracle-tested"}, {name: "hardware-validated"}], hidden: true },
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "signalPin", displayName: "Signal R30 pin", default: "10", options: GPIO_SIGNALS },
         { name: "dataRegister", displayName: "Data Register (32-bit)", default: "R5" },
         { name: "tickUs", displayName: "Tick / UT (us)", default: 3 },
@@ -44,7 +44,7 @@ const sentModule = {
         { name: "numOfOutputPorts", default: 1, hidden: true },
         { name: "output1Size", default: 1, hidden: true },
         { name: "numOfConstants", default: 7, hidden: true },
-        
+
         { name: "constant1", hidden: true, default: "", getValue: (inst) => inst.signalPin },
         { name: "constant2", hidden: true, default: "", getValue: (inst) => inst.dataRegister },
         { name: "constant3", hidden: true, default: 0, getValue: (inst) => Math.round((inst.tickUs * inst.clkHz) / 1e6) },
@@ -61,11 +61,11 @@ const sentModule = {
             return inst.lowTicks * tickCyc;
         } },
         { name: "constant7", hidden: true, default: 0, getValue: (inst) => inst.numDataNibbles + 2 },
-        
+
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 1, default: 1 }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         return [
             { name: "output1", type: "output32" },
             { name: "prev", type: "IO_PREV" },

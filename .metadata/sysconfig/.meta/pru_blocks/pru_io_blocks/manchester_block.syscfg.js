@@ -76,7 +76,7 @@ const manchesterModule = {
         { name: "blockMaturity", displayName: "Block Maturity", default: "dual-oracle-tested", options: [{name: "metadata-only"}, {name: "assembles"}, {name: "simulator-tested"}, {name: "dual-oracle-tested"}, {name: "hardware-validated"}], hidden: true },
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "signalPin", displayName: "Signal R30 pin", default: "13", options: GPIO_SIGNALS },
         { name: "dataRegister", displayName: "Byte to encode (Reg)", default: "R5.b0" },
         { name: "bitRateHz", displayName: "Bit rate (Hz)", default: 1000000 },
@@ -97,11 +97,11 @@ const manchesterModule = {
         { name: "constant6", hidden: true, default: 0, getValue: (inst) => (manchesterTiming(inst.clkHz, inst.bitRateHz) || { first: { pad: 0 } }).first.pad },
         { name: "constant7", hidden: true, default: 1, getValue: (inst) => Math.max(1, (manchesterTiming(inst.clkHz, inst.bitRateHz) || { second: { loops: 1 } }).second.loops) },
         { name: "constant8", hidden: true, default: 0, getValue: (inst) => (manchesterTiming(inst.clkHz, inst.bitRateHz) || { second: { pad: 0 } }).second.pad },
-        
+
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 1, default: 1 }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         return [
             { name: "output1", type: "output32" },
             { name: "prev", type: "IO_PREV" },

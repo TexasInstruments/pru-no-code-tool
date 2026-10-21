@@ -97,7 +97,7 @@ const serdesModule = {
         { name: "blockMaturity", displayName: "Block Maturity", default: "dual-oracle-tested", options: [{name: "metadata-only"}, {name: "assembles"}, {name: "simulator-tested"}, {name: "dual-oracle-tested"}, {name: "hardware-validated"}], hidden: true },
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "width", displayName: "Bits per word", default: 8 },
         { name: "bitOrder", displayName: "Bit order", default: "MSB", options: [{name:"MSB"}, {name:"LSB"}] },
         { name: "bitCycles", displayName: "Cycles per bit", default: 33,
@@ -120,7 +120,7 @@ const serdesModule = {
         { name: "numOfOutputPorts", default: 1, hidden: true },
         { name: "output1Size", default: 1, hidden: true },
         { name: "numOfConstants", default: 12, hidden: true },
-        
+
         { name: "constant1", hidden: true, default: 0, getValue: (inst) => inst.width },
         { name: "constant2", hidden: true, default: 0, getValue: (inst) => inst.bitOrder === 'MSB' ? 1 : 0 },
         { name: "constant3", hidden: true, default: 0, getValue: (inst) => 32 - inst.width },
@@ -138,11 +138,11 @@ const serdesModule = {
             return String(val);
         }},
         { name: "constant12", hidden: true, default: "", getValue: (inst) => inst.dataRegister },
-        
+
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 1, default: 1 }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         return [
             { name: "output1", type: "output32" },
             { name: "prev", type: "IO_PREV" },

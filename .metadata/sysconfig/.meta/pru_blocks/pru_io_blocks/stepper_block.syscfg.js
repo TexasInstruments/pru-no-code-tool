@@ -57,7 +57,7 @@ const stepperModule = {
         { name: "blockMaturity", displayName: "Block Maturity", default: "simulator-tested", options: [{name: "metadata-only"}, {name: "assembles"}, {name: "simulator-tested"}, {name: "dual-oracle-tested"}, {name: "hardware-validated"}], hidden: true },
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "stepPin", displayName: "Step R30 pin", default: "5", options: GPIO_SIGNALS },
         { name: "dirPin", displayName: "Direction R30 pin", default: "6", options: GPIO_SIGNALS },
         { name: "numSteps", displayName: "Target Steps", default: 1000 },
@@ -70,17 +70,17 @@ const stepperModule = {
         { name: "numOfOutputPorts", default: 1, hidden: true },
         { name: "output1Size", default: 1, hidden: true },
         { name: "numOfConstants", default: 5, hidden: true },
-        
+
         { name: "constant1", hidden: true, default: "", getValue: (inst) => inst.stepPin },
         { name: "constant2", hidden: true, default: "", getValue: (inst) => inst.dirPin },
         { name: "constant3", hidden: true, default: 0, getValue: (inst) => inst.numSteps },
         { name: "constant4", hidden: true, default: 0, getValue: generatedDelayCycles },
         { name: "constant5", hidden: true, default: 0, getValue: generatedPulseHighCycles },
-        
+
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 1, default: 1 }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         return [
             { name: "output1", type: "output32" },
             { name: "prev", type: "IO_PREV" },

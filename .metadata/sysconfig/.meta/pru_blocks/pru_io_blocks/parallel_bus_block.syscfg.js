@@ -27,7 +27,7 @@ const parallelBusModule = {
     config: [
         { name: "$shape", hidden: true, default: "pin" },
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "direction", displayName: "Direction", default: "write", options: [{name:"write"}, {name:"read"}] },
         { name: "dataPinsStr", displayName: "Data pins (comma separated R30/R31 bits)", default: "12,13,14,15,16,17,18,19" },
         { name: "strobePin", displayName: "Strobe pin", default: 20 },
@@ -42,7 +42,7 @@ const parallelBusModule = {
         { name: "numOfOutputPorts", default: 1, hidden: true },
         { name: "output1Size", default: 1, hidden: true },
         { name: "numOfConstants", default: 10, hidden: true },
-        
+
         { name: "constant1", hidden: true, default: 0, getValue: (inst) => {
             const pins = inst.dataPinsStr.split(',').map(s => parseInt(s.trim()));
             return Math.min(...pins);
@@ -70,11 +70,11 @@ const parallelBusModule = {
         }},
         { name: "constant9", hidden: true, default: 0, getValue: (inst) => inst.direction === "read" ? 1 : 0 },
         { name: "constant10", hidden: true, default: "", getValue: (inst) => inst.dataRegister },
-        
+
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 1, default: 1 }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         if (inst.direction === 'read') {
             return [
                 { name: "output1", type: "output32" },

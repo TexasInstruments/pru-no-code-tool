@@ -37,7 +37,7 @@ event_wait?:
 `;
 
     if(pruInstructionMacro == "") {
-        macroBody += "\n    .endm\n";	
+        macroBody += "\n    .endm\n";
     }
     return macroBody;
 }
@@ -54,7 +54,7 @@ exports = {
         { name: "inputEventBit", displayName: "Input event R31 bit", default: 30 },
         { name: "outputEvent", displayName: "Output system event", default: 16 },
         { name: "clearAfterWait", displayName: "Clear event after wait", default: true },
-        
+
         { name: "constant1", hidden: true, default: "0", getValue: (inst) => {
             if (inst.mode === "wait") return "0";
             if (inst.mode === "signal") return "1";
@@ -63,7 +63,7 @@ exports = {
         { name: "constant2", hidden: true, default: "30", getValue: (inst) => inst.inputEventBit + "" },
         { name: "constant3", hidden: true, default: "16", getValue: (inst) => inst.outputEvent + "" },
         { name: "constant4", hidden: true, default: "1", getValue: (inst) => inst.clearAfterWait ? "1" : "0" },
-        
+
         { name: "numOfConstants", hidden: true, default: 4 },
         { name: "opCode", hidden: true, default: "m_event_block" },
         { name: "numOfInputPorts", hidden: true, default: 0 },

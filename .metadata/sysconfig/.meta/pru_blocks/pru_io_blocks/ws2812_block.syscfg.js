@@ -59,7 +59,7 @@ const ws2812Module = {
             hidden: true
         },
         { name: "$topLabel", hidden: true, default: "" },
-        
+
         { name: "pinId", displayName: "Output R30 pin", default: "5", options: GPIO_SIGNALS },
         { name: "dataRegister", displayName: "Data Register (24-bit Color)", default: "R0" },
         { name: "numLeds", displayName: "Number of LEDs", default: 10 },
@@ -70,7 +70,7 @@ const ws2812Module = {
         { name: "numOfOutputPorts", default: 1, hidden: true },
         { name: "output1Size", default: 1, hidden: true },
         { name: "numOfConstants", default: 8, hidden: true },
-        
+
         { name: "constant1", hidden: true, default: "", getValue: (inst) => inst.pinId },
         { name: "constant2", hidden: true, default: "", getValue: (inst) => inst.dataRegister },
         { name: "constant3", hidden: true, default: 0, getValue: (inst) => inst.numLeds },
@@ -79,11 +79,11 @@ const ws2812Module = {
         { name: "constant6", hidden: true, default: 0, getValue: (inst) => wsDelayCount(WS_T1H_NS, inst.clkHz, WS_HIGH_OVERHEAD) },
         { name: "constant7", hidden: true, default: 0, getValue: (inst) => wsDelayCount(WS_T1L_NS, inst.clkHz, WS_T1L_OVERHEAD) },
         { name: "constant8", hidden: true, default: 0, getValue: (inst) => wsDelayCount(WS_RESET_NS, inst.clkHz, 0) },
-        
+
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 1, default: 1 }
     ],
 
-    ports: (inst) => { 
+    ports: (inst) => {
         return [
             { name: "output1", type: "output32" },
             { name: "prev", type: "IO_PREV" },
