@@ -88,14 +88,15 @@ def syscfg(kind, n=1, mode="controller", spimode="MODE0", bits=16, setup=10, hol
     return "\n".join(s) + "\n"
 
 
-def build(name, text, tool=REPO):
-    """SysConfig + gmake + clpru. Returns (CompletedProcess, [.out paths]). `tool` is the PRU_NO_CODE_TOOL_PATH (a scratch copy for sabotage arms)."""
+def build(name, text, tool=REPO, main_asm=os.path.join(TEMPLATE, "main.asm")):
+    """SysConfig + gmake + clpru. Returns (CompletedProcess, [.out paths]). `tool` is the PRU_NO_CODE_TOOL_PATH (a scratch copy for sabotage arms);
+    `main_asm` is the firmware entry file the design is linked with."""
     work = os.path.join(BUILD_ROOT, name)
     shutil.rmtree(work, ignore_errors=True)
     fw = os.path.join(work, "firmware")
     proj = os.path.join(fw, "am243x-evm", "icss_g0_pru0_fw")
     os.makedirs(os.path.dirname(proj), exist_ok=True)
-    shutil.copy(os.path.join(TEMPLATE, "main.asm"), os.path.join(fw, "main.asm"))
+    shutil.copy(main_asm, os.path.join(fw, "main.asm"))
     shutil.copytree(os.path.join(TEMPLATE, "am243x-evm", "icss_g0_pru0_fw"), proj, ignore=shutil.ignore_patterns("generated", "syscfg"))
     with open(os.path.join(proj, "example.syscfg"), "w", encoding="utf-8", newline="") as f:
         f.write(text)
@@ -219,8 +220,10 @@ def test_peripheral_blocks_do_not_drive_cs_and_a_shared_cs_pin_is_set_once():
 
 @needs_build
 def test_the_incremental_spi_example_now_asserts_cs_on_its_first_transaction():
-    example = os.path.join(REPO, "examples", "incremental_spi", "firmware", "am243x-lp", "icss_g0_pru0_fw", "example.syscfg")
-    res, outs = build("incspi", open(example, encoding="utf-8").read())
+    firmware = os.path.join(REPO, "examples", "incremental_spi", "firmware")
+    example = os.path.join(firmware, "am243x-lp", "icss_g0_pru0_fw", "example.syscfg")
+    # the example's own main.asm: its loop block jumps to sysconfig_generated_end, which that file defines
+    res, outs = build("incspi", open(example, encoding="utf-8").read(), main_asm=os.path.join(firmware, "main.asm"))
     assert res.returncode == 0 and outs, (res.stdout + res.stderr)[-1500:]
     assert "set     r30, r30, 5" in prologue(generated_asm("incspi"))
 
@@ -230,7 +233,7 @@ def test_docs_describe_the_idle_prologue_and_not_the_old_workaround(kind):
     text = open(DOCS % kind, encoding="utf-8").read()
     assert "driven to its idle (HIGH) level once per entry into the generated code: at program start and at every group start" in text
     assert "runt" not in text and "once-per-design init hook" not in text
-    assert "3,288 bytes measured" in text and "2.8 KB" not in text
+    assert "2,888 bytes measured" in text and "3,288" not in text
 
 
 # ---- 2. fixed overhead + cap documented, and true ---------------------------------------------------------------------------------
@@ -330,7 +333,7 @@ def estimate_of(inst):
     return int(out.stdout.strip())
 
 
-MAXED_BLOCK_TEXT = 3288      # bytes of .text one maxed controller block links to (the docs quote this number)
+MAXED_BLOCK_TEXT = 2888      # bytes of .text the smallest one-block maxed design links to (the docs quote this number)
 
 
 @needs_build
@@ -338,7 +341,7 @@ MAXED_BLOCK_TEXT = 3288      # bytes of .text one maxed controller block links t
 def test_one_maxed_block_links_to_the_documented_text_size(kind):
     res, outs = build("iram_one_" + kind, syscfg(kind, n=1, **MAXED))
     assert res.returncode == 0 and outs, (res.stdout + res.stderr)[-1500:]
-    # the whole design is the block plus a Load Constant and a PRU GPO: a few words over the block's own 3288 B
+    # the design is the block plus a Load Constant and a PRU GPO; read / write / transfer differ by a few words
     assert MAXED_BLOCK_TEXT <= text_bytes(outs[0]) <= MAXED_BLOCK_TEXT + 16, text_bytes(outs[0])
 
 
