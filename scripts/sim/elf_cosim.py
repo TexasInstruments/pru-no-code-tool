@@ -74,9 +74,10 @@ class SimulatorNotFound(RuntimeError):
 
 
 def find_pru_simulator() -> str:
-    """Locate the TI pru-simulator checkout (tools/pru-simulator-upstream),
-    walking ancestors so worktrees at any depth resolve. Only a directory
-    that contains simulator.py counts."""
+    """Locate the TI pru-simulator checkout: PRU_SIMULATOR_PATH, else a
+    tools/pru-simulator-upstream directory in this checkout or any parent
+    directory (so worktrees at any depth resolve). Only a directory that
+    contains simulator.py counts."""
     tried = []
     env = os.environ.get("PRU_SIMULATOR_PATH")
     if env:
@@ -94,8 +95,8 @@ def find_pru_simulator() -> str:
             break
         d = parent
     raise SimulatorNotFound(
-        "pru-simulator-upstream not found (looked for simulator.py in each); "
-        "set PRU_SIMULATOR_PATH. Tried: " + " | ".join(tried))
+        "no pru-simulator checkout found (set PRU_SIMULATOR_PATH); "
+        "looked for simulator.py in: " + " | ".join(tried))
 
 
 def expand_block_asm(spec: Dict[str, Any], workdir: str) -> str:

@@ -2,14 +2,15 @@
 
 The generated read of a ushort/uint table was `LBBO &res, TEMP_REG1, <index>, 2|4`:
 the index register was used as a raw byte offset, so index 1 of a ushort table
-returned bytes 1-2 of the table, not entry 1 (same defect
-class as, which fixed crc only).  Byte tables were correct.
+returned bytes 1-2 of the table, not entry 1 (the crc block's table read had the
+same issue).  Byte tables were correct.
 
 The oracle is the table written in this test (distinct, non-repeating bytes) -
 independent of the block.  The firmware under test is the block's own emitted
 macro (getMacro) assembled by clpru and run on the TI pru-simulator, with the
-table placed in .data (PRU0 DMEM).  Simulator tests fail (not skip) without
-PRU_SIMULATOR_PATH / clpru: a skip would read as a pass.
+table placed in .data (PRU0 DMEM).  Without a pru-simulator checkout
+(PRU_SIMULATOR_PATH) or clpru the simulator tests are reported as SKIPPED with
+the reason (see conftest.py).
 """
 
 import json

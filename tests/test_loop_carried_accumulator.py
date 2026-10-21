@@ -23,10 +23,10 @@ Design under test (a repeat-add design with the write moved after the loop):
 Oracle: the VALUE in out_buf after the real clpru ELF runs on the TI
 pru-simulator (never the asm text). Expected N*x mod 2^(8n).
 
-Red at base: the design is rejected at validation (container
-boundary error for acc -> wr, plus the unknown exportedBlocks /
-accumulators fields), so the value assertion cannot pass.
-Green after: out_buf == N*x for N=3 and N=10, x in (1, 7).
+Without accumulators/exportedBlocks support the design is rejected at
+validation (container boundary error for acc -> wr, plus the unknown
+exportedBlocks / accumulators fields), so the value assertion cannot pass.
+With it: out_buf == N*x for N=3 and N=10, x in (1, 7).
 """
 
 import os
