@@ -406,8 +406,8 @@ function disallocatePruRegisters(byteOffset, numOfBytes) {
 }
 
 // a connection names the SOURCE PORT it leaves from (conn.port === "output2"), and every output port a block
-// allocates has its own register (byteOffsetOfOutput<N> / numOfBytesReqByOutput<N>). The allocator used to read only output1,
-// so a consumer wired to output2..N silently read output1's register. All consumer-side lookups go through these helpers.
+// allocates has its own register (byteOffsetOfOutput<N> / numOfBytesReqByOutput<N>). Reading only output1 would make
+// a consumer wired to output2..N silently read output1's register. All consumer-side lookups go through these helpers.
 let allocationFailures = [];  // register-pool exhaustion, one record per request that could not be placed; reported by validation
 let unroutedConnections = [];  // consumers wired to an output port that owns no register; reported by validation, never rerouted to output1
 let loopBoundaryViolations = []; // loop contents consumed outside loop; reported by validation

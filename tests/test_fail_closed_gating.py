@@ -15,9 +15,9 @@ and the REAL capability table at
 .metadata/sysconfig/.meta/pru_blocks/common/pru_device_caps.js
 via scripts/static_module_validate_runner.js.
 
-Red-proof contract: if any fail-closed branch is reverted to its old fail-open
-form, the corresponding test below goes RED because the runner then reports an
-empty error list ("clean build") for that degraded mode.
+If any fail-closed branch is changed to fail open, the corresponding test below
+fails, because the runner then reports an empty error list ("clean build") for
+that degraded mode.
 """
 import json
 import pathlib

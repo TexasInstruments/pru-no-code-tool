@@ -149,6 +149,7 @@ def test_pru1_bad_crc_frame_reports_mismatch(core):
     assert smem[0] == crc8([0x41]), "SMEM[0] (computed CRC) = 0x%02X, want 0x%02X" % (smem[0], crc8([0x41]))
     assert smem[1] == 0x11, "SMEM[1] (received CRC) = 0x%02X, want 0x11" % smem[1]
     assert smem[2] == 0xFF, "SMEM[2] = 0x%02X: a frame with a wrong CRC must report mismatch (0xFF)" % smem[2]
+    assert smem[3] == 0x41, "SMEM[3] (received data) = 0x%02X, want 0x41" % smem[3]
 
 
 @needs_tools

@@ -55,7 +55,7 @@ function run(insts) {
 }
 
 const cases = {
-    // the defect: rd.memVar.labelName = in_buf; wr.memVar.labelName = out_buf on ONE object
+    // the rename hazard: rd.memVar.labelName = in_buf; wr.memVar.labelName = out_buf on ONE object
     sharedMemVar: run([access("rd", "read", memVars.shared), access("wr", "write", memVars.shared)]),
     // the guided pattern: explicit instances assigned by reference
     separateMemVars: run([access("rd", "read", memVars.inBuf), access("wr", "write", memVars.outBuf)]),

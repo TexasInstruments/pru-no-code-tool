@@ -72,10 +72,10 @@ def test_every_block_module_adds_an_instance() -> None:
 
 
 def test_red_arm_rejects_a_deliberately_invalid_module_path() -> None:
-    """Prove the add-instance assertion goes red when a design names no module."""
+    """The add-instance assertion fails when a design names no module."""
     result = _run("/pru_blocks/this_module_does_not_exist")
     output = result.stdout + result.stderr
     assert "Exception occurred calling scripting.addModule()" in output
-    # Same oracle used by the all-module test must reject this deliberately bad design.
+    # The check used by the all-module test must reject this deliberately bad design.
     with pytest.raises(AssertionError, match="rejected module path"):
         _assert_instantiated("/pru_blocks/this_module_does_not_exist", result)

@@ -8,11 +8,10 @@
  * this file from its validate(); the list lives HERE ONLY — do not copy it
  * into blocks.
  *
- * Oracle: TI clpru 2.3.3 (ti-cgt-pru-linux). Each name below was probed as a
- * data symbol (`<name> .byte 1, 2, 3` in .initdmem — exactly what the CRC/LUT
- * blocks emit) and as a code label (`<name>:`); every one fails with
- * [E0300] "<name> is a reserved identifier". Any name that assembles was
- * REMOVED from this list (kept red): SCAN, BROAD, IDLE, MULL, MUL, b4-b7,
+ * Checked against TI clpru 2.3.3: each name below, used as a data symbol
+ * (`<name> .byte 1, 2, 3` in .initdmem — exactly what the CRC/LUT blocks emit)
+ * and as a code label (`<name>:`), fails with [E0300] "<name> is a reserved
+ * identifier". Names that assemble are not listed: SCAN, BROAD, IDLE, MULL, MUL, b4-b7,
  * w0-w7, assembler directives (byte/ushort/uint/usect/text/sect/global/...),
  * sp, pc, main, call, ret, TEMP_REG1 and ordinary names all assemble fine.
  *

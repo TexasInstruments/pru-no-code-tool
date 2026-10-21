@@ -495,7 +495,8 @@ exports = {
 		{
 			name: "exportedBlocks",
 			displayName: "Exported Result Blocks",
-			description: "Blocks inside this loop whose final-iteration output may be read by blocks outside the loop (for example a memory write storing the accumulated sum once, after the loop). Without an entry here, a consumer outside the loop reading a block inside it is a container-boundary error.",
+			description: "Blocks inside this loop whose final-iteration output may be read by blocks outside the loop.",
+			longDescription: "Blocks inside this loop whose final-iteration output may be read by blocks outside the loop (for example a memory write storing the accumulated sum once, after the loop). Without an entry here, a consumer outside the loop reading a block inside it is a container-boundary error.",
 			default: [],
 			minSelections: 0,
 			options: (inst) => {
@@ -510,7 +511,8 @@ exports = {
 		{
 			name: "accumulators",
 			displayName: "Accumulator Bindings",
-			description: "Loop-carried accumulator bindings as a JSON string '[{\\\"preInit\\\": \\\"<block>\\\", \\\"update\\\": \\\"<block>\\\"}]': the update (Arithmetic/Bitwise) block's destination register is coalesced with its preInit block's register, so the update reads and writes the same register on every pass with zero extra cycles per iteration. The preInit block must also be listed in Pre-Initialization Blocks, both blocks must sit inside this loop, and the preInit value must have exactly one data reader (the update block).",
+			description: "Loop-carried accumulator bindings (JSON): the update block reads and writes its preInit block's register on every pass.",
+			longDescription: "Loop-carried accumulator bindings as a JSON string '[{\\\"preInit\\\": \\\"BLOCK_NAME\\\", \\\"update\\\": \\\"BLOCK_NAME\\\"}]': the update (Arithmetic/Bitwise) block's destination register is coalesced with its preInit block's register, so the update reads and writes the same register on every pass with zero extra cycles per iteration. The preInit block must also be listed in Pre-Initialization Blocks, both blocks must sit inside this loop, and the preInit value must have exactly one data reader (the update block).",
 			default: "",
 		},
         {

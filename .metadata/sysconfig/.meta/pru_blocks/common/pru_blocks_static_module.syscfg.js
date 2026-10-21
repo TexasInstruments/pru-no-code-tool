@@ -772,7 +772,7 @@ function getInitSectDirectives() {
 // c28 hits local 0x00000000 -- the core's own data RAM -- not shared RAM.
 // The design-wide fix lives here, once, rather than in each block: one write
 // at every entry point into the generated code serves all c28 users and costs
-// the per-call blocks (mailbox, gateway) nothing.
+// the per-call blocks that use c28 nothing.
 
 // PRU_CTRL base of each SysConfig core context (core-local addresses).
 // SPRUIM2J Table 6-65 entry 11 and the CTPPR0 instance table; SPRUJB6 confirms only the c28 pointer formula and the local control bases;
@@ -1290,7 +1290,7 @@ function isSequentialBlock(blockName, instCfg) {
     }
     if (bcfData && bcfData.blockControlFlow && bcfData.blockControlFlow[blockName] !== undefined) {
         if (bcfData.blockControlFlow[blockName] === 'sequential') return true;
-        // continuous by default, sequential once the block's bound config is > 0 (pwm_block periodCount).
+        // continuous by default, sequential once the block's bound config is > 0 (e.g. a period count).
         const bound = bcfData.blockControlFlowBound && bcfData.blockControlFlowBound[blockName];
         return !!(bound && instCfg && Number.isInteger(Number(instCfg[bound])) && Number(instCfg[bound]) > 0);
     }
