@@ -228,13 +228,17 @@ SKIP_BIT_ENTRY_0?:
 	set r30, r30,   ${CS_PIN}`
 	}
     if (macroName === "m_read_packet_spi_mode1_lsb_gpo_sclk") {
+        // The bit counter advances in the high half, as in the MSB variant, so both halves
+        // match delay_component1/2. bitId is a byte register (TEMP_REG1.b0): it starts at
+        // 0xFF and wraps to 0 on the first add, and the loop ends after bit PACKETSIZE-1.
         macroBody += `	clr r30, r30,   ${CS_PIN}
 	.loop   ${CS_SETUP_TIME}
 	nop
 	.endloop
-	ldi     ${bitId}, 0
+	ldi     ${bitId}, 0xFF
 READ_BIT_LOOP?:
 	set r30, r30,   ${SCLK_PIN}
+	add     ${bitId}, ${bitId}, 1
 	.loop   ${DATA_SETUP_TIME}
 	nop
 	.endloop
@@ -249,11 +253,10 @@ BIT_ENTRY_0?:
 	clr     ${dataReg}, ${dataReg}, ${bitId}
 	nop
 SKIP_BIT_ENTRY_0?:
-	add     ${bitId}, ${bitId}, 1
 	.loop   ${DELAY_COMPEN_2} ; 0
 	nop
 	.endloop
-	qbne    READ_BIT_LOOP?, ${bitId}, ${PACKETSIZE}
+	qbne    READ_BIT_LOOP?, ${bitId}, ${PACKETSIZE}-1
 	.loop   ${CS_HOLD_TIME}
 	nop
 	.endloop
@@ -361,12 +364,15 @@ SKIP_BIT_ENTRY_0?:
 	set r30, r30, ${CS_PIN}`;
     }
     if (macroName === "m_read_packet_spi_mode3_lsb_gpo_sclk") {
+        // Both sample paths take two instructions, and the bit counter advances in the low half,
+        // as the MSB variant's sub does, so both halves match delay_component1/2. bitId is a
+        // byte register (TEMP_REG1.b0): it starts at 0xFF and wraps to 0 on the first add.
         macroBody += `	set r30, r30, ${SCLK_PIN}
 	clr r30, r30, ${CS_PIN}
 	.loop   ${CS_SETUP_TIME}
 	nop
 	.endloop
-	ldi     ${bitId}, 0
+	ldi     ${bitId}, 0xFF
 READ_BIT_LOOP?:
 	clr r30, r30, ${SCLK_PIN}
 	.loop   ${DATA_SETUP_TIME}
@@ -375,19 +381,19 @@ READ_BIT_LOOP?:
 	.loop   ${DELAY_COMPEN_1}
 	nop
 	.endloop
-	nop
+	add     ${bitId}, ${bitId}, 1
 	set r30, r30, ${SCLK_PIN}
 	qbbc    BIT_ENTRY_0?, r31, ${SDI_PIN}
 	set     ${dataReg}, ${dataReg}, ${bitId}
 	qba     SKIP_BIT_ENTRY_0?
 BIT_ENTRY_0?:
 	clr     ${dataReg}, ${dataReg}, ${bitId}
+	nop
 SKIP_BIT_ENTRY_0?:
-	add     ${bitId}, ${bitId}, 1
 	.loop   ${DELAY_COMPEN_2}
 	nop
 	.endloop
-	qbne    READ_BIT_LOOP?, ${bitId}, ${PACKETSIZE}
+	qbne    READ_BIT_LOOP?, ${bitId}, ${PACKETSIZE}-1
 	.loop   ${CS_HOLD_TIME}
 	nop
 	.endloop
