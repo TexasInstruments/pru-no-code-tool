@@ -1,4 +1,4 @@
-"""pru_spi_{read,write,transfer} follow-ups, each measured on a real SysConfig + gmake + clpru build.
+"""pru_spi_{read,write,transfer} checks, each measured on a real SysConfig + gmake + clpru build.
 
   1. Controller-mode CS is driven to its idle (high) level once, in the generated prologue: with no PRU GPO block the first transaction now
      has an assertion edge (TI pru-simulator pin trace; red arm = the same build with the prologue emission removed). Peripheral mode

@@ -49,7 +49,7 @@ Tick **Open live web view after the run** (`tiRunLiveView`, off by default) to a
 - **Detached.** The view keeps running after the Run finishes and after SysConfig's wait ends; its log is `syscfg/ti_live_view.log`. Close it by closing the console-less process (for example from Task Manager) or by pressing Run again with the box ticked; the panel prints its pid.
 - **The panel line.** `Live web view: http://127.0.0.1:8765 (opened in your browser; pid N)`, or `Live web view: not started - <reason>` / `failed - <reason> (log: ...)`. It is shown only for a result that matches the design on screen.
 - **It never changes the verdict.** The view is a convenience: a view that fails to start leaves the verdict and exit code exactly as the run produced them. Both fields are saved in the `.syscfg` (a per-design preference) but are ignored by the design digest, so ticking the box does not make the last result STALE.
-- **Evidence class.** The live view is **simulator-only evidence**: TI pru-simulator running the real `clpru` ELF against behavioural device models. It is not hardware. Edits made by hand in the dashboard (memory, peripheral configuration, a replaced simulator) withhold the verdict until the live view is restarted; a register or pin edit is cleared by Reset.
+- **Scope.** The live view shows **simulator results only**: TI pru-simulator running the real `clpru` ELF against behavioural device models. It is not hardware. Edits made by hand in the dashboard (memory, peripheral configuration, a replaced simulator) withhold the verdict until the live view is restarted; a register or pin edit is cleared by Reset.
 
 From a shell the same view is `gmake live` (it runs `gmake sim` first, so the verdict exists before the browser opens).
 

@@ -10,7 +10,7 @@ There are two sources. **Both are supported; neither replaces the other; nothing
 | Visible in the design | A row of fields inside Simulation Settings | A named block with its kind, its pins and what reads it |
 | Parameters | A JSON string, checked when the model is built | Typed fields, range-checked in the GUI |
 | Pins | The selected GPI pin is the device's primary pin; companions in two fields | Every pin is its own labelled field, marked *device drives* or *PRU drives* |
-| In-tool JavaScript preview | Attached (kinds that are ported) | Not attached; TI pru-simulator is the evidence |
+| In-tool JavaScript preview | Attached (kinds that are ported) | Not attached; TI pru-simulator is the reference |
 
 ## A pin claimed by both sources is an error
 

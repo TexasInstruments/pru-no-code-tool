@@ -220,7 +220,7 @@ CASES = [
     (800, 10, (789, 785, 781)),    # dense cluster just before the boundary
     # Every escape handler exists once per leg (x1 and gh and gl and g7 by the leg that opens the
     # token, x2 by the unclamped leg), so a case arms one leg's copy only. One case per remaining
-    # leg, found by breaking each copy in turn (a mutant per leg: the suite must go red).
+    # leg: breaking any one copy must make the suite fail.
     (800, 10, (900, 300, 400)),    # one clamped leg: A
     (800, 10, (300, 400, 900)),    # one clamped leg: C
     (800, 10, (300, 900, 800)),    # two clamped legs, A unclamped
