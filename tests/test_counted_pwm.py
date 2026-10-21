@@ -127,8 +127,12 @@ def edges(result, pins):
 
 
 def run_asm(tmp_path, spec, name, steps):
+    # Both PWM blocks program the IEP through c26; the run maps c26 to the IEP as on the device,
+    # whatever the checkout's constants_am243x.cfg says.
+    if elf_cosim.simulator_iep_base() != 0x0002E000:
+        pytest.skip("pru-simulator checkout has no IEP0 model at 0x0002E000")
     elf, _ = elf_cosim.build_block_firmware(spec, name, str(tmp_path))
-    return elf_cosim.run_elf_closed_loop(elf, Idle(), max_steps=steps)
+    return elf_cosim.run_elf_closed_loop(elf, Idle(), max_steps=steps, constants=elf_cosim.IEP_CONSTANTS)
 
 
 PWM_PINS = {"PWM": 3, "COMP": 4}

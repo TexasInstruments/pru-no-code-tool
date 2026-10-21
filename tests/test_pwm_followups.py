@@ -124,7 +124,7 @@ def test_s3_counted_pwm_header_peak_covers_the_run(tmp_path):
 
 @needs_syscfg
 @pytest.mark.parametrize("count", [1, 2, 5])
-def test_s3_header_peak_bounds_the_run_measured_in_the_ti_simulator(tmp_path, count):
+def test_s3_header_peak_bounds_the_simulated_run(tmp_path, count):
     """The oracle is the real clpru ELF in the TI pru-simulator, not the JS formula."""
     import sys
     sys.path.insert(0, str(ROOT / "scripts" / "sim"))
@@ -140,7 +140,10 @@ def test_s3_header_peak_bounds_the_run_measured_in_the_ti_simulator(tmp_path, co
                                EN_COMP="0", COMP_PIN="6", DEADBAND_COUNTS="4", PERIOD_COUNT=str(count)),
                 postlude=["halt"])
     elf, _ = elf_cosim.build_block_firmware(spec, f"s3_{count}", str(tmp_path))
-    result = elf_cosim.run_elf_closed_loop(elf, Idle(), max_steps=6000)
+    if elf_cosim.simulator_iep_base() != 0x0002E000:
+        pytest.skip("pru-simulator checkout has no IEP0 model at 0x0002E000")
+    # The macro programs the IEP through c26; map c26 to the IEP as on the device.
+    result = elf_cosim.run_elf_closed_loop(elf, Idle(), max_steps=6000, constants=elf_cosim.IEP_CONSTANTS)
     assert result.halted
     _s, out, _ = generate(tmp_path, pwm_then_gpo(count))
     assert peak_of(out) >= result.cycles, (peak_of(out), result.cycles)
@@ -256,7 +259,10 @@ def test_m1_boundary_one_duty_count_halts_within_the_header_budget(tmp_path, cou
                                EN_COMP="0", COMP_PIN="6", DEADBAND_COUNTS="4", PERIOD_COUNT=str(count)),
                 postlude=["halt"])
     elf, _ = elf_cosim.build_block_firmware(spec, f"m1_{count}", str(tmp_path))
-    result = elf_cosim.run_elf_closed_loop(elf, Idle(), max_steps=6000)
+    if elf_cosim.simulator_iep_base() != 0x0002E000:
+        pytest.skip("pru-simulator checkout has no IEP0 model at 0x0002E000")
+    # The macro programs the IEP through c26; map c26 to the IEP as on the device.
+    result = elf_cosim.run_elf_closed_loop(elf, Idle(), max_steps=6000, constants=elf_cosim.IEP_CONSTANTS)
     assert result.halted, "a counted pwm with DUTY_COUNTS 1 must terminate"
     text = pwm_then_gpo(count).replace("a.dutyPct = 40;", "a.dutyPct = 0.5;")
     syscfg, out, log = generate(tmp_path, text)
