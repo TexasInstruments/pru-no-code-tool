@@ -36,7 +36,10 @@ const mailboxModule = {
         { name: "hostEvent", displayName: "Host system event", default: 16 },
         { name: "dataRegister", displayName: "Value Register", default: "R10" },
 
-        { name: "opCode", default: "m_mailbox_run", hidden: true },
+        // The allocator passes an output wider than 4 bytes as two tokens (first register, second register),
+        // so an output1Size above 4 calls the _wide variant, which takes both; the window starts at RES.
+        { name: "opCode", default: "m_mailbox_run", hidden: true,
+          getValue: (inst) => Number(inst.output1Size) > 4 ? "m_mailbox_run_wide" : "m_mailbox_run" },
         { name: "numOfInputPorts", default: 0, hidden: true },
         { name: "numOfOutputPorts", default: 1, hidden: true },
         { name: "output1Size", default: 1, hidden: true, getValue: (inst) => inst.mode === "consume" ? (Number(inst.slotBytes) || 4) : 1 },
@@ -62,7 +65,8 @@ const mailboxModule = {
 
     ports: (inst) => {
         return [
-            { name: "output1", type: "output32" },
+            // An output wider than 4 bytes is a two-register value; 32-bit blocks read it through a Data Splitter.
+            { name: "output1", type: Number(inst.output1Size) > 4 ? "output64" : "output32" },
             { name: "prev", type: "IO_PREV" },
             { name: "next", type: "IO_NEXT" }
         ];
@@ -78,9 +82,12 @@ const mailboxModule = {
     },
 
     getMacro(pruInstructionMacro, opCode) {
-        opCode = opCode || pruInstructionMacro.split(",")[0];
+        opCode = opCode || pruInstructionMacro.split(",")[0].trim().split(/\s+/)[0];
+        // RES_HI is the allocator's second output token for an output wider than 4 bytes. The macro does
+        // not use it: lbco &RES, ..., SLOT_BYTES fills the contiguous window that starts at RES.
+        const resParams = /_wide$/.test(opCode) ? "RES, RES_HI" : "RES";
         return [
-            `${opCode} .macro RES, BASE_OFF, RING_MASK, LOG2_SLOT, SLOT_BYTES, IS_SHARED, IS_PUBLISH, SIGNAL_EVENT, DATA_REG`,
+            `${opCode} .macro ${resParams}, BASE_OFF, RING_MASK, LOG2_SLOT, SLOT_BYTES, IS_SHARED, IS_PUBLISH, SIGNAL_EVENT, DATA_REG`,
             `    .if IS_SHARED == 1`,
             `    lbco  &TEMP_REG1, c28, BASE_OFF + 0, 4`,
             `    lbco  &TEMP_REG2.w0, c28, BASE_OFF + 4, 4`,

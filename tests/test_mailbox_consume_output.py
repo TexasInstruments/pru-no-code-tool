@@ -106,28 +106,35 @@ def test_consume_reaches_output1_and_downstream_add(tmp_path, tail, slot):
 # macro above: only the SysConfig allocator observes output1Size.
 MAILBOX_MODULE = ('const mailbox_block = scripting.addModule('
                   '"/pru_blocks/pru_io_blocks/mailbox_block", {}, false);\n')
-
+SPLITTER_MODULE = ('const data_splitter = scripting.addModule('
+                   '"/pru_blocks/utils/data_splitter", {}, false);\n')
 
 def wide_consume_design(slot_bytes):
-    """Consume one wide slot, feed its output1 to ADD, and keep an addend live.
+    """Consume one wide slot, take its first word through a Data Splitter, add 1, and keep an addend live.
 
+    An output wider than 4 bytes reaches a consumer as two register tokens (first, second), so a 32-bit
+    block reads it through utils/data_splitter (lower 32 bits), as for any wide output.
     With an output1 starting at R0, the addend must start immediately after its
     reservation: R4 for 16 bytes and R8 for 32 bytes.  That allocation boundary
     shows independently that the metadata width reached the allocator.
     """
     return "".join([
-        T.HEADER, MAILBOX_MODULE,
+        T.HEADER, MAILBOX_MODULE, SPLITTER_MODULE,
         'const mb = mailbox_block.addInstance();\n',
         'const k = load_constant_block.addInstance();\n',
+        'const lo = data_splitter.addInstance();\n',
         'const add = arithmetic_block.addInstance();\n',
         'mb.$name = "Consume_Wide"; mb.mode = "consume"; mb.slots = 2; '
         'mb.slotBytes = %d; mb.memory = "dmem0"; mb.baseOffset = "0x0000"; mb.dataRegister = "R10";\n' % slot_bytes,
         'k.$name = "Addend_After_Output"; k.constant1 = 1;\n',
+        'lo.$name = "Slot_Word0"; lo.splitSelect = "lower";\n',
         'add.$name = "Add_Slot_Word0"; add.opCode = "ADD"; add.output1Size = "4";\n',
-        'scripting.connect(add, "input1", mb, "output1");\n',
+        'scripting.connect(lo, "input1", mb, "output1");\n',
+        'scripting.connect(add, "input1", lo, "output1");\n',
         'scripting.connect(add, "input2", k, "output1");\n',
         'scripting.connect(mb, "next", k, "prev");\n',
-        'scripting.connect(k, "next", add, "prev");\n',
+        'scripting.connect(k, "next", lo, "prev");\n',
+        'scripting.connect(lo, "next", add, "prev");\n',
     ])
 
 
@@ -164,7 +171,8 @@ def build_and_run_wide_consume(slot_bytes, product=None):
         T.PRODUCT_JSON = old_product
     try:
         assert rc == 0 and asm, out[-1800:]
-        call = re.search(r"^\s*m_mailbox_run\s+(R\d+(?:\.[bw]\d)?)\s*,", asm, re.M)
+        # An output wider than 4 bytes is passed as two register tokens, so the call is the _wide variant.
+        call = re.search(r"^\s*m_mailbox_run_wide\s+(R\d+(?:\.[bw]\d)?)\s*,", asm, re.M)
         assert call, "Consume_Wide mailbox call missing from generated code"
         # The output itself begins at R0 and consumes whole contiguous registers;
         # the independent constant is the first allocation after that window.
@@ -212,7 +220,11 @@ def test_real_syscfg_wide_output_reserves_slot_and_feeds_downstream(slot_bytes):
 @T.needs_tools
 @pytest.mark.parametrize("product_fixture", ["no_output_size_getvalue_product", "output_size_hard_coded_to_four_product"])
 def test_mutants_that_shrink_wide_output1_are_red(request, product_fixture):
-    """Both metadata regressions fail before simulation at the allocation-boundary oracle."""
+    """Both metadata regressions fail before simulation.
+
+    With output1Size shrunk, output1 is a 32-bit port again, so the design cannot connect it to the
+    Data Splitter's 64-bit input; if it could, the allocation-boundary oracle would fail.
+    """
     product = request.getfixturevalue(product_fixture)
-    with pytest.raises(AssertionError, match=r"wide output|output1Size"):
+    with pytest.raises(AssertionError, match=r"wide output|output1Size|Cannot connect input64 ports to output32"):
         build_and_run_wide_consume(16, product)
