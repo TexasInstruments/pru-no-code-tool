@@ -1,7 +1,7 @@
 """Open-drain I2C slave for the real-ELF tests.
 
-The i2c_block master now samples the address ACK and leaves on a NACK, so a
-bus that never pulls SDA low is no longer a valid read-frame partner. This
+The i2c_block master samples the address ACK and leaves on a NACK, so a
+bus that never pulls SDA low is not a valid read-frame partner. This
 slave ACKs (or NACKs) the address byte and, for a read, shifts ``data`` out.
 """
 

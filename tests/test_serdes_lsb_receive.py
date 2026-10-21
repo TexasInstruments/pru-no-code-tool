@@ -23,7 +23,7 @@ The device half needs clpru and the TI pru-simulator checkout. It is gated
 on PRU_SIMULATOR_PATH (and clpru): when PRU_SIMULATOR_PATH is unset or does
 not point at a checkout, the device tests SKIP with a reason instead of
 passing. The static half runs anywhere: it parses the committed block
-source and asserts the LSB receive branch no longer shifts an 8-bit field
+source and asserts the LSB receive branch does not shift an 8-bit field
 by more than 7 and that both receive branches cost the same number of
 instructions per bit (so the bit period does not change with bit order).
 """

@@ -1,7 +1,7 @@
 """Source-level helpers for tests that walk the block library.
 
-Guards used to decide "this module declares getPinUsage" (or getMacro) by a bare substring match,
-so a comment or a string literal that merely mentions the name made a non-block look like a block
+Deciding "this module declares getPinUsage" (or getMacro) by a bare substring match would let a
+comment or a string literal that merely mentions the name make a non-block look like a block
 (common/pru_blocks_static_module.syscfg.js documents and calls getPinUsage). declares() looks only
 at code - comments and string/template literals blanked out - and counts the name only where it is
 not a member access: a property key (name: ...), method shorthand (name(inst) {...}), shorthand

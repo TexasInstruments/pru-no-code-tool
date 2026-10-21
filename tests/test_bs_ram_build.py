@@ -83,7 +83,7 @@ def test_write_then_read_design_builds_with_row_and_bytecount_in_the_right_slots
     assert write.startswith("m_bsram_write ") and write.endswith(", 7 , 4"), write
     assert snoop.startswith("m_bsram_snoop_write ") and snoop.endswith(", 11 , 32"), snoop
     assert "undefined" not in write and "undefined" not in snoop and "undefined" not in read
-    # Read is RES, ROW, BYTECOUNT - the XIN length follows the config (12 / 4 / 32), it is no longer a hardcoded 32
+    # Read is RES, ROW, BYTECOUNT - the XIN length follows the config (12 / 4 / 32), not a hardcoded 32
     for call, row, nbytes in ((read, 9, 12), (read4, 3, 4), (read32, 5, 32)):
         assert call.startswith("m_bsram_read ") and call.replace(" ", "").endswith(",%d,%d" % (row, nbytes)) and len(call.split(",")) == 3, call
         assert "undefined" not in call
