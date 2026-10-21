@@ -4,7 +4,7 @@
  * ICSSG Byte Swap (BSWAP) broadside unit.
  *
  * BSWAP is not a PRU opcode; it is a broadside peripheral reached with XIN.
- * Evidence: SPRUIM2J 6.4.6.2.7 and Table 6-95 (device IDs), Table 6-60
+ * References: SPRUIM2J 6.4.6.2.7 and Table 6-95 (device IDs), Table 6-60
  * (6 copies: PRU1/0 + RTU_PRU1/0 + TX_PRU1/0).
  *
  *   160 (0xA0)  Byte Order Swap  - in place on ANY of R0-R29 (6.4.6.2.7.1)
@@ -179,7 +179,7 @@ const bswapModule = {
         return macroLines(mode, name);
     },
 
-    // Machine-readable evidence.  Cycle counts are an instruction-count claim
+    // Machine-readable metadata. Cycle counts are an instruction-count claim
     // plus the TRM's 1-cycle XIN, not a hardware benchmark.
     modes: MODES,
     registerClobbers: Object.keys(MODES).reduce((out, key) => { out[key] = MODES[key].clobbers; return out; }, {}),

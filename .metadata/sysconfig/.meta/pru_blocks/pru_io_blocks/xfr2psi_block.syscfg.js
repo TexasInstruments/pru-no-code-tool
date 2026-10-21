@@ -92,7 +92,7 @@ const xfr2psiModule = {
 
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => {
             // Fault model: if ready check is NOT emitted, the XOUT can STALL until PSI-L drains.
-            // A fixed cycle budget that ignores backpressure is the defect. Declare stall as -1 (unknown).
+            // A fixed cycle budget would ignore that backpressure, so the stall is declared as -1 (unknown).
             if (!inst.checkReady && (inst.operation === "send" || inst.direction === "tx")) return -1;
             if (!inst.checkReady && inst.operation === "receive") return -1;
             // With ready check, deterministic: status read + header XOUT/XIN + payload words
@@ -191,7 +191,7 @@ const xfr2psiModule = {
         // Directly compute expected noOfCycles from instance fields to avoid relying on hidden getValue indirection in test harness
         const expectsStall = !inst.checkReady;
         if (expectsStall) {
-            // When checkReady is false, the correct noOfCycles is -1 (stall declared). If the instance's noOfCycles resolves to a fixed positive, it's the defect.
+            // When checkReady is false, the correct noOfCycles is -1 (stall declared). If the instance's noOfCycles resolves to a fixed positive, that is an error.
             let resolved = null;
             try {
                 if (typeof inst.noOfCycles === "function") resolved = inst.noOfCycles(inst);

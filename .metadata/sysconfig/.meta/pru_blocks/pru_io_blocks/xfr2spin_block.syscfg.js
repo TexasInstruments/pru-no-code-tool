@@ -3,7 +3,7 @@
 /*
  * ICSSG Spinlock (XFR2SPIN) hardware mutex.
  *
- * Evidence, read from SPRUIM2J directly (Table 6-60 "Hardware Module Broadside
+ * References, from SPRUIM2J (Table 6-60 "Hardware Module Broadside
  * ID Mapping", PDF p573; and 6.4.6.2.9 / 6.4.6.2.9.1 Table 6-98, PDF p638-639):
  *
  *   Table 6-60:  XFR2SPIN   0x90   "1 copy per PRU_ICSSG system"
@@ -52,8 +52,8 @@
  * "NOTE: Firmware must have 8 NOP before XIN after XOUT." appears three times
  * in Table 6-98, on the EXT_SPIN_ID0 0x91 XOUT block and on both EXT_SPIN_ID1
  * 0x92 blocks. It is NOT printed against the INT_SPIN_ID 0x90 rows, so for
- * 0x90 it is a conservative carry-over, not a quoted requirement - recorded
- * honestly in `nopEvidence` below rather than dressed up as a TRM citation.
+ * 0x90 it is a conservative carry-over, not a quoted requirement; `nopEvidence`
+ * below records it as such rather than as a TRM citation.
  *
  * Because acquire and release are separate blocks that the graph may schedule
  * in any order, the only placement that actually satisfies "8 NOP before XIN
@@ -87,10 +87,8 @@ const OPERATIONS = {
     acquire: {
         opCode: "m_xfr2spin_acquire",
         // Blocking. Cycle budget is deliberately -1, which the register
-        // allocator maps to INFINITY_BLOCK_CONNECTED_CYCLE_BUDGET_UNKNOWN. The
-        // defect this item exists to fix was a lock-free bridge that "reported
-        // a clean cycle budget"; a spin whose duration is set by another core
-        // must not report a number.
+        // allocator maps to INFINITY_BLOCK_CONNECTED_CYCLE_BUDGET_UNKNOWN: a spin
+        // whose duration is set by another core must not report a number.
         cycles: -1,
         hasOutput: true,
         blocking: true,
@@ -295,9 +293,9 @@ const xfr2spinModule = {
         // Static validation hands over a whole allocator call such as
         // "m_xfr2spin_acquire R4, 7"; the .xdt production path hands over
         // ("", instance.opCode). Take the first token of whichever is present
-        // so BOTH callers land on the same body - an earlier implementation
-        // returned a bare .macro/.endm on the ("", opCode) path and shipped
-        // firmware with no spinlock access in it at all.
+        // so BOTH callers land on the same body; returning a bare .macro/.endm
+        // on the ("", opCode) path would ship firmware with no spinlock access
+        // in it at all.
         const raw = (requestedOpCode || pruInstructionMacro || "").trim();
         const name = raw.split(/[\s,]+/)[0];
         const operation = Object.keys(OPERATIONS).find(
@@ -308,7 +306,7 @@ const xfr2spinModule = {
         return macroLines(operation);
     },
 
-    // Machine-readable evidence, consumed by the tests and the validator.
+    // Machine-readable metadata, consumed by the tests and the validator.
     operations: OPERATIONS,
     deviceId: INT_SPIN_ID,
     numFlags: NUM_FLAGS,

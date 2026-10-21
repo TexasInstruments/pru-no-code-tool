@@ -119,7 +119,7 @@ const queueEmptyModule = {
         return macroLines("m_queue_empty");
     },
 
-    // Machine-readable evidence used by documentation and tests.
+    // Machine-readable metadata used by documentation and tests.
     deviceId: 0xF0,
     deviceIds: { query: 0xF0 },
     direction: "xin_only",

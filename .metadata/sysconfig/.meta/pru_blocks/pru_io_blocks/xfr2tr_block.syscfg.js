@@ -3,7 +3,7 @@
 /*
  * RTU_PRU XFR2TR ring accelerator.
  *
- * Evidence: SPRUIM2J 6.4.6.3.3 "PRU_ICSSG XFR2TR Ring Accelerator" and Table
+ * References: SPRUIM2J 6.4.6.3.3 "PRU_ICSSG XFR2TR Ring Accelerator" and Table
  * 6-112 "RTU_PRU to XFR2TR Ring Interface". One ring is attached to each
  * RTU_PRU core; it accelerates a local Data RAM2 copy from a preconfigured
  * source TR list to a destination ring, driven by XOUT-submitted TR IDs.
@@ -54,7 +54,7 @@
  * is a pacing model, not a hardware timing claim. Nothing in this block
  * invents a doorbell or a completion interrupt that Table 6-112 does not list.
  *
- * Memory placement (gap 1): R6[17:0] is 18 bits (0..0x3FFFF). Larger
+ * Memory placement: R6[17:0] is 18 bits (0..0x3FFFF). Larger
  * values truncate in hardware; this block refuses them at build time instead
  * of silently aliasing inside the window. Furthermore, the source TR list
  * (tr_msrc_base) and the destination ring (tr_rsrc_base) must reside inside
@@ -64,9 +64,9 @@
  * 0x0001_0000; the simulator's SMEM models 64 KB there (0x00010000-0x0001FFFF
  * on AM64x/AM243x). Bases outside that window, or bases whose
  * base+entries*trSize extent would leave the window (or exceed the 4 KB
- * source-TR ceiling, gap 2), are build errors.
+ * source-TR ceiling below), are build errors.
  *
- * 4 KB source-TR ceiling (gap 2): the source TR list that the ring
+ * 4 KB source-TR ceiling: the source TR list that the ring
  * copies from is capped at 4 KB (4096 bytes). Table 6-112 has no register
  * that carries a source-list length — the only length register is
  * tr_rsrc_nums, which sizes the DESTINATION ring (1..4096 entries) and is a
@@ -95,13 +95,12 @@
 const OPERATIONS = ["configure", "submit", "status"];
 
 // The source TR list length has ONE default, used by both the declared
-// SysConfig config default below and validate()'s omitted-field path. An
-// earlier revision defaulted the omitted path to ringEntries while declaring
-// a literal 16 in the UI, so a programmatic caller and a real design got two
-// different answers from the same block (and the omitted path re-introduced
-// the very over-rejection the sourceTrCount split exists to remove: a
-// 4096-entry ring with trSize=8 became a hard build error again). One
-// constant, both paths.
+// SysConfig config default below and validate()'s omitted-field path.
+// Defaulting the omitted path to ringEntries while the UI declares a literal
+// 16 would give a programmatic caller and a real design two different answers
+// from the same block (and would make a 4096-entry ring with trSize=8 a hard
+// build error, the over-rejection the sourceTrCount field exists to remove).
+// One constant, both paths.
 const DEFAULT_SOURCE_TR_COUNT = 16;
 
 function operationName(inst) {
@@ -130,8 +129,7 @@ function getCoreType() {
         const common = system.getScript("/common");
         const raw = common.getSelfSysCfgCoreName();
         const coreName = (raw || "").toLowerCase();
-        // gap 4: the previous check used coreName.includes("rtu") which
-        // is a loose substring — it matches "artu", "virtual", "myrtu_device"
+        // coreName.includes("rtu") would be a loose substring check — it matches "artu", "virtual", "myrtu_device"
         // and any future core name that merely contains those three letters.
         // Tighten to the documented token "_rtu_pru" / "_tx_pru" (SPRACJ8 /
         // pru_blocks_am64x.syscfg.js uses includes("rtu") discrimination for the
@@ -247,10 +245,9 @@ function validate(inst, report) {
         // descriptors actually live at sourceBase. When omitted it takes the
         // single DEFAULT_SOURCE_TR_COUNT above -- the same literal the UI
         // declares -- so the programmatic and SysConfig paths cannot disagree.
-        // The prior version of this check used ringEntries*trSize
-        // directly, which made a 4096-entry ring (Table 6-112's own maximum,
-        // legal per the range check just above) a hard build error whenever
-        // trSize=8 — contradicting this very validator. ringEntries itself
+        // Using ringEntries*trSize directly would make a 4096-entry ring
+        // (Table 6-112's own maximum, legal per the range check just above) a
+        // hard build error whenever trSize=8 — contradicting this validator. ringEntries itself
         // carries no byte ceiling: only sourceTrCount does.
         const sourceTrCountRaw = inst.sourceTrCount;
         const sourceTrCountGiven = !(sourceTrCountRaw === undefined || sourceTrCountRaw === null);
@@ -270,7 +267,7 @@ function validate(inst, report) {
             }
         }
 
-        // gap 1: sourceBase/ringBase must fit in 18 bits and must lie
+        // sourceBase/ringBase must fit in 18 bits and must lie
         // inside PRU_ICSSG Shared RAM / Data RAM2. Larger values would truncate
         // via R6[17:0] and silently alias inside the window, so they are refused.
         // Local view: Shared Data RAM 2 at 0x0001_0000, 64 KB on AM64x/AM243x
@@ -519,7 +516,7 @@ const xfr2trModule = {
         return macroText(op);
     },
 
-    // Machine-readable evidence for tests/tooling.
+    // Machine-readable metadata for tests/tooling.
     deviceIds: { sourceConfig: 0x70, ringConfigStatus: 0x71, submit: 0x72 },
     registerClobbers: { configure: [[6, 2]], submit: [[2, 4]], status: [[7, 2]] },
     cycleEvidence: {

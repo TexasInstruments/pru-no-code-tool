@@ -4,7 +4,7 @@
  * ICSSG Broadside BS RAM — per-core private 2 KB scratch (SPRUIM2J 6.4.6.2.5,
  * Fig 6-49, Tables 6-91/6-92).
  *
- * TRM evidence and the trap:
+ * TRM references and the trap:
  *   SPRUIM2J 6.4.6.2.5 describes BS RAM as a per-core private broadside memory
  *   with a deterministic XOUT/XIN sequence and no other owner. Fig 6-49 shows
  *   the sequence; Tables 6-91/6-92 map the broadside control registers.
@@ -74,8 +74,8 @@
  * shared broadside-macro primitive exists.
  *
  * Cycle count: 1 by house convention (SPRUIM2J 6.4.6.2.5 notes XFR is 1 cycle;
- *   the address + data pair is still counted as 1 for evidence-ledger
- *   purposes). Must NOT be promoted above simulator-tested maturity without a
+ *   the address + data pair is still counted as 1 in the block's cycle
+ *   metadata). Must NOT be promoted above simulator-tested maturity without a
  *   bench; stated explicitly in cycleEvidence.
  */
 
@@ -188,7 +188,7 @@ function validate(inst, report) {
         report.logError("BS RAM row is " + ROW_BYTES + " bytes (2KB / " + NUM_ROWS + " rows). Window larger than " + ROW_BYTES + " B would alias onto the next row. Got " + inst.byteCount + ".", inst, "operation");
     }
     // The write macro loads only R2 (4 bytes) from INPUT. A longer XOUT 48 would transfer R3..R9 too, which hold whatever
-    // the surrounding program left there. Refused rather than loading R3..R9 from an undeclared source (smaller honest fix).
+    // the surrounding program left there. Refused rather than loading R3..R9 from an undeclared source.
     if (op === "write" && bc !== null && Number.isInteger(bc) && bc > WRITE_MAX_BYTES) {
         report.logError("BS RAM write loads only R2 (4 bytes) from its input, so Bytes must be 1.." + WRITE_MAX_BYTES + " for write; got " + inst.byteCount + ". A longer XOUT 48 would send stale R3..R9. Use snoop write (32 Byte, R3..R9 zero-filled) for a full row.", inst, "byteCount");
     }
@@ -336,7 +336,7 @@ const bsRamModule = {
         return macroLines(op, name);
     },
 
-    // Machine-readable evidence (instruction-count claim, not hardware bench).
+    // Machine-readable metadata (instruction-count claim, not hardware bench).
     numRows: NUM_ROWS,
     rowBytes: ROW_BYTES,
     deviceSizeBytes: BS_RAM_SIZE,

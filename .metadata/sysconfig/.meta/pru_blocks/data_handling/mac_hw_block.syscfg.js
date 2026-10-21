@@ -20,7 +20,7 @@ const macHwModule = {
         { name: "output1Size", default: 4, hidden: true },
         { name: "numOfConstants", default: 0, hidden: true },
 
-        // Default generated macro evidence: 9 cycles (including the emitted HALT).
+        // The default generated macro runs in 9 cycles (including the emitted HALT).
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 9, default: 9 }
     ],
 

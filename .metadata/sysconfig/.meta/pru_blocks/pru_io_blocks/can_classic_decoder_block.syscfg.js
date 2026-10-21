@@ -40,7 +40,7 @@ function sjwTicks(inst) {
     return Math.max(1, Math.floor((inst.sjwCycles + 1) / POLL_TICK_CYCLES));
 }
 
-// Everything the macro needs, derived here (the evidence emitter and the TI pru-simulator parser do not evaluate `.eval`).
+// Everything the macro needs, derived here (the block-macro emitter and the TI pru-simulator parser do not evaluate `.eval`).
 //   wt  wait-loop ticks per bit        (BIT_CYC - 10) / 3
 //   rp  remainder pad nops (0..2)      (BIT_CYC - 10) - 3 * wt          => 10 + 3 * wt + rp = BIT_CYC
 //   sq  hard-sync reload ticks         (SAMPLE_CYC - rp - 10 + 1) / 3   => effective sample point 3 * sq + rp + 10

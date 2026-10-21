@@ -39,7 +39,7 @@ const pidModule = {
         { name: "constant3", hidden: true, default: "", getValue: (inst) => String(Math.round(parseFloat(inst.kd) * 4096)) },
         { name: "constant4", hidden: true, default: "", getValue: (inst) => inst.$name + "_pid_state" },
 
-        // Counted from the default generated macro/evidence run: 50 cycles,
+        // Counted from a run of the default generated macro: 50 cycles,
         // including the three operand-latency NOPs (LDI32 expands to two PRU instructions).
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 50, default: 50 }
     ],

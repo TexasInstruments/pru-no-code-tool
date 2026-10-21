@@ -1,7 +1,8 @@
 "use strict";
 
-// TODO: Center-aligned PWM (the event list is sorted once per call).
-// VERIFY: TI pru-simulator needs an IEP CNT/CMP/W1C model before it can serve as an independent timing oracle.
+// Edge-aligned PWM only; center-aligned PWM is not implemented. The event list is sorted once per call.
+// Timing is checked on the JS PRU core; TI pru-simulator can serve as an independent timing check only in a
+// revision that models IEP CNT/CMP/W1C.
 
 const GPIO_SIGNALS = Array.from({ length: 20 }, (_, i) => ({
     name: String(i),

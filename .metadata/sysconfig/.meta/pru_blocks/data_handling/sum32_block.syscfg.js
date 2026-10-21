@@ -205,7 +205,7 @@ const sum32Module = {
         return macroLines(name);
     },
 
-    // Machine-readable evidence used by documentation and tests. Instruction
+    // Machine-readable metadata used by documentation and tests. Instruction
     // / TRM-cycle-count claims, not a hardware benchmark.
     cycleEvidence: {
         accumulate: { peakCycles: 12, basis: "LBBO &R2, SRC_ADDR, 0, 32 loads 8 words from DMEM: " +

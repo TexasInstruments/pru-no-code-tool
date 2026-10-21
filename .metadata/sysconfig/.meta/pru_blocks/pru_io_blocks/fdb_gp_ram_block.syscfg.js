@@ -4,13 +4,13 @@
  * FDB Generic Broadside RAM + 16-byte Compare (ICSSG).
  *
  * -----------------------------------------------------------------------------
- * GO / NO-GO (STEP 1 - TRM evidence for non-Ethernet use)
+ * NON-ETHERNET USE: WHAT THE TRM SAYS
  * -----------------------------------------------------------------------------
  * The FDB generic-mode controls live in the MII_G_RT register space. The
  * local functional extract identifies the enable bits as
  * MII_G_RT_FDB_GEN_CFG2[7] and [8]. That placement raised the question whether FDB generic mode
- * requires a configured MII port at all, which would invalidate the entire
- * non-Ethernet premise of this item.
+ * requires a configured MII port at all, which would rule out using it
+ * without Ethernet.
  *
  * What the TRM says (consulted):
  *   - SPRUIM2J 6.4.11.2.3.7.4 "FDB Generic Mode" describes the generic access
@@ -41,13 +41,13 @@
  *   sentence proves independence, and no sentence proves dependence, and no
  *   second source settles it.
  *
- * Verdict recorded honestly: GO with explicit caveat - the TRM's generic-mode
+ * Conclusion, with an explicit caveat: the TRM's generic-mode
  * prose and broadside tables describe the access without listing MII port
  * configuration as a prerequisite, so we proceed on that reading, but the TRM
  * does not state independence in a single settling sentence and this has not
  * been proven on silicon. The block is therefore delivered as
  * "simulator-tested" at most, and its header and docs carry this caveat
- * rather than a claim that the question is closed. Compare is honestly
+ * rather than a claim that the question is closed. Compare is
  * described as a single-row compare (not a search) with no cycle advantage
  * over register compares after a 1-cycle XIN.
  *
@@ -57,12 +57,12 @@
  *   MII_G_RT_FDB_GEN_CFG2[7]/[8] generic-bank enables.
  *
  * -----------------------------------------------------------------------------
- * DESIGN (from SPRUIM2J; honest value, not oversold)
+ * DESIGN (from SPRUIM2J)
  * -----------------------------------------------------------------------------
- * New block fdb_gp_ram_block. PRU0/PRU1 only, never RTU_PRU/TX_PRU. ICSSG
+ * fdb_gp_ram_block. PRU0/PRU1 only, never RTU_PRU/TX_PRU. ICSSG
  * only; ICSSM (AM261x) must be refused via pru_device_caps.
  *
- * Honest value: 16 KB of shared 32-byte-wide table memory (512 rows x 32 B),
+ * What it provides: 16 KB of shared 32-byte-wide table memory (512 rows x 32 B),
  * addressed by a 9-bit FDB_Address where R10[8] selects the bank (Table 6-103),
  * plus arbitrated inter-PRU IPC when guarded by XFR2SPIN. The compare
  * is NOT a search - it compares the pattern (ID 31) against the CURRENTLY
@@ -269,7 +269,7 @@ const fdbGpRamModule = {
         "Table 6-60: 1 cycle per XFR; Table 6-105: 2-cycle hazard before XIN 35). " +
         "512 rows x 32 B are addressed by a 9-bit FDB_Address where R10[8] selects the bank; set_address XOUTs " +
         "R10,2 to ID 30, write/read XFER R2..R9 (1..32 B) on ID 30, set_pattern XOUTs R2..R5 (1..16 B) on ID 31, " +
-        "compare_result XINs R10 from ID 35. The honest value is the table memory plus arbitrated inter-PRU IPC " +
+        "compare_result XINs R10 from ID 35. What the block provides is the table memory plus arbitrated inter-PRU IPC " +
         "when every shared access is guarded by an XFR2SPIN spinlock. " +
         "The compare is NOT a search: it compares the pattern against the CURRENTLY ADDRESSED ROW only. Walking N " +
         "rows costs N x (advance + 2-cycle wait + read) and has NO cycle advantage over four 32-bit register " +
@@ -309,7 +309,7 @@ const fdbGpRamModule = {
 
         // CFG enables live in MII_G_RT at CFG2 [7] and [8] (SPRUIM2J 6.4.11.2.3.7.4).
         // The TRM does not specify the exact memory offset for CFG2 or confirm clock/reset gating from MII_G_RT.
-        // Therefore, this block operates on the assumption that external initialization (e.g., from R5F/Linux)
+        // Therefore, this block requires that external initialization (e.g., from R5F/Linux)
         // configures the generic mode and compare-size fields before the PRU uses it.
         { name: "externalInitProvided", displayName: "Acknowledged: External Initialization Required", default: false,
           description: "FDB Generic Mode requires MII_G_RT_FDB_GEN_CFG2[7:8] to be enabled by an external application. Check this to acknowledge." },

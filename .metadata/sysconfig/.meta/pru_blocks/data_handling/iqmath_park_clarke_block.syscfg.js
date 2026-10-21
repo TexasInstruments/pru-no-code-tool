@@ -23,7 +23,7 @@ const parkClarkeModule = {
 
         { name: "constant1", hidden: true, default: 0, getValue: (inst) => inst.transformType === "Forward" ? 1 : 0 },
 
-        // Default forward macro evidence executes in 97 cycles (109 assembled instructions).
+        // The default forward macro executes in 97 cycles (109 assembled instructions).
         { name: "noOfCycles", displayName: "Number Of Cycles", getValue: (inst) => 97, default: 97 },
 
         { name: "blockMaturity", displayName: "Block Maturity", default: "simulator-tested", options: [{name: "metadata-only"}, {name: "assembles"}, {name: "simulator-tested"}, {name: "dual-oracle-tested"}, {name: "hardware-validated"}], hidden: true }

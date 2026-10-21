@@ -2199,9 +2199,9 @@ function validateXfr2trGlobal(inst, report) {
  * 6.4.6.2.9 / Table 6-98) pairing and placement.
  *
  * This validator deliberately answers "is this region PROTECTED?", never "does
- * a spinlock EXIST?". The rejected attempt at this item returned clean as soon
- * as any spinlock appeared anywhere in the graph, so two unprotected cross-core
- * writes plus a dangling release on an unrelated lock id passed. Every arm
+ * a spinlock EXIST?". A check that returns clean as soon as any spinlock
+ * appears anywhere in the graph lets two unprotected cross-core writes plus a
+ * dangling release on an unrelated lock id pass. Every arm
  * below is therefore keyed on a RELATIONSHIP - acquire<->release lock id,
  * lock<->variable, and position in the emitted instruction chain - so that
  * deleting the guard changes a verdict.

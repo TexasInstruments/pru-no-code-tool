@@ -39,7 +39,7 @@
  *
  * Maturity: the TI pru-simulator has no model of device 0x08 (it is not one of
  * the SPAD/MAC/BSWAP banks scripts/simulator.js recognises), so this block
- * cannot claim simulator-tested or any label above it. Evidence is static:
+ * cannot claim simulator-tested or any label above it. The checks are static:
  * (a) every emitted macro assembles with clpru, including through
  * allocator-style two/three-register-operand calls; (b) the emitted text
  * contains exactly the four XFR forms above with device ID 8 and the
@@ -210,7 +210,7 @@ const stitchFifoModule = {
         "declared via registerClobbers exactly as bswap_block.syscfg.js declares its fixed 0xA1/0xA2 " +
         "windows; a design that holds a live value in one of them across a stitch FIFO op is rejected at " +
         "build time. Maturity is 'assembles': the TI pru-simulator has no device model for ID 0x08, so " +
-        "this block does not claim simulator-tested or higher - the evidence is that every emitted macro " +
+        "this block does not claim simulator-tested or higher; it is checked that every emitted macro " +
         "assembles with clpru and that the emitted text is exactly the documented XFR forms.",
     uiView: "graph",
 
@@ -261,7 +261,7 @@ const stitchFifoModule = {
         return macroLines(op, name);
     },
 
-    // Machine-readable evidence.
+    // Machine-readable metadata.
     modes: MODES,
     registerClobbers: Object.keys(MODES).reduce((out, key) => { out[key] = MODES[key].clobbers; return out; }, {}),
     deviceId: 0x08,
