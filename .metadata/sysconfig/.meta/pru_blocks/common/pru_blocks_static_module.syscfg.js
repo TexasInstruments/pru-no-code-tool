@@ -1198,24 +1198,24 @@ function validatePruInstructions(inst, report) {
  * GUI pin warnings: shared GPO/GPI physical pads, duplicate GPO drivers,
  * malformed getPinUsage results, and unavailable device/core pad data.
  *
- * scripts/check_pin_collisions.js (run by the suite and CI) fails a design where a two-way (bidirectional)
+ * The command-line pin-collision check (run by the test suite and CI) fails a design where a two-way (bidirectional)
  * pad is shared by blocks of DIFFERENT modules (e.g. two blocks of different modules reading and driving the same two-way pad).
  * This validator emits a report.logWarning (not logError, so code generation still succeeds) to give
  * the user immediate feedback in the SysConfig GUI before CI runs.
  *
- * Verdict uses the exact same data and exemptions as CI:
+ * The check uses the same data and exemptions as the command-line pin-collision check:
  *   - claims come from each block's moduleStatic pin usage query (inst);
  *   - exempt (no warning):
  *       (a) the same instance's own open-drain pair;
  *       (b) different instances of the SAME block module that classify SEQUENTIAL (sourced from
- *           scripts/block_control_flow.js via generated block_control_flow_data.js).
+ *           the generated common/block_control_flow_data.js table).
  *   - only pads that are actually shared between GPO and GPI on the device count (derived from
  *     SysConfig device data).
  *
  * Warning text names both blocks (instance names), the pad, and warns that CI's pin check will FAIL.
  * Device scope: both read the design's own device and PRU core (CI from the @cliArgs --device/--context header, the GUI from system.deviceData and the core name), so they agree on every device.
  */
-// SysConfig core name -> pad signal prefix, same mapping as scripts/check_pin_collisions.js corePrefix():
+// SysConfig core name -> pad signal prefix, same mapping as the command-line pin-collision check:
 // icss_g<N>_[rtu_|tx_]pru<K> -> PRG<N>_PRU<K> (ICSSG), icss_m<N>_pru<K> -> PR<N>_PRU<K> (ICSSM).
 function padPrefixForCore(coreName) {
     const m = /^icss_([gm])(\d)(?:_(?:rtu|tx))?_pru(\d)$/.exec(coreName || '');
@@ -1402,7 +1402,7 @@ function validateBidiPinCollisionsGlobal(inst, report) {
 
         // two different instances drive one GPO index and at least one block is CONTINUOUS
         // (fail closed: a block missing from the control-flow table counts as continuous). Mirrors
-        // the duplicate-GPO rule in scripts/check_pin_collisions.js checkSyscfg.
+        // the duplicate-GPO rule of the command-line pin-collision check.
         for (let x = 0; x < gpoBits.length; x++) {
             for (let y = x + 1; y < gpoBits.length; y++) {
                 const a = gpoBits[x], b = gpoBits[y];

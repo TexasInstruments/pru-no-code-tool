@@ -1,8 +1,8 @@
 """
 The device-capability gate must fail CLOSED or error VISIBLY on every failure path.
 
-Failure paths covered (all previously failed OPEN — silently skipped validation
-and left the build clean):
+Failure paths covered (each must report an error instead of silently skipping
+validation and leaving the build clean):
   1. getScript("/common") failure          -> silent return          (was: return)
   2. missing SoC (getSocName() -> null)     -> silent return          (was: return)
   3. isWidgetAvailable() exception          -> available = true       (was: true)
@@ -109,15 +109,14 @@ def test_caps_module_unknown_soc_has_no_widgets():
 
 
 def test_validator_fail_closed_source_guards():
-    """Lint only - NOT load-bearing coupling evidence.
+    """Lint only; the behavioural tests above are the real check.
 
     These are whitespace-literal substring checks. Re-introducing the exact
     fail-open as `catch (e) {
     available = true;
 }` passes them both while
-    the behavioural arms above correctly go red. Reviewed 2026-09-09; kept as
-    cheap lint, but the proof that the gate fails closed is the five
-    run_validator arms, never this function.
+    the behavioural arms above correctly go red. Kept as cheap lint; the
+    check that the gate fails closed is the five run_validator arms.
     """
     src = (REPO_ROOT / ".metadata" / "sysconfig" / ".meta" / "pru_blocks" / "common"
            / "pru_blocks_static_module.syscfg.js").read_text(encoding="utf-8")

@@ -121,7 +121,7 @@ function getNumOfBytes(value)
 }
 
 // A full variant name (not the bare "m_read_packet_spi_" prefix that
-// scripts/block_control_flow.js probes with) must always carry the insert point.
+// the block control-flow classifier probes with) must always carry the insert point.
 const READ_VARIANT_NAME = /^m_read_packet_spi_mode[0-3]_(slave_)?(msb|lsb)_/;
 
 function insertReadResultInitialization(macroBody, dataReg, macroName)

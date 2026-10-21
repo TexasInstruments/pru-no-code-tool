@@ -17,8 +17,8 @@
  *   node scripts/block_validate_runner.js --report
  *
  * blockPath forms:
- *   pru_io_blocks/spi_adc_sequencer_block
- *   .metadata/sysconfig/.meta/pru_blocks/pru_io_blocks/spi_adc_sequencer_block.syscfg.js
+ *   pru_io_blocks/pru_spi_read
+ *   .metadata/sysconfig/.meta/pru_blocks/pru_io_blocks/pru_spi_read.syscfg.js
  *   pru_blocks_static_module  (device-capability static module)
  *
  * instJson: JSON object for the block instance. Extra keys are ignored by
@@ -30,8 +30,8 @@
  *
  * Output (--sweep): JSON array of {block, file, hasValidate, errorCount, warningCount}
  * Output (--report): same as --sweep plus {validatorsFound, armedCount} summary
- *                   armed = blocks whose error paths have a committed red/control pair
- *                   in tests/test_block_validators.py
+ *                   armed = blocks whose error paths have a committed red/control test
+ *                   pair (listed in ARMED_BLOCKS below)
  *
  * Exit code 0 on success, 2 on harness error.
  */
@@ -240,18 +240,17 @@ function printSweep(asReport) {
         return;
     }
     // For --report we also emit armed summary based on committed test arms
-    // The committed armed set lives in tests/test_block_validators.py:ARMED_BLOCKS
-    // We duplicate the list here so the runner can report without importing python.
-    // Keep in sync — if you arm a new block, add it to both places.
-    const ARMED_BLOCKS = [
-        'spi_adc_sequencer_block', // sample_period
-    ];
+    // Blocks whose validator error paths have a committed red/control test pair,
+    // mapped to the number of error paths those tests cover. Kept here so the
+    // runner can report without importing Python; add a block when its
+    // validator test pair is added.
+    const ARMED_ERROR_PATHS_BY_BLOCK = {
+    };
+    const ARMED_BLOCKS = Object.keys(ARMED_ERROR_PATHS_BY_BLOCK);
     const validatorsFound = rows.length;
     const armedCount = rows.filter(r => ARMED_BLOCKS.includes(r.block)).length;
-    // Also count error paths found vs armed paths — for now 1 path per armed block starter
     const errorPathsFound = rows.reduce((s, r) => s + r.errorCount, 0);
-    // Armed error paths: we know sample_period is 1 of 3 paths in spi_adc_sequencer_block
-    const ARMED_ERROR_PATHS = 1;
+    const ARMED_ERROR_PATHS = ARMED_BLOCKS.reduce((s, b) => s + ARMED_ERROR_PATHS_BY_BLOCK[b], 0);
     console.log(JSON.stringify({
         validators: rows,
         summary: {

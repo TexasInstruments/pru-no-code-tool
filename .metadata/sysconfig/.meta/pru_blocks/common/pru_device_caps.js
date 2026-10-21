@@ -1,12 +1,12 @@
 "use strict";
 /*
- * pru_device_caps.js — single-source device capability table for.
+ * pru_device_caps.js — single-source device capability table for the PRU blocks.
  *
- * TRM evidence (authoritative, do not re-derive):
+ * TRM references:
  *   - AM64x/AM243x carry PRU_ICSSG  (SPRUIM2J §6.4.1.1)
  *   - AM261x carries PRU_ICSSM       (SPRUJB6 §7.3.1.1)
  *
- * Widget listing derived from the table in the task:
+ * Widget availability per subsystem:
  *   widget                  ICSSG (AM64x/AM243x)    ICSSM (AM261x/AM263Px)
  *   MAC (multiply/acc)      yes                     yes
  *   CRC16/32                yes                     yes
