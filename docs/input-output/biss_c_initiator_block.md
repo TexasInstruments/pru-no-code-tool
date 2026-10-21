@@ -4,41 +4,36 @@
 
 ### Purpose
 
-The BiSS-C Initiator block interfaces with absolute rotary encoders using the BiSS-C synchronous serial protocol. It extracts high-resolution position feedback for closed-loop motion control.
+The BiSS-C Initiator block clocks a BiSS-C encoder's MA line from a PRU output pin and shifts the SLO data line into a 32-bit result register.
 
 ### Features
 
-- Emits synchronous clock pulses (MA) and samples input serial data (SLO)
-- Integrates pre-compiled Motor Control SDK assembly routines (`bissc_read_data`)
-- Performs 6-bit Cyclic Redundancy Check (CRC) verification using polynomial $0x43$ ($x^6 + x^1 + 1$)
-- Accommodates frame data lengths up to 32 bits
+- Drives the MA clock on one R30 pin and samples SLO on one R31 pin
+- Shifts `Data Length` bits (1 to 32), MSB first, into the output register
+- MA idles high between frames
 
 ### Configuration
 
-| Parameter | Description | Default | Options |
-|-----------|-------------|---------|---------|
-| Clock Frequency | Clock frequency output on the MA line | `5MHz` | `1MHz`, `2.5MHz`, `5MHz` |
-| CLK / DATA Pins | Physical PRU pins assigned to MA (output) and SLO (input) | `GPO0 / GPI1` | Standard GPIO map |
-| Data Length | Expected bit-width of the position frame | `32` | `16`, `24`, `32` |
+| Parameter | Description | Default | Range |
+|-----------|-------------|---------|-------|
+| CLK Pin | PRU output pin driving MA | `0` | 0-19 |
+| DATA Pin | PRU input pin sampling SLO | `1` | 0-19, different from CLK Pin |
+| Data Length | Number of bits shifted into the result | `32` | 1-32 |
 
 ### How It Works
 
-The block runs a synchronous serial shift loop:
-1. Generates clock cycles on the MA pin.
-2. Shifts incoming bits from the SLO pin into a register.
-3. Decodes the frame structure: Ack (0), Start (1), CDS (0), Position Bits, Error/Warning, and CRC-6 checksum.
-4. Performs CRC validation over the payload. If validation succeeds, outputs the position.
+For each bit the block pulls MA low, waits one instruction, drives MA high and samples SLO into the least significant bit of the result after shifting it left. The bit period is fixed by the instruction sequence (8 PRU cycles in the TI pru-simulator).
 
 ### Important Notes
 
-- In the simulator, the CRC-6 calculation is verified against known-good reference vectors injected via the R31 input history.
-- Physical propagation delay compensation parameters (for long cable runs) require SDK-level register setup outside the No-Code tool.
+- This is a shift register only. It does not handle the BiSS-C start/ACK/CDS bits, does not check the CRC-6, has no timeout, and the clock frequency is not configurable.
+- Not validated on hardware; propagation-delay compensation for long cables is not implemented.
+- SysConfig reports an error when Data Length is outside 1-32, when a pin is outside 0-19, or when CLK and DATA use the same pin.
 
 ### Example Usage
 
-To gather absolute position data:
-1. Place a BiSS-C block in the diagram.
-2. Assign the CLK and DATA pins corresponding to the physical wiring.
-3. Connect the output of the block to the Feedback port of a PID block or an IPC Shared Memory block.
+1. Place a BiSS-C Initiator block in the diagram.
+2. Assign the CLK and DATA pins to match the wiring.
+3. Connect the block's output to a block that consumes the raw frame, for example an IPC Shared Memory block.
 
 ---

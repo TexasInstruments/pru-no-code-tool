@@ -270,8 +270,8 @@ def test_strobe_width_is_identical_across_cases(tmp_path):
     assert max(widths) - min(widths) <= 1 and widths == {W}, widths
 
 
-# ---- delivered dead time (round-5 review F1) --------------------------------------------------
-# The dead time is no longer a busy-wait, so it exists only as event times: nominally the high-off
+# ---- delivered dead time ------------------------------------------------------------------------
+# The dead time is not a busy-wait, so it exists only as event times: nominally the high-off
 # is at duty - DEADTIME and the low-on at duty + DEADTIME, a both-off gap of 2 x DEADTIME. A late
 # high-off can bunch with an on-time low-on, and the delivered gap is then shorter. The numbers
 # below are OBSERVED minima of the high-off -> low-on gap per leg (IEP counts, first period),

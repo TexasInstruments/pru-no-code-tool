@@ -190,7 +190,7 @@ scripting.connect(delay, "next", gpo_clr, "prev");
 
     env = dict(
         os.environ,
-        NCP_LIVE_NO_BROWSER="1",
+        PRU_SIM_LIVE_NO_BROWSER="1",
     )
 
     res = subprocess.run(

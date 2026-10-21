@@ -9,16 +9,16 @@ The IQMath Park/Clarke block performs reference frame transformations essential 
 ### Features
 
 - Supports both Forward transform (Clarke and Park) and Inverse transform (Inverse Park and Clarke) modes
-- High-performance, cycle-accurate implementation using PRU ALU bit-shifts and additions
+- Implementation using PRU ALU shifts and additions
 - Employs a pre-calculated 256-entry sine lookup table (`sine_lut`) in PRU memory
-- Emits optimized assemblies executing in exactly 25 cycles (Forward) or 30 cycles (Inverse)
+- The default forward macro executes in 97 cycles (109 assembled instructions)
 
 ### Configuration
 
 | Parameter | Description | Options |
 |-----------|-------------|---------|
 | Transform Type | The direction of vector calculation | `Forward`, `Inverse` |
-| Number of Cycles | The execution cycle constraint checked by the compiler | Default: `25` |
+| Number of Cycles | Cycle count reported for the block | Default: `97` |
 
 ### How It Works
 

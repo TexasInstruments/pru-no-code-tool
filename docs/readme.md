@@ -76,8 +76,7 @@ The blocks in this category enable:
 | [UART TX](./input-output/serial-protocol-emulation/uart_tx_block.md) | Transmit UART frame | 1 | 0 | ~50-100 |
 | [UART RX](./input-output/serial-protocol-emulation/uart_rx_block.md) | Receive UART frame | 0 | 1 | ~50-100 |
 | [SDFM](./input-output/sdfm_block.md) | Interface with Sigma-Delta Filter Module | 0 | 1 | Variable |
-| [Tamagawa Initiator](./input-output/tamagawa_initiator_block.md) | Interface with Tamagawa absolute encoder | 0 | 1 | Variable |
-| [BiSS-C Initiator](./input-output/biss_c_initiator_block.md) | Interface with BiSS-C absolute encoder | 0 | 1 | Variable |
+| [BiSS-C Initiator](./input-output/biss_c_initiator_block.md) | Shift a BiSS-C encoder frame into a register | 0 | 1 | Variable |
 
 ---
 
@@ -114,8 +113,7 @@ Application Specific blocks provide ready-made implementations of common algorit
 
 Currently available:
 - **CRC Block**: Table-driven Cyclic Redundancy Check for error detection
-- **IPC Shared Memory Block**: Allocate variables in shared memory
-- **Application Host Block**: Generate host C launch and interface code
+- **IPC Shared Memory Block**: Store a value in a variable the host or another core can read
 
 ---
 
@@ -124,8 +122,7 @@ Currently available:
 | Block | Purpose | Inputs | Output | Cycles |
 |-------|---------|--------|--------|--------|
 | [CRC](./application-specific/crc_block.md) | Cyclic Redundancy Check (CRC8/16/32) | 2 (init, data) | 1 (result) | 6–9 |
-| [IPC Shared Memory](./application-specific/ipc_shared_mem_block.md) | Allocate variables in shared memory | 1 | 0 | 0 |
-| [Application Host](./application-specific/application_host_block.md) | Generate R5F initialization & launch code | 0 | 0 | 0 |
+| [IPC Shared Memory](./application-specific/ipc_shared_mem_block.md) | Store a value in a variable the host can read | 1 | 0 | 4 |
 
 ---
 

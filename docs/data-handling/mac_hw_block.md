@@ -10,8 +10,7 @@ The Hardware MAC block utilizes the PRU's dedicated hardware Multiply-Accumulate
 
 - 32-bit signed and unsigned multiplication with 64-bit accumulation
 - Mapped directly to broadside coprocessor registers (`XIN`/`XOUT`)
-- Standard 7-cycle execution latency under simulation
-- High-efficiency execution bypassing main instruction ALU pipeline limits
+- The default generated macro takes 9 cycles (including its emitted HALT), counted in the TI pru-simulator
 
 ### Configuration
 

@@ -200,7 +200,7 @@ Further blocks extend these categories; each has a user guide and a design page 
 | Program Control | Event, Scheduler |
 | PRU I/O | PWM, Three-Phase PWM, Servo, Stepper, Multi-Axis Motion, Quadrature, Hall, Encoder Speed, Capture, Counter, SDFM, PDM, I2C, I3C SDR Initiator, MDIO Master, OneWire, CAN Classic Decoder, SENT, Manchester, DSHOT, WS2812, SerDes, Parallel Bus, SPI ADC Sequencer, Mailbox, Scratchpad, Safety Dual Monitor, XFR2PSI, XFR2TR, XFR2SPIN, Queue Empty, FDB Generic RAM |
 | Utilities | IEP Timer, Logic Analyzer, Device Model |
-| Application Specific | Application Host, IPC Shared Memory, BiSS-C Initiator, EnDat Initiator, SSI Initiator, Tamagawa Initiator, Modbus RTU Framer, IO-Link Master, Industrial Serial Gateway, Vibration Edge |
+| Application Specific | IPC Shared Memory, BiSS-C Initiator, EnDat Initiator, SSI Initiator, Modbus RTU Framer, IO-Link Master, Industrial Serial Gateway |
 
 
 
