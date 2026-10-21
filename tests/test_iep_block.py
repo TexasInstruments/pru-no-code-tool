@@ -110,14 +110,13 @@ def test_scheduler_does_not_dispatch_before_period():
 
 
 @pytest.mark.parametrize("path", [
-    ("application_specific", "vibration_edge_block"),
     ("pru_io_blocks", "hall_block"),
     ("pru_io_blocks", "encoder_speed_block"),
 ])
 def test_iep_counter_reads_use_count_reg0(path):
     """Every `lbco ..., c26, <off>` that timestamps with the IEP counter must read
-    IEP_COUNT_REG0 (0x10). vibration_edge_block read 0x08 = IEP_COMPEN_REG (SPRUIM2J
-    14.3.6.1.25), a register that is 0 unless firmware programs a compensation value."""
+    IEP_COUNT_REG0 (0x10). Offset 0x08 is IEP_COMPEN_REG (SPRUIM2J 14.3.6.1.25), a register
+    that is 0 unless firmware programs a compensation value."""
     src = open(os.path.join(BLOCKS, path[0], path[1] + ".syscfg.js")).read()
     offs = re.findall(r"lbco\s+&TEMP_REG\d,\s*c26,\s*(0x[0-9a-fA-F]+)", src)
     ts = [o for o in offs if int(o, 16) in (0x08, 0x0C, 0x10)]

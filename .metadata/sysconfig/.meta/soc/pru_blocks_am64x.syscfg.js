@@ -75,8 +75,6 @@ const topModules_pru = [
                     "/pru_blocks/application_specific/biss_c_initiator_block",
                     "/pru_blocks/application_specific/endat_initiator_block",
                     "/pru_blocks/application_specific/ipc_shared_mem_block",
-                    "/pru_blocks/application_specific/vibration_edge_block",
-                    "/pru_blocks/application_specific/application_host_block",
                     "/pru_blocks/application_specific/industrial_serial_gateway_block",
                     "/pru_blocks/application_specific/iolink_master_block",
                     "/pru_blocks/application_specific/modbus_rtu_framer",
@@ -196,7 +194,6 @@ const topModules_rtu_tx_pru =[
                     "/pru_blocks/application_specific/biss_c_initiator_block",
                     "/pru_blocks/application_specific/endat_initiator_block",
                     "/pru_blocks/application_specific/ipc_shared_mem_block",
-                    "/pru_blocks/application_specific/application_host_block",
                 ],
             },
             {

@@ -3,7 +3,6 @@
 exports = {
     blockControlFlow: {
         "access_look_up_table": "sequential",
-        "application_host_block": "continuous",
         "arithmetic_block": "sequential",
         "biss_c_initiator_block": "sequential",
         "bitwise_block": "sequential",
@@ -76,7 +75,6 @@ exports = {
         "uart_config": "sequential",
         "uart_rx_op": "sequential",
         "uart_tx_op": "sequential",
-        "vibration_edge_block": "sequential",
         "ws2812_block": "sequential",
         "xfr2psi_block": "sequential",
         "xfr2spin_block": "continuous",

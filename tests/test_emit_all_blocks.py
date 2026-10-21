@@ -251,7 +251,7 @@ GUARD_KEYS = [
     ("multi_axis_motion_block", "NUM_AXES"), ("multi_axis_motion_block", "PULSE_K"),
     ("multi_axis_motion_block", "PULSE_NOPS"),
     ("iolink_master_block", "TX_BYTES"), ("iolink_master_block", "RX_BYTES"),
-    ("pdm_block", "SAMPLE_HIGH"), ("vibration_edge_block", "FEAT_EN"),
+    ("pdm_block", "SAMPLE_HIGH"),
 ]
 
 
