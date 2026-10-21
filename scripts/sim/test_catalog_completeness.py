@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Every DeviceModel subclass in perif/ and pru_io/ is a kind in the GUI device catalogue
+"""Every DeviceModel subclass in pru_device_models/ is a kind in the GUI device catalogue
 (DEVICE_MODEL_KINDS in common/simulation/device_models.js), so a new model cannot be added
 without being selectable. Runs under pytest, or directly as a script."""
 import os
@@ -21,14 +21,14 @@ def missing_from_catalog():
     kinds_in_js = set(re.findall(r'kind:\s*"([^"]+)"', match.group(1)))
 
     py_files = []
-    for d in ["perif", "pru_io"]:
+    for d in ["pru_device_models"]:
         py_files.extend(glob.glob(os.path.join(root, d, "*.py")))
 
     found_classes = set()
     for pf in py_files:
         with open(pf, "r", encoding="utf-8") as f:
             content = f.read()
-            for m in re.finditer(r"^class\s+([A-Za-z0-9_]+)\s*\(\s*(?:pru_io\.|perif\.)?DeviceModel\s*\)\s*:", content, re.MULTILINE):
+            for m in re.finditer(r"^class\s+([A-Za-z0-9_]+)\s*\(\s*(?:pru_device_models\.)?DeviceModel\s*\)\s*:", content, re.MULTILINE):
                 found_classes.add(m.group(1))
 
     abstract_classes = {"SsiEndatEncoder", "QuadratureIndexEncoder"}
@@ -63,7 +63,7 @@ def missing_from_catalog():
 
 def test_every_device_model_class_is_in_the_catalogue():
     missing, found = missing_from_catalog()
-    assert found, "no DeviceModel subclasses found under perif/ or pru_io/"
+    assert found, "no DeviceModel subclasses found under pru_device_models/"
     assert not missing, "DeviceModel subclasses missing from DEVICE_MODEL_KINDS: " + ", ".join(missing)
 
 

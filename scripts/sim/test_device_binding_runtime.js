@@ -261,11 +261,11 @@ test('verdict: macro blocks report cannot execute macro blocks instead of device
     assert.ok(/cannot execute macro blocks \(m_ssi_read\)/.test(r.summary), r.summary);
     assert.ok(!/never spoke/.test(r.summary), r.summary);
 
-    // Mutant arm: dropping the skip counter falls back to 'never spoke' and fails the assertion
-    const mutantState = Object.assign({}, pruState, { skippedMacroCount: 0 });
-    const mutantR = glue.buildDeviceRunResults(bus, bindings, r30ValueHistory, mutantState)[0];
-    assert.ok(/never spoke/.test(mutantR.summary), mutantR.summary);
-    assert.ok(!/cannot execute macro blocks/.test(mutantR.summary), mutantR.summary);
+    // Without the skip counter the summary must fall back to 'never spoke'
+    const noSkipState = Object.assign({}, pruState, { skippedMacroCount: 0 });
+    const noSkipR = glue.buildDeviceRunResults(bus, bindings, r30ValueHistory, noSkipState)[0];
+    assert.ok(/never spoke/.test(noSkipR.summary), noSkipR.summary);
+    assert.ok(!/cannot execute macro blocks/.test(noSkipR.summary), noSkipR.summary);
 });
 
 test('margin: the measurement reads the trace, not the configuration', () => {

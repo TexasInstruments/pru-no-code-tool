@@ -36,7 +36,7 @@ from typing import Any, Dict, List, Optional
 
 MISSING_SSI_TERMINATOR = "missing SSI terminator pulse"
 
-from core.device_model import DeviceModel
+from pru_device_models.device_model import DeviceModel
 
 
 def _gray(n: int) -> int:

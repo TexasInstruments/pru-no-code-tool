@@ -25,7 +25,7 @@ cycle-by-cycle. All times are PRU core cycles (1 cycle = 5 ns at
 Events / faults / oracle
 ------------------------
 ``events()`` records injected pulses/trips; ``faults()`` records
-construction or electrical errors. ``perif/buscosim.decode_ossd`` is the
+construction or electrical errors. ``pru_device_models/buscosim.decode_ossd`` is the
 independent oracle that re-derives pulse classes from the resolved pin
 trace and must agree with this model's classification.
 
@@ -42,7 +42,7 @@ thresholds, not to the nominal 100 us figure.
 
 from typing import Any, Dict, List, Optional, Tuple
 
-from core.device_model import DeviceModel
+from pru_device_models.device_model import DeviceModel
 
 
 class DualOssdEmitter(DeviceModel):

@@ -41,10 +41,11 @@ sys.path.insert(0, os.path.join(REPO_ROOT, "scripts", "sim"))
 
 import elf_cosim  # noqa: E402
 
-FW = os.path.join(REPO_ROOT, "examples", "ssi_encoder_sim", "firmware")
+# Minimal firmware shell (jump to the generated code, halt at sysconfig_generated_end) and the AM243x PRU0 linker
+# command file, both shipped as test fixtures.
+FW = os.path.join(REPO_ROOT, "tests", "fixtures", "firmware")
 MAIN_ASM = os.path.join(FW, "main.asm")
-LINKER_CMD = os.path.join(REPO_ROOT, "examples", "gray_encoder_4_bit", "firmware", "am243x-lp",
-                          "icss_g0_pru0_fw", "ti-pru-cgt", "linker.cmd")
+LINKER_CMD = os.path.join(FW, "linker.cmd")
 PRODUCT_JSON = os.path.join(REPO_ROOT, ".metadata", "product.json")
 
 SYSCFG_DIR = os.environ.get("SYSCFG_PATH", "C:/ti/sysconfig_1.28.0")
@@ -59,12 +60,10 @@ try:
     HAVE_TOOLS = os.path.exists(SYSCFG_CLI) and os.path.exists(SYSCFG_NODE)
 except RuntimeError:
     HAVE_TOOLS = False
-# The ELF arms link against the ssi_encoder_sim main.asm and the gray_encoder_4_bit linker command file.
-HAVE_EXAMPLES = os.path.exists(MAIN_ASM) and os.path.exists(LINKER_CMD)
-HAVE_TOOLS = HAVE_TOOLS and HAVE_EXAMPLES
+assert os.path.exists(MAIN_ASM) and os.path.exists(LINKER_CMD), "tests/fixtures/firmware is part of the repository"
 
 needs_tools = pytest.mark.skipif(
-    not HAVE_TOOLS, reason="clpru, SysConfig 1.28 CLI, pru-simulator or the ssi_encoder_sim / gray_encoder_4_bit example sources missing")
+    not HAVE_TOOLS, reason="clpru, SysConfig 1.28 CLI or pru-simulator missing")
 
 MASK = 0xFFFFFFFF
 VALUE = 0x5A5A5A5A

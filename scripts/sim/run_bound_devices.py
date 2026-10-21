@@ -184,7 +184,7 @@ def attach_bound_devices(pru, manifest, sim_dir):
     except Exception as exc:
         raise DeviceRefused(str(exc)) from exc
     for entry, model in attached:
-        # the perif/ models (core.device_model contract: tick()
+        # the pru_device_models models (pru_device_models.device_model contract: tick()
         # returns a GPI word, no `nets`) cannot sit on TI pru-simulator's
         # DeviceBus, which resolves nets per pin. Refuse by name rather
         # than crash mid-run with an AttributeError.
@@ -192,7 +192,7 @@ def attach_bound_devices(pru, manifest, sim_dir):
             raise DeviceRefused(
                 f"device kind {entry['kind']!r} "
                 f"({type(model).__module__}.{type(model).__name__}) uses the "
-                f"core.device_model contract with no `nets`; TI pru-simulator's "
+                f"pru_device_models.device_model contract with no `nets`; TI pru-simulator's "
                 f"device bus cannot attach it, so gmake sim does not support "
                 f"this kind yet")
     for _, model in attached:

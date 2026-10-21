@@ -19,7 +19,7 @@ Faults (``faults()``):
 
 from typing import Any, Dict, List, Tuple
 
-from core.device_model import DeviceModel
+from pru_device_models.device_model import DeviceModel
 
 # x4 state table: state = 2*A + B. Forward (CW) order 0,1,3,2,0...
 _FWD = {0: 1, 1: 3, 3: 2, 2: 0}

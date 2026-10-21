@@ -27,7 +27,7 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from perif.bissline_device_model import (
+from pru_device_models.bissline_device_model import (
     BissLineEncoder,
     crc6_bissc,
     hamming74_encode,
@@ -45,8 +45,8 @@ def _independent_crc6(bits):
 
     Implemented by GF(2) polynomial long division, a structurally
     different method from the model's shift-register feedback loop in
-    perif/bissline_device_model.py:crc6_bissc (and from the third copy in
-    perif/buscosim.py:_bissline_crc6). Here the message bits are the
+    pru_device_models/bissline_device_model.py:crc6_bissc (and from the third copy in
+    pru_device_models/buscosim.py:_bissline_crc6). Here the message bits are the
     coefficients of M(x) (first bit = highest degree), the dividend is
     M(x) * x^6, and it is divided by G(x) = x^6 + x + 1 by repeatedly
     cancelling the leading term, exactly as paper long division. The
@@ -512,11 +512,11 @@ class TestOverclockPair:
 class TestBuscosimWireShape:
     """SHAPE COVERAGE, not independent CRC verification.
 
-    The buscosim decoder's CRC (perif/buscosim.py:_bissline_crc6) is a
+    The buscosim decoder's CRC (pru_device_models/buscosim.py:_bissline_crc6) is a
     third copy of the model's shift-register algorithm, so this test is
     self-consistency for the CRC: it catches bit-level decode/trace bugs
     (wrong pin, wrong edge, wrong frame slicing), and it happens to catch
-    a mutation confined to perif/bissline_device_model.py:crc6_bissc, but
+    a mutation confined to pru_device_models/bissline_device_model.py:crc6_bissc, but
     a polynomial error written identically into both copies passes.
     Genuine CRC oracle-independence lives in TestCrc6Independent and
     TestIndependentCrcValidation against the GF(2) long-division helper.
@@ -526,7 +526,7 @@ class TestBuscosimWireShape:
     """
 
     def test_buscosim_decodes_raw_frame_shape(self):
-        from perif import buscosim
+        from pru_device_models import buscosim
         pos = 0xCAFEBABE
         m = BissLineEncoder(
             data_bits=32, position=pos,
@@ -617,7 +617,7 @@ class TestWireLevelCodedFec:
     """Verify full 8b/10b and FEC decoding from raw wire bits."""
 
     def test_wire_level_decode(self):
-        from perif.bissline_device_model import decode_8b10b_symbol, hamming74_decode
+        from pru_device_models.bissline_device_model import decode_8b10b_symbol, hamming74_decode
         pos = 0xC0DE
         m = BissLineEncoder(data_bits=16, position=pos, line_coding=True, fec_enable=True)
         trace = _clock_model(m, m.total_wire_bits, half_period=10)

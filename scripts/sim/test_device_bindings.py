@@ -166,7 +166,7 @@ def test_a_sink_really_drives_nothing(kind):
 
     It is the one declaration that switches the primary-pin invariant off, so
     it is also the obvious place to hide a reversed mapping. Port a model that
-    starts driving a line back and this goes red, which forces the registry to
+    starts driving a line back and this fails, which forces the registry to
     be re-read rather than letting the exemption rot into a blanket skip.
     """
     model = build_device(bound(kind, primaryPin=11))
@@ -174,7 +174,7 @@ def test_a_sink_really_drives_nothing(kind):
         # Reach StepDirDriver's post-edge return. All three device inputs are
         # asserted on its first real STEP transition; its output must still be
         # zero. This must not be a quiet-path test: changing the production
-        # post-edge return to ``1 << step_pin`` makes this assertion RED.
+        # post-edge return to ``1 << step_pin`` makes this assertion fail.
         stimulus = ((0, 0), (1, (1 << 11) | (1 << 12) | (1 << 13)))
     elif kind == "ws2812":
         # Drive a real high then falling data edge through Ws2812String's
@@ -395,7 +395,7 @@ def test_a_pin_with_no_gui_slot_cannot_collide_across_devices():
 # the two checkouts collide, and which model binds first must not matter
 # ---------------------------------------------------------------------------
 def test_binding_a_local_model_first_does_not_break_the_upstream_ones():
-    """`perif` and `core` exist in BOTH this repo and the pru-simulator.
+    """Local models (pru_device_models) and upstream ones resolve from different roots.
 
     Resolving one by mutating sys.path and leaving it mutated makes every
     later import depend on binding order. The suite can be green on that by
@@ -405,4 +405,4 @@ def test_binding_a_local_model_first_does_not_break_the_upstream_ones():
     build_device(bound("spi_adc"))
     for kind in ("ssi", "quadrature", "tca9538", "uart"):
         assert driven_pins(build_device(bound(kind))), \
-            "%s stopped resolving after a perif model was bound" % kind
+            "%s stopped resolving after a local model was bound" % kind

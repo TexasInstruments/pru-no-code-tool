@@ -44,8 +44,8 @@ derived from `nets` rather than from which name sounds like "the first pin".
 
 TWO MODEL CONTRACTS, ONE INVARIANT
 ----------------------------------
-the models in this repository's `perif/` package subclass
-`core.device_model`, not the upstream `pru_io` base. They declare no `nets`;
+the models in this repository's `pru_device_models/` package subclass
+`pru_device_models.device_model`, not the upstream `pru_io` base. They declare no `nets`;
 their `tick(cycle, pins_out)` RETURNS the GPI word the device asserts. That is
 the same fact, observed rather than declared, so `driven_pins()` reads whichever
 of the two a model offers and the direction invariant above applies to every
@@ -168,14 +168,14 @@ REGISTRY = {
     "sigma_delta": _Spec("pru_io.sd_modulator_device",  "SigmaDeltaModulator",
                          primary="data_pin", clock="clk_pin"),
     # ----------------------------------------------------------------
-    # The four models below live in this repository's perif/ package and
-    # subclass `core.device_model`, NOT the upstream `pru_io` base. They
+    # The four models below live in this repository's pru_device_models/ package and
+    # subclass `pru_device_models.device_model`, NOT the upstream `pru_io` base. They
     # declare no `nets`; instead `tick(cycle, pins_out)` RETURNS the GPI word
     # the device asserts, so the set bits of that return are the same fact
     # `nets` states declaratively. `driven_pins()` reads whichever of the two
     # a model offers, which is what keeps the direction invariant checkable
     # across both contracts instead of exempting half the registry from it.
-    "spi_adc":    _Spec("perif.spi_adc",          "SpiAdc",
+    "spi_adc":    _Spec("pru_device_models.spi_adc",          "SpiAdc",
                         # The ADC drives MISO, which this model calls sdi_pin
                         # ("the pin the PRU reads"). SCLK and MOSI are the
                         # controller's. CS is a fourth pin and the manifest has
@@ -183,17 +183,17 @@ REGISTRY = {
                         # full pin validation - see extra_pins.
                         primary="sdi_pin", clock="sclk_pin", index="sdo_pin",
                         extra_pins=("cs_pin",)),
-    "step_dir":   _Spec("perif.step_dir_driver",  "StepDirDriver",
+    "step_dir":   _Spec("pru_device_models.step_dir_driver",  "StepDirDriver",
                         # "open-loop driver: nothing to feed back" - the model
                         # returns 0 forever. STEP/DIR/EN are all PRU outputs,
                         # and DIR occupies the clock slot because it is the
                         # second pin, not because anything clocks it.
                         primary="step_pin", clock="dir_pin", index="en_pin",
                         sink=True),
-    "ws2812":     _Spec("perif.ws2812_string",    "Ws2812String",
+    "ws2812":     _Spec("pru_device_models.ws2812_string",    "Ws2812String",
                         # Single-wire NRZ input. "WS2812 drives nothing back".
                         primary="data_pin", sink=True),
-    "mdio_phy":   _Spec("perif.mdio_phy_model",   "MdioPhyModel",
+    "mdio_phy":   _Spec("pru_device_models.mdio_phy_model",   "MdioPhyModel",
                         # MDIO is shared: the PHY drives it during read
                         # turn-around and read data, so it is genuinely the
                         # device-driven pin. MDC is the STA's.
@@ -340,9 +340,10 @@ def _validate_entry(entry, seen):
 # --------------------------------------------------------------------------
 # instantiation
 # --------------------------------------------------------------------------
-#: Top-level package names this repository and the pru-simulator checkout both
-#: define. Whichever root is first on sys.path wins for ALL of them, so an
-#: import has to be scoped to one root rather than leaving both in place.
+#: Top-level package names of the pru-simulator checkout. This repository's
+#: models live in `pru_device_models`, which the checkout does not define, but
+#: a simulator import is still scoped so that it never leaves the checkout's
+#: packages bound in sys.modules for later imports.
 _COLLIDING_TOPS = frozenset({"core", "perif", "pru_io", "simulator", "tools"})
 
 
@@ -350,12 +351,9 @@ _COLLIDING_TOPS = frozenset({"core", "perif", "pru_io", "simulator", "tools"})
 def _import_from(root):
     """Import with `root` winning, then put sys.path and sys.modules back.
 
-    The two checkouts both define `core` and `perif`. Mutating sys.path in
-    place and leaving it mutated makes the result depend on which device was
-    bound FIRST: bind a perif model before an upstream one in the same process
-    and the upstream import fails, because this repo's `pru_io` now shadows the
-    simulator's. That is order-dependent and a test suite can be green on it by
-    luck of alphabetical ordering, so the scope is restored rather than trusted.
+    Mutating sys.path in place and leaving it mutated makes the result depend
+    on which device was bound FIRST, so the scope is restored rather than
+    trusted.
     """
     saved_modules = {k: sys.modules.pop(k) for k in list(sys.modules)
                      if k.split(".")[0] in _COLLIDING_TOPS}
@@ -374,10 +372,9 @@ def _import_from(root):
 def resolve_class(spec, simulator_path=None):
     """Import a model class from the checkout that owns it."""
     path = locate_simulator(simulator_path)
-    # models live in this repository's perif/ package and import this
-    # repository's core/; every other binding resolves from the upstream
-    # pru-simulator checkout, which has its own core/ and perif/.
-    root = ROOT if spec.module.split(".")[0] == "perif" else path
+    # pru_device_models.* lives in this repository; every other binding
+    # resolves from the pru-simulator checkout.
+    root = ROOT if spec.module.split(".")[0] == "pru_device_models" else path
     with _import_from(root):
         try:
             module = __import__(spec.module, fromlist=[spec.cls])
@@ -431,7 +428,7 @@ def build_device(entry, simulator_path=None):
 def driven_pins(model, stimulus=None):
     """Which pin numbers does this DEVICE drive? Works for both contracts.
 
-    Upstream `pru_io` models state it declaratively in `nets`. the `core.device_model` models state it by behaviour: `tick()` returns the GPI
+    Upstream `pru_io` models state it declaratively in `nets`. the `pru_device_models.device_model` models state it by behaviour: `tick()` returns the GPI
     word the device asserts, so the union of set bits over a few cycles is the
     same fact, observed instead of asserted.
 

@@ -57,7 +57,7 @@ MASK_20 = (1 << 20) - 1
 PUSH_PULL = "push_pull"
 
 try:  # this repo's ABC
-    from core.device_model import DeviceModel  # type: ignore
+    from pru_device_models.device_model import DeviceModel  # type: ignore
 except ImportError:  # pragma: no cover - loaded inside the TI pru-simulator
     from pru_io.device_model import DeviceModel  # type: ignore
 

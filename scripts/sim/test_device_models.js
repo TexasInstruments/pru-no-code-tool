@@ -316,8 +316,8 @@ test('factory: unknown parameters are refused', () => {
 });
 
 test('factory: a bissc position parameter reaches the encoder frame', () => {
-    // Red arm: before the key was refused ("unknown bissc parameter"), so
-    // a GUI-attached BiSS-C encoder could only ever hold position 0.
+    // The factory must accept the key: refusing it ("unknown bissc parameter")
+    // would leave a GUI-attached BiSS-C encoder at position 0.
     const m = models.createDeviceModel('bissc', { primary: 1, clock: 0 },
                                        { position_bits: 21, position: 1234567 });
     assert.strictEqual(m.encoder.position, 1234567);

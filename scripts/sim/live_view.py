@@ -398,8 +398,8 @@ def live_session(elf_path, manifest_path, **kwargs):
     """Yield the live FastAPI app with TI pru-simulator's namespace swapped in.
 
     The dashboard imports simulator packages lazily, per request, so the swap
-    must last as long as the app is used. Leaving the block restores this
-    repo's own `core`/`perif` modules.
+    must last as long as the app is used. Leaving the block restores the
+    previous sys.path and sys.modules.
     """
     with _sim_namespace(find_pru_simulator()):
         yield make_app(elf_path, manifest_path, **kwargs)

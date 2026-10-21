@@ -1248,8 +1248,9 @@ class Simulator {
   /**
    * A broadside ID this block did not model in the direction it was used
    * (e.g. XIN on the XOUT-only 0x70/0x72, or an XOUT/XIN with the wrong
-   * register/byte-count). Table 6-112 and PR #30's policy: record it and
-   * continue, do not trap and do not invent generic FIFO/staged-data state.
+   * register/byte-count). Per TRM Table 6-112 the ID has no defined behaviour
+   * in that direction: record it and continue, do not trap and do not invent
+   * generic FIFO/staged-data state.
    */
   _recordUnsupportedXfr(pruState, id) {
     if (!pruState.unsupported_xfr) pruState.unsupported_xfr = [];
@@ -1361,7 +1362,7 @@ class Simulator {
    * An unresolved target is counted as a parse error rather than silently
    * stepping to the next instruction, again matching pru_core.js: a branch to
    * a label that is not in the map is a broken program, and staying quiet
-   * about it is what made the original defect invisible.
+   * about it would hide the broken branch.
    */
   _executeConditionalBranch(pruState, opcode, operands, labelMap) {
     const label = (operands[0] || '').replace(/[,:]/g, '').trim();

@@ -50,7 +50,7 @@ an unanswered read leaves MDIO released (1) on the wire.
 
 from typing import Any, Dict, List, Optional
 
-from core.device_model import DeviceModel
+from pru_device_models.device_model import DeviceModel
 
 _ST = 0b01
 _OP_WRITE = 0b01

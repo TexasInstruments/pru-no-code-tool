@@ -156,7 +156,7 @@ test('designDigest ignores layout and tiRun* state, tracks config', () => {
 });
 
 test('designDigest separates cores and devices', () => {
-    // mutant: designDigest ignores its env argument (the pre-digest)
+    // fails if designDigest ignores its env argument
     const modules = baseModules();
     const env = (context, device) => ({ context, deviceData: { device, part: 'ALX', package: 'ALX' } });
     assert.notStrictEqual(ti.designDigest(modules, env('icss_g0_pru0', 'AM243x')),
@@ -180,7 +180,7 @@ function fullEnv(over) {
 }
 
 test('designDigest changes with ANY design field and with none of the layout / tiRun* fields', () => {
-    // mutant: drop one covered field from snapshot()/executionContext() -> the FAIL names that field
+    // fails, naming the field, if a covered field is dropped from snapshot()/executionContext()
     const env = fullEnv();
     const d0 = ti.designDigest(baseModules(), env);
     const changes = {
@@ -215,9 +215,8 @@ test('designDigest changes with ANY design field and with none of the layout / t
 });
 
 test('every digest call site in the static module passes the system object (behavioural, format-independent)', () => {
-    // mutant: revert any one designDigest(system.modules, system) in the static module to
-    // designDigest(system.modules) -> that site's spy records no environment and this fails
-    // naming the site. The asm.xdt site is covered by the CLI test
+    // fails, naming the site, if any designDigest(system.modules, system) call in the static
+    // module drops its second argument: that site's spy then records no environment. The asm.xdt site is covered by the CLI test
     // test_cli_digest_changes_with_the_pru_core_context (real SysConfig), not by source text.
     const calls = [];
     const spy = { ...ti, designDigest: (m, e) => { calls.push(e); return ti.designDigest(m, e); } };
@@ -271,7 +270,7 @@ test('findPython: Windows fixed-directory fallback retains its backslashes', () 
     const paths = launcher.candidates({}, 'win32').map((candidate) => candidate[0]);
     const drive = 'C:';
     assert.ok(paths.includes(drive + '\\Python313\\python.exe'),
-              'mutant: a single-backslash JS literal becomes C:Python313/python.exe');
+              'a single-backslash JS literal would give C:Python313/python.exe');
 });
 
 // ---- "Open live web view" checkbox ---------------------------------
@@ -306,7 +305,7 @@ test('launchSpec: custom port is passed; a bad port falls back to the default', 
 });
 
 test('designDigest is identical with the live view box on and off', () => {
-    // mutant: snapshot() stops skipping tiRun* keys -> every tick of the box makes the last run STALE
+    // fails if snapshot() stops skipping tiRun* keys: every tick of the box would make the last run STALE
     const off = baseModules(); off['/m/static'].$static.tiRunLiveView = false; off['/m/static'].$static.tiRunLivePort = 8765;
     const on = baseModules(); on['/m/static'].$static.tiRunLiveView = true; on['/m/static'].$static.tiRunLivePort = 9999;
     assert.strictEqual(ti.designDigest(on), ti.designDigest(off));

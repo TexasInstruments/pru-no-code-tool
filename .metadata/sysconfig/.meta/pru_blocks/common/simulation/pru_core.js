@@ -135,11 +135,14 @@ function setRegisterValue(pruState, regInfo, value) {
         const clearMask = ~(regInfo.mask << regInfo.shift);
         pruState.registers[regInfo.reg] &= clearMask;
         pruState.registers[regInfo.reg] |= ((value & regInfo.mask) << regInfo.shift);
+        // JS bitwise operators yield signed 32-bit results; registers hold unsigned values.
+        pruState.registers[regInfo.reg] >>>= 0;
     } else if (regInfo.type === 'word') {
         // Clear the word position and set the new value
         const clearMask = ~(regInfo.mask << regInfo.shift);
         pruState.registers[regInfo.reg] &= clearMask;
         pruState.registers[regInfo.reg] |= ((value & regInfo.mask) << regInfo.shift);
+        pruState.registers[regInfo.reg] >>>= 0;
     }
 }
 
@@ -1827,14 +1830,14 @@ function executeInstruction(pruState, pruInstructions, labelMap, r30ValueHistory
         }
 
         default: {
-            // intent: fail loudly on real PRU instructions we know are not
-            // yet modelled, so block-level tests can't silently "pass" on them.
-            // But the static validator simulates the FULL generated firmware, which
+            // Fail loudly on real PRU instructions that are not modelled, so
+            // block-level tests cannot silently "pass" on them.
+            // The static validator simulates the FULL generated firmware, which
             // contains macro invocations (m_*) and assembler directives (.*) that are
             // NOT base instructions and must not be executed here. Throwing on those
             // would break validation/build of every real example. So: throw only for
             // the explicit set of recognised-but-unimplemented base instructions, and
-            // skip everything else (restoring pre-strict behaviour for macro calls).
+            // skip everything else (macro calls and directives are not executed here).
             const UNIMPLEMENTED_BASE_INSTRUCTIONS = ["MAC", "MACU", "WBC"];
             if (UNIMPLEMENTED_BASE_INSTRUCTIONS.indexOf(opcode) !== -1) {
                 throw new Error("Simulator Error: PRU instruction '" + opcode + "' is recognised but not yet implemented in pru_core.js (PC " + pruState.pc + "). Please add support before simulating blocks that use it.");

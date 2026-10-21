@@ -26,7 +26,7 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from pru_io.waveform_player import WaveformPlayer  # noqa: E402
+from pru_device_models.waveform_player import WaveformPlayer  # noqa: E402
 
 MASK_20 = (1 << 20) - 1
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -60,9 +60,9 @@ def _locate_simulator():
 def _load_upstream_device_model():
     """Load the real DeviceBus from the simulator checkout, by path.
 
-    By path because in this process the name ``pru_io`` is already this
-    repo's package; the upstream module has no intra-package imports, so
-    loading it standalone is safe.
+    By path, so the checkout's ``pru_io`` package is not bound in this
+    process; the upstream module has no intra-package imports, so loading it
+    standalone is safe.
     """
     sim = _locate_simulator()
     if sim is None:

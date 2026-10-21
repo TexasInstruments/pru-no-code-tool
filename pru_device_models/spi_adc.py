@@ -26,7 +26,7 @@ Events:
 
 from typing import Any, Dict, List
 
-from core.device_model import DeviceModel
+from pru_device_models.device_model import DeviceModel
 
 
 class SpiAdc(DeviceModel):

@@ -50,7 +50,7 @@ function snapshot(obj) {
             continue;
         }
         // Load Constant's outputWidth at its default "auto" is not part of the digest, so a design that does
-        // not use the option keeps the digest (and the pru_syscfg.asm header) it had before the option existed.
+        // not use the option keeps the same digest (and pru_syscfg.asm header) as a design without the option.
         if (key === "outputWidth" && value === "auto") {
             continue;
         }

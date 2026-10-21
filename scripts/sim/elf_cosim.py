@@ -7,7 +7,7 @@ Pipeline:
     4. step instruction-by-instruction; each step the DeviceModel sees the PRU
        GPO word (pins_out) and drives the GPI word the PRU samples next
     5. return the per-step resolved trace so an independent bus-cosim decoder
-       (perif/buscosim.py) can re-derive the protocol events
+       (pru_device_models/buscosim.py) can re-derive the protocol events
 
 Nothing here judges protocol correctness - that is the tests' job.
 """
@@ -157,9 +157,9 @@ def run_elf_closed_loop(
     tests can inject extra stimuli (e.g. an EnDat mode command).
     """
     sim_dir = find_pru_simulator()
-    # The pru-simulator and this repo BOTH ship a top-level "core" package.
-    # Run the whole loop with the simulator's namespace swapped in, so its
-    # absolute imports (incl. lazy ones inside methods) resolve correctly.
+    # Run the whole loop with the simulator's packages first on sys.path, so its
+    # absolute imports (incl. lazy ones inside methods) resolve to the checkout
+    # even if another copy of a same-named package was imported earlier.
     with _sim_namespace(sim_dir):
         from simulator import Simulator  # type: ignore
 
@@ -176,8 +176,8 @@ def run_elf_closed_loop(
 
 @contextlib.contextmanager
 def _sim_namespace(sim_dir: str):
-    # The pru-simulator and this repo share several top-level package names
-    # (core/, perif/, ...). Swap the colliding namespace for the duration.
+    # Bind the checkout's top-level packages (core/, perif/, pru_io/, ...) for
+    # the duration and restore sys.modules afterwards.
     colliding = [
         d for d in os.listdir(sim_dir)
         if os.path.isfile(os.path.join(sim_dir, d, "__init__.py"))

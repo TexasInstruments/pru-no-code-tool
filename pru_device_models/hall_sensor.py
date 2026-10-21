@@ -35,7 +35,7 @@ Faults():
 
 from typing import Any, Dict, List, Optional, Tuple
 
-from core.device_model import DeviceModel
+from pru_device_models.device_model import DeviceModel
 
 # Six legal codes in forward order
 _HALL_CODES = [1, 3, 2, 6, 4, 5]

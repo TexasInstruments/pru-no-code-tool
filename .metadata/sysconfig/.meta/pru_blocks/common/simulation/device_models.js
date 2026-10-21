@@ -346,7 +346,7 @@ class SsiEncoder {
 }
 
 // ---------------------------------------------------------------------------
-// Hall sensor (port of perif/hall_sensor.py)
+// Hall sensor (port of pru_device_models/hall_sensor.py)
 // ---------------------------------------------------------------------------
 //
 // Three push-pull Hall outputs (A,B,C) = 6 60-degree sectors. Code
@@ -480,12 +480,12 @@ class HallSensor {
     getState() { return {name:this.name, position:this.position, code:this._code, faults:this._faults.length}; }
 }
 
-// Dual-channel OSSD emitter (port of perif/ossd_emitter.py)
+// Dual-channel OSSD emitter (port of pru_device_models/ossd_emitter.py)
 // ---------------------------------------------------------------------------
 //
 // Two normally-high safety channels (A, B). The firmware only reads; the
 // model drives. Schedule API mirrors the Python class so JS and Python
-// traces can be cross-checked. Classification oracle is perif/buscosim.py
+// traces can be cross-checked. Classification oracle is pru_device_models/buscosim.py
 // decode_ossd and must agree with events().
 
 class DualOssdEmitter {
@@ -1391,7 +1391,7 @@ const DEVICE_MODEL_KINDS = [
     // flag is load-bearing; flipping it without a faithful JS port breaks
     // that contract and falls through to the internal-error branch below.
     // (2) the Python behavioural model in
-    // perif/bissline_device_model.py is not this JS registry's implementation;
+    // pru_device_models/bissline_device_model.py is not this JS registry's implementation;
     // the external simulator currently resolves a materially different model
     // from tools/pru-simulator-upstream. (3) bissc and endat - which also have
     // Python models - are staged identically; porting here means a full JS

@@ -83,16 +83,14 @@ def locate_simulator(explicit=None):
 
 
 def load_waveform_player_module():
-    """Load pru_io/waveform_player.py from THIS repo.
+    """Load pru_device_models/waveform_player.py from THIS repo.
 
-    Deliberately by path: inside the runner the name ``pru_io`` may already
-    be bound to the simulator checkout's package (the bus we need comes from
-    there), so a plain ``import pru_io.waveform_player`` could resolve to the
-    wrong tree. The module itself picks whichever DeviceModel base is
+    By path, so the module loads from this repository even though the
+    simulator checkout is first on sys.path (the bus comes from there). The module itself picks whichever DeviceModel base is
     importable; the bus never isinstance-checks, so the wire contract is
     what matters.
     """
-    path = os.path.join(ROOT, "pru_io", "waveform_player.py")
+    path = os.path.join(ROOT, "pru_device_models", "waveform_player.py")
     spec = importlib.util.spec_from_file_location("waveform_player", path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)

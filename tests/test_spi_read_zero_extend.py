@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts" / "sim"))
 import elf_cosim  # noqa: E402
-from perif.spi_adc import SpiAdc  # noqa: E402
+from pru_device_models.spi_adc import SpiAdc  # noqa: E402
 
 
 SCLK_PIN, SDI_PIN, CS_PIN = 0, 1, 3
@@ -101,8 +101,8 @@ def spi_read_spec(packet_size):
             "DELAY_COMPEN_1": "1", "DELAY_COMPEN_2": "1", "CS_PIN": str(CS_PIN),
             "CS_SETUP_TIME": "0", "CS_HOLD_TIME": "0", "DATA_SETUP_TIME": "0",
         },
-        # Model the natural register reuse seen in the regression: the destination
-        # contains a prior word before the shorter SPI read starts.
+        # Model register reuse: the destination holds an older 32-bit word
+        # before the shorter SPI read starts.
         "prelude": ["set R30, R30, 3", "ldi32 R0, 0x%08X" % PRELOAD],
         "postlude": ["halt"],
     }

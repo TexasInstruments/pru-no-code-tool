@@ -20,7 +20,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts" / "sim"))
 sys.path.insert(0, str(ROOT / "tests"))
 import elf_cosim  # noqa: E402
-from perif.spi_adc import SpiAdc  # noqa: E402
+from pru_device_models.spi_adc import SpiAdc  # noqa: E402
 import test_fanout_register_alias as T  # noqa: E402
 from test_spi_read_zero_extend import (  # noqa: E402
     READ_VARIANTS, TRANSFER_VARIANTS, PRELOAD)
