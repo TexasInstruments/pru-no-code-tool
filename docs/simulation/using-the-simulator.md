@@ -1,6 +1,6 @@
 # Using the Simulator
 
-The PRU No-Code Tool includes a cycle-accurate software simulator that lets you execute and debug your PRU block design without physical hardware.
+The PRU No-Code Tool includes a software simulator that lets you execute and debug your PRU block design without physical hardware. It counts instruction cycles but is not a cycle-accurate model of the hardware (see Simulator Limitations below); for timing, run the generated firmware on TI pru-simulator (`gmake sim`).
 
 ---
 
@@ -35,10 +35,7 @@ Execute the following command from the repository root:
 ```bash
 node scripts/test_headless_sim.js
 ```
-To run the entire compliance suite including ledger verification:
-```bash
-node scripts/run_all_tests.js
-```
+The Python tests (pytest) and the other node test scripts are run as described in the repository README.
 
 ### Writing a New Block Test
 To add unit tests or validation checks for a new block, append a test function inside `scripts/test_headless_sim.js`:

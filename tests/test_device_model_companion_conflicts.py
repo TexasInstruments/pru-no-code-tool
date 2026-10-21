@@ -1,8 +1,8 @@
 """Device Model block-vs-block conflicts on COMPANION pins (clock, index, ...).
 
-the conflict test only used primary pins. The reviewer's mutant - limit the other block's
-claim to its primary pin, table.claimedPins(other).slice(0, 1) - left every test green, and
-design A ssi data1/clk0 + B ssi data7/clk0 generated silently with two models on one net.
+A conflict check that compared only primary pins would miss a clash on a companion pin: limiting the other
+block's claim to its primary pin (table.claimedPins(other).slice(0, 1)) would let design A ssi data1/clk0 +
+B ssi data7/clk0 generate silently with two models on one net. These tests use companion-pin clashes.
 
 Shared clock: two SSI/BiSS devices on one PRU-driven clock can be legal wiring (one CLK fanned out
 to two encoders), but pru_device_bindings.json attaches one model per pin and the firmware would

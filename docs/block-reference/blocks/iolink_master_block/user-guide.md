@@ -34,6 +34,7 @@ to convert the PRU's 3.3V ENDAT UART to 24V C/Q levels.
 (`uart_config`, `uart_tx_op`, `uart_rx_op`), but the in-tool simulator does
 NOT model the internal ENDAT FIFO/TX/RX state machine, so the transaction
 is not simulated; only the R30 wake-up/DIR waveform is checked.
+The M-sequence transmit sends byte 0 only; multi-byte M-sequences are not implemented.
 
 ## Parameters
 

@@ -37,10 +37,9 @@ wired to a downstream block.
 
 ## Verification
 
-- Observed-line PHY model: `perif/mdio_phy_model.py` decodes the
+- Observed-line PHY model: `pru_device_models/mdio_phy_model.py` decodes the
   (MDC, MDIO) pins actually toggling — never a transmit buffer.
-- Suite: `tests/test_mdio.py` (registered in
-  `scripts/suite_registry.json`): green write/read control arms plus
+- Suite: `tests/test_mdio.py`: write/read control cases plus
   independent negative mutations for bit order, start/opcode, PHY and
   register addresses, turn-around, edge count, MDC speed and wire-level
   data corruption.

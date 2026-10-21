@@ -30,7 +30,7 @@ Any pin counts, companion pins included: two blocks whose CLK (or other companio
 Pin 0 is claimed by Device Model 'First_Model' (ssi, CLK pin) and by Device Model 'Second_Model' (ssi, CLK pin). Two models on one net is a short, not a configuration; shared clock between device models is not supported by the simulator yet.
 ```
 
-Fan-out is not implemented. `tests/test_device_model_companion_conflicts.py` pins the behaviour, including a mutant (limit the other block's claim to its primary pin) that turns it red.
+Fan-out is not implemented. `tests/test_device_model_companion_conflicts.py` pins the behaviour, including clashes on companion (clock, index) pins, not only on primary pins.
 
 ## The same design either way gives the same manifest
 
@@ -52,4 +52,4 @@ For `ssi` and `bissc`, the block's **Read by** field names the initiator block w
 
 ## Example
 
-`examples/ssi_device_model_sim` attaches its SSI encoder only through the block (Simulation Settings carries no device fields): `gmake all`, then `gmake sim`, ends in `Firmware decoded R0: 4321; model position: 4321` and `RESULT: PASS`.
+A design attaches an SSI encoder only through the block (Simulation Settings carries no device fields); after `gmake all`, `gmake sim` prints the firmware's decoded register next to the model position and ends in `RESULT: PASS` when they agree.

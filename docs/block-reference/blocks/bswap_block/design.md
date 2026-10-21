@@ -45,7 +45,7 @@ flowchart LR
 ## Validation rules
 
 - BSWAP mode '
-- BSWAP no longer has a Width setting: the span is the XIN length, and 0xA1/0xA2
+- BSWAP has no Width setting: the span is the XIN length, and 0xA1/0xA2
 
 ## Generated macro (`.xdt` equivalent)
 

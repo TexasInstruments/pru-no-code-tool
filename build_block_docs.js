@@ -124,7 +124,6 @@ function portsOf(mod) {
 }
 
 const STRUCTURAL_EMISSION = {
-  application_host_block: 'host-code template; intentionally emits no PRU instruction',
   group_block: 'structural container; shared register allocator emits its labelled child body',
   loop_block: 'structural container; shared register allocator emits LOOP/QBA around its child body',
   label: 'marker block; contributes a label through graph metadata, not a PRU instruction',

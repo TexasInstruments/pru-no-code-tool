@@ -23,7 +23,7 @@ data value (no instruction in the bit loop branches on data). The block derives 
   D < 3 is D nops; otherwise TRIPS = floor((D - 1) / 2) and one `nop` when D is even.
 - Minimum bitCycles = 15 for both bit orders. A smaller value is rejected. The maximum is set by the 16-bit trip counter (65535 trips per phase).
 
-**Setup / hold shares (preCycles / postCycles).** These no longer count delay-loop trips. They set the CLK phase split within the bit:
+**Setup / hold shares (preCycles / postCycles).** They do not count delay-loop trips; they set the CLK phase split within the bit:
 the CLK-low (setup) phase is round(bitCycles * preCycles / (preCycles + postCycles)) cycles and the CLK-high (hold) phase is the rest.
 When that request does not fit the fixed cost of a phase, the split is clamped (CLK low at least 9 cycles, CLK high at least 6)
 and SysConfig warns with the split actually generated. The defaults 4 / 4 give a 50% split (17 low / 16 high at bitCycles 33).

@@ -1,4 +1,4 @@
-"""the pwm_block text must not claim cycle-exact periods .
+"""the pwm_block text must not claim cycle-exact periods.
 
 The counted/continuous macro polls the IEP with a 4-cycle loop, so edges land 0..3 cycles after
 their compare event. 'same high and low cycle counts' is only allowed next to the jitter qualifier.

@@ -70,8 +70,8 @@ execute the same binary. No MULL/XIN/XOUT.
 
 ### Simulating
 Use Simulation Settings (device mode `ossd` on the two pins) or drive
-R31 via the Python model `perif/ossd_emitter.DualOssdEmitter` and the
-independent oracle `perif/buscosim.decode_ossd`. Focused tests are in
+R31 via the Python model `pru_device_models/ossd_emitter.DualOssdEmitter` and the
+independent oracle `pru_device_models/buscosim.decode_ossd`. Focused tests are in
 `tests/test_ossd.py` (accepted OSSD, genuine trip, disagreement
 within/beyond window, boundary cases).
 

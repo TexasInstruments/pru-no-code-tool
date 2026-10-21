@@ -68,7 +68,7 @@ The blocks in this category enable:
 
 | Block | Purpose | Inputs | Outputs | Cycles |
 |-------|---------|--------|---------|--------|
-| [PRU GPI](./input-output/pru_gpi_block.md) | Read digital input pin | 0 | 1 | 1 |
+| [PRU GPI](./input-output/pru_gpi_block.md) | Read digital input pin | 0 | 1 | 3 |
 | [PRU GPO](./input-output/pru_gpo_block.md) | Set/Clear digital output pin | 0 | 0 | 1 |
 | [SPI Read](./input-output/serial-protocol-emulation/pru_spi_read_block.md) | Receive data via SPI | 0 | 1 | Variable |
 | [SPI Write](./input-output/serial-protocol-emulation/pru_spi_write_block.md) | Transmit data via SPI | 1 | 0 | Variable |
@@ -130,7 +130,7 @@ Currently available:
 
 ## Overview
 
-The PRU No-Code tool includes a cycle-accurate simulator environment that allows verifying and debugging code without physical hardware.
+The PRU No-Code tool includes a simulator environment that allows verifying and debugging code without physical hardware. The in-tool simulator counts instruction cycles but is not cycle-accurate; TI pru-simulator (`gmake sim`) runs the generated firmware.
 
 The simulation guides include:
 - [Using the Simulator](./simulation/using-the-simulator.md): Detailed usage guide for GUI and CLI simulator environments.

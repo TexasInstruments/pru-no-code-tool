@@ -381,6 +381,24 @@ Pins are sorted by direction (GPO pins first, then GPI pins) and by pin number i
 - Simulation currently does not support UART block  
 - Timing is calculated, not measured
 
+### Running the tests
+
+The Python tests use pytest and node. Tests that need a tool that is not installed are reported as skipped with the reason.
+
+```bash
+python -m pytest tests scripts/sim -q
+for t in scripts/sim/test_*.js scripts/test_*.js; do node "$t" || echo "FAIL $t"; done
+node scripts/check_syscfg_arity.js
+```
+
+Environment variables read by the tests that build and run firmware:
+
+- `SYSCFG_PATH`: SysConfig 1.28 installation (default `sysconfig_1.28.0` under `TOOLS_PATH`, as in `imports.mak.default`)
+- `CGT_TI_PRU_PATH`: TI PRU code generation tools 2.3.3 (clpru)
+- `PRU_SIMULATOR_PATH`: a checkout of [TI pru-simulator](https://github.com/TexasInstruments/pru-simulator)
+
+Tests that build through `gmake` also need an `imports.mak` at the repository root (a copy of `imports.mak.default` with your tool paths).
+
 ---
 
 ## Best Practices
