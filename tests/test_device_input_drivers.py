@@ -15,7 +15,7 @@ Per kind with a model on the simulator the chain test builds the real clpru ELF 
               attaches the model without a transceiver, so even the clean design FAILs with 'unsupported mode command'.
   sigma_delta `gmake sim` (no decoder for the kind: RESULT NOT CHECKED) plus a hand-written oracle for the PDM word.
   bissline    attachable but no block speaks it: nothing to run; GUI/CI verdict only.
-  spi_adc, step_dir, ws2812, mdio_phy   perif models with no `nets`: the simulator REFUSES them. test_untestable_* pins the exact
+  spi_adc, step_dir, ws2812, mdio_phy   pru_device_models models with no `nets`: the simulator REFUSES them. test_untestable_* pins the exact
               message, so the day the simulator gains them this goes red and asks for a sim arm. GUI/CI verdict proven for each.
 
 Every red arm asserts specific text and is paired with a green arm of the same shape; every kind has a mutant (its entry
@@ -727,15 +727,15 @@ def test_endat_red_design_before_the_read_corrupts_the_telegram_when_the_check_i
 
 @needs_chain
 @pytest.mark.parametrize("kind,build,refused", [
-    ("spi_adc", lambda: spi_adc(None), "(perif.spi_adc.SpiAdc)"),
-    ("step_dir", lambda: step_dir(False), "(perif.step_dir_driver.StepDirDriver)"),
-    ("ws2812", lambda: ws2812(False), "(perif.ws2812_string.Ws2812String)"),
-    ("mdio_phy", lambda: mdio_phy(False), "(perif.mdio_phy_model.MdioPhyModel)")])
+    ("spi_adc", lambda: spi_adc(None), "(pru_device_models.spi_adc.SpiAdc)"),
+    ("step_dir", lambda: step_dir(False), "(pru_device_models.step_dir_driver.StepDirDriver)"),
+    ("ws2812", lambda: ws2812(False), "(pru_device_models.ws2812_string.Ws2812String)"),
+    ("mdio_phy", lambda: mdio_phy(False), "(pru_device_models.mdio_phy_model.MdioPhyModel)")])
 def test_untestable_on_the_simulator_kinds_are_refused_with_the_exact_message(tmp_path, kind, build, refused):
-    """spi_adc, step_dir, ws2812, mdio_phy use the core.device_model contract with no `nets`. The check for them is proven
+    """spi_adc, step_dir, ws2812, mdio_phy use the pru_device_models.device_model contract with no `nets`. The check for them is proven
     in SysConfig/CI only. When this test goes red the simulator gained the kind: add a sim arm."""
     elf, out = build_elf(tmp_path, build())
     rc, text = bound_sim(elf, out)
     assert rc == 2, text
-    assert ("REFUSED: device kind '%s' %s uses the core.device_model contract with no `nets`; TI pru-simulator's device bus "
+    assert ("REFUSED: device kind '%s' %s uses the pru_device_models.device_model contract with no `nets`; TI pru-simulator's device bus "
             "cannot attach it, so gmake sim does not support this kind yet") % (kind, refused) in text, text

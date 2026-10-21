@@ -11,7 +11,7 @@ Per model, three layers of checks:
     ELF under the TI pru-simulator in a closed pin loop with the model
     (scripts/sim/elf_cosim.py).
 
-(c) Independent bus-cosim - perif/buscosim.py decodes the recorded pin
+(c) Independent bus-cosim - pru_device_models/buscosim.py decodes the recorded pin
     trace and its events must agree with the model's events().
 
 Model-only tests run anywhere. ELF tests skip cleanly when clpru or the
@@ -26,12 +26,12 @@ import pytest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scripts", "sim")))
 
-from perif.quadrature_index_encoder import QuadratureIndexEncoder
-from perif.ssi_endat_encoder import MISSING_SSI_TERMINATOR, SsiEndatEncoder
-from perif.ws2812_string import Ws2812String
-from perif.spi_adc import SpiAdc
-from perif.step_dir_driver import StepDirDriver
-from perif import buscosim
+from pru_device_models.quadrature_index_encoder import QuadratureIndexEncoder
+from pru_device_models.ssi_endat_encoder import MISSING_SSI_TERMINATOR, SsiEndatEncoder
+from pru_device_models.ws2812_string import Ws2812String
+from pru_device_models.spi_adc import SpiAdc
+from pru_device_models.step_dir_driver import StepDirDriver
+from pru_device_models import buscosim
 
 import elf_cosim
 

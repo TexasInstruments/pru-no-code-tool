@@ -58,7 +58,7 @@ def _scratch_root(name, edit=None):
     if root.exists():
         shutil.rmtree(root)
     root.mkdir(parents=True)
-    for d in (".metadata", "scripts", "perif", "core", "pru_io"):
+    for d in (".metadata", "scripts", "pru_device_models"):
         if (ROOT / d).is_dir():
             shutil.copytree(ROOT / d, root / d, ignore=shutil.ignore_patterns("__pycache__", "node_modules"))
     if edit is not None:

@@ -82,13 +82,13 @@ BISS_OLD = """\
 
 
 def _scratch_root(name, block_file=None, edit=None):
-    """Copy of the tool root (small: .metadata, scripts, perif, core, pru_io and
+    """Copy of the tool root (small: .metadata, scripts, pru_device_models and
     the two .mak files) with one block source edited."""
     root = SCRATCH / name
     if root.exists():
         shutil.rmtree(root)
     root.mkdir(parents=True)
-    for d in (".metadata", "scripts", "perif", "core", "pru_io"):
+    for d in (".metadata", "scripts", "pru_device_models"):
         src = ROOT / d
         if src.is_dir():
             shutil.copytree(src, root / d, ignore=shutil.ignore_patterns("__pycache__", "node_modules"))
@@ -274,7 +274,7 @@ def test_red_arm_old_endat_macro_leaves_clock_low():
 
 # --- EnDat: no runt clock pulse, judged by the EnDat model --------------------------------
 #
-# The reference EnDat model is perif/ssi_endat_encoder.py; the
+# The reference EnDat model is pru_device_models/ssi_endat_encoder.py; the
 # half-period rule now comes from the one EnDat model, pru-simulator's
 # pru_io.endat_encoder (min_half_period_cycles).
 

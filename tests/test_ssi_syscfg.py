@@ -45,7 +45,7 @@ MACRO_PARAMS = ["RES", "TOTAL_WIDTH", "ST_BITS", "MT_BITS", "CLK_PIN", "DATA_PIN
 
 try:
     import elf_cosim
-    from perif.ssi_endat_encoder import SsiEndatEncoder
+    from pru_device_models.ssi_endat_encoder import SsiEndatEncoder
     elf_cosim.find_clpru()
     elf_cosim.find_pru_simulator()
     HAVE_ELF = True
