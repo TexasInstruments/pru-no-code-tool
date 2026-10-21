@@ -45,7 +45,7 @@ SYSCONFIG_NODE = Path(str(TI_TOOLS / "sysconfig_1.28.0" / "nodejs" / "node.exe")
 SYSCONFIG_CLI = Path(str(TI_TOOLS / "sysconfig_1.28.0" / "dist" / "cli.js"))
 SOURCE = ROOT / "examples" / "ssi_encoder_sim"
 DESIGN = Path("firmware/am243x-lp/icss_g0_pru0_fw/example.syscfg")
-SCRATCH = ROOT / ".tmp" / "v175"
+SCRATCH = ROOT / ".tmp" / "clock_idle"
 BLOCKS = Path(".metadata/sysconfig/.meta/pru_blocks/application_specific")
 
 pytestmark = pytest.mark.skipif(
@@ -56,13 +56,13 @@ pytestmark = pytest.mark.skipif(
     reason="needs gmake, SysConfig 1.28, clpru, imports.mak, and PRU_SIMULATOR_PATH",
 )
 
-# --- the macro bodies the fix replaced (for the red arms) --------------------------------
+# --- clock-order variants: the current macro body and the high-then-low order re-applied as a mutant (red arms) ---
 
 BISS_NEW = """\
 `m_biss_c_loop?:`,
             `    ; MA idles HIGH between frames: pulse it low, then back high.`,
-            `    ; The old order ended each bit on clr, so the frame left MA low and the`,
-            `    ; encoder saw the next transaction start from the wrong level.`,
+            `    ; Ending each bit on clr would leave MA low after the frame, and the`,
+            `    ; encoder would see the next transaction start from the wrong level.`,
             `    ; Set MA clock pin low`,
             `    clr   R30, R30, CLK               ; (clkPin: MA clock output bit)`,
             `    ; Wait half-period (not simulated accurately)`,
@@ -132,6 +132,8 @@ def _biss_design(position):
 
 
 def run_gmake_sim(root, position):
+    if not SOURCE.is_dir():
+        pytest.skip("needs the examples/ssi_encoder_sim example project")
     path = root / "examples" / ("_case_" + uuid.uuid4().hex[:8])
     try:
         shutil.copytree(SOURCE, path, ignore=shutil.ignore_patterns(

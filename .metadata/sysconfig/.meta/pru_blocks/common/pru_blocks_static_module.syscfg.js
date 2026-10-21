@@ -1391,8 +1391,7 @@ function getUsectLinkerDirectives()
                 const sizeMap = { "uint32_t": 4, "int32_t": 4, "float": 4 };
                 const sizeInBytes = sizeMap[instance.dataType] || 4;
                 const sectionName = instance.memorySection === "PRU_SHARED_RAM" ? ".usmem" :
-                                    instance.memorySection === "PRU_DRAM_0" ? ".udmem" :
-                                    instance.memorySection === "PRU_DRAM_1" ? ".udmem" : ".usmem";
+                                    instance.memorySection === "PRU_DRAM_0" ? ".udmem" : ".usmem";
                 
                 // Always use 4-byte alignment
                 usectDirectives.add(`${labelName}\t.usect "${sectionName}", ${sizeInBytes}, 4`);

@@ -4,7 +4,7 @@ const bissCModule = {
     displayName: "BiSS-C Initiator",
     defaultInstanceName: "BISS_C_INITIATOR_",
     description: "BiSS-C protocol initiator leveraging Motor Control SDK.",
-    longDescription: "Interfaces with the BiSS-C encoder. This staged logical slice uses a fixed NOP for clock spacing; clockFreq is currently unused. TI pru-simulator measures an 8-cycle bit period with changing input data. Exact 5 MHz physical timing and propagation delay are not implemented.",
+    longDescription: "Interfaces with the BiSS-C encoder. It is a shift register only: clock spacing is a fixed NOP (the clock frequency is not configurable), and there is no CRC, start/ACK or timeout handling. TI pru-simulator measures an 8-cycle bit period with changing input data. Exact 5 MHz physical timing and propagation delay are not implemented.",
     uiView: "graph",
 
     config: [
@@ -18,7 +18,8 @@ const bissCModule = {
 		},
         { name: "$topLabel", hidden: true, default: "" },
         
-        { name: "clockFreq", displayName: "Clock Frequency (Hz)", default: 5000000 },
+        // Not used by the macro (clock spacing is a fixed NOP); hidden until clock timing is implemented.
+        { name: "clockFreq", displayName: "Clock Frequency (Hz)", default: 5000000, hidden: true },
         { name: "clkPin", displayName: "CLK Pin", default: 0 },
         { name: "dataPin", displayName: "DATA Pin", default: 1 },
         { name: "dataLen", displayName: "Data Length (bits)", default: 32 },
@@ -45,6 +46,22 @@ const bissCModule = {
         ];
     },
 
+    validate(inst, validation) {
+        const len = Number(inst.dataLen);
+        if (!Number.isInteger(len) || len < 1 || len > 32) {
+            validation.logError("dataLen must be an integer 1..32 (the result is one 32-bit register)", inst, "dataLen");
+        }
+        for (const field of ["clkPin", "dataPin"]) {
+            const pin = Number(inst[field]);
+            if (!Number.isInteger(pin) || pin < 0 || pin > 19) {
+                validation.logError(field + " must be a PRU pin 0..19", inst, field);
+            }
+        }
+        if (Number(inst.clkPin) === Number(inst.dataPin)) {
+            validation.logError("clkPin and dataPin must differ", inst, "clkPin");
+        }
+    },
+
     getMacro(pruInstructionMacro, opCode) {
         opCode = opCode || pruInstructionMacro.split(",")[0];
         return [
@@ -56,8 +73,8 @@ const bissCModule = {
             `    ldi   RES, 0                      ; Clear result`,
             `m_biss_c_loop?:`,
             `    ; MA idles HIGH between frames: pulse it low, then back high.`,
-            `    ; The old order ended each bit on clr, so the frame left MA low and the`,
-            `    ; encoder saw the next transaction start from the wrong level.`,
+            `    ; Ending each bit on clr would leave MA low after the frame, and the`,
+            `    ; encoder would see the next transaction start from the wrong level.`,
             `    ; Set MA clock pin low`,
             `    clr   R30, R30, CLK               ; (clkPin: MA clock output bit)`,
             `    ; Wait half-period (not simulated accurately)`,

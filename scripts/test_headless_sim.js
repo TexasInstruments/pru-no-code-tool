@@ -1339,39 +1339,7 @@ function testPwm() {
 testPwm();
 
 // ---------------------------------------------------------------------------
-// Tamagawa Initiator Payload Parsing Test
-// ---------------------------------------------------------------------------
-function testTamagawa() {
-    console.log('\n--- Running Phase 7: Tamagawa Block Test ---');
-    const tamagawaModule = loadBlockModule('tamagawa_initiator_block', 'application_specific');
-    const tamagawaMacro = tamagawaModule.getMacro('', 'm_tamagawa_read');
-    
-    const expandedTamagawa = expandMacro(tamagawaMacro, {
-        RES: 'R4'
-    });
-    
-    // Setup initial state: TEMP_REG1 (R28) = 0x12345600 (SF status byte 0x00, position 0x123456)
-    const initRegisters = [
-        'ldi32 R28, 0x12345600'
-    ];
-    
-    const res = runSim([
-        ...initRegisters,
-        ...expandedTamagawa,
-        'halt'
-    ], 20);
-    
-    const pos = res.pruState.registers[4] >>> 0;
-    console.log(`Tamagawa position parsed: 0x${pos.toString(16).toUpperCase()}`);
-    if (pos !== 0x123456) {
-        throw new Error(`Tamagawa verification failed: expected 0x123456, got 0x${pos.toString(16)}`);
-    }
-    console.log('✅ Tamagawa Block verification: OK');
-}
-testTamagawa();
-
-// ---------------------------------------------------------------------------
-// SSI Initiator Tests (external oracle, parity, timeout, cycle budget)
+// SSI Initiator Tests (external oracle, parity, error bit, cycle budget)
 // ---------------------------------------------------------------------------
 function testSsi(){
     console.log('\n--- Running SSI Initiator Tests ---');
@@ -1486,7 +1454,7 @@ function testSsi(){
         }
         console.log('SSI bad parity negative test OK (status='+status+')');
     }
-    // Timeout / error-bit negative test: errorFlag=true => error bit 0 => status bit 4
+    // Error-bit negative test: errorFlag=true => error bit 0 => status bit 4
     {
         const cfg = cfgs[2]; // error enabled
         const st = 0x155 & ((1<<cfg.singleTurnBits)-1);
@@ -1500,7 +1468,7 @@ function testSsi(){
         }
         console.log('SSI error-bit negative test OK (status='+status+')');
     }
-    console.log('✅ SSI Initiator verification: OK (oracle, parity, timeout, cycle budget)');
+    console.log('✅ SSI Initiator verification: OK (oracle, parity, error bit, cycle budget)');
 }
 testSsi();
 

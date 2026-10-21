@@ -67,7 +67,6 @@ const topModules_pru = [
                 displayName: "APPLICATION SPECIFIC",
                 modules: [
                     "/pru_blocks/application_specific/crc_block",
-                    "/pru_blocks/application_specific/tamagawa_initiator_block",
                     "/pru_blocks/application_specific/biss_c_initiator_block",
                     "/pru_blocks/application_specific/endat_initiator_block",
                     "/pru_blocks/application_specific/ipc_shared_mem_block",
@@ -182,7 +181,6 @@ const topModules_rtu_tx_pru =[
                 displayName: "APPLICATION SPECIFIC",
                 modules: [
                     "/pru_blocks/application_specific/crc_block",
-                    "/pru_blocks/application_specific/tamagawa_initiator_block",
                     "/pru_blocks/application_specific/biss_c_initiator_block",
                     "/pru_blocks/application_specific/endat_initiator_block",
                     "/pru_blocks/application_specific/ipc_shared_mem_block",

@@ -69,7 +69,6 @@ exports = {
         "stitch_fifo_block": "continuous",
         "sum32_block": "continuous",
         "svpwm_block": "sequential",
-        "tamagawa_initiator_block": "sequential",
         "three_phase_pwm_block": "sequential",
         "trigger_router_block": "continuous",
         "uart_config": "sequential",

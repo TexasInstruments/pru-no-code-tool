@@ -34,7 +34,7 @@ import elf_cosim  # noqa: E402
 SIM = Path(os.environ.get("PRU_SIMULATOR_PATH", ""))
 SYSCONFIG_NODE = Path(str(TI_TOOLS / "sysconfig_1.28.0" / "nodejs" / "node.exe"))
 SYSCONFIG_CLI = Path(str(TI_TOOLS / "sysconfig_1.28.0" / "dist" / "cli.js"))
-SCRATCH = ROOT / ".tmp" / "v179"
+SCRATCH = ROOT / ".tmp" / "endat_framing"
 BLOCK = Path(".metadata/sysconfig/.meta/pru_blocks/application_specific/endat_initiator_block.syscfg.js")
 
 pytestmark = pytest.mark.skipif(
