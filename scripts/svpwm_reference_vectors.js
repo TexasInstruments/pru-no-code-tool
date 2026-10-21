@@ -1,112 +1,75 @@
 /**
  * SVPWM sector/duty reference vectors.
  *
- * ============================================================================
- * IMPORTANT — AUTHORING CONSTRAINT (read before trusting this file):
- * This file was authored by an agent running with NO shell and NO file-read
- * access. It was NOT executed during authoring. The math below is derived
- * from the space-vector equations themselves (not from the block's code,
- * which the author could not read), so it is independent by construction.
- * The operator MUST run:
+ * An independent model of space-vector PWM derived from the space-vector
+ * equations (not from the block's code). It builds a table of commanded
+ * (Valpha, Vbeta) vectors with the expected sector and dwell times, and
+ * self-checks every row algebraically before printing it.
  *
- *     node scripts/svpwm_reference_vectors.js
+ * Usage:  node scripts/svpwm_reference_vectors.js
+ * Output: the self-check result, the table as JSON, then "REFERENCE VECTORS OK".
+ * Exit:   0 when the self-check passes, 1 otherwise.
  *
- * and confirm it prints "REFERENCE VECTORS OK" before using this table as
- * an oracle for the block test.
- * ============================================================================
- *
- * ASSUMPTIONS (open questions — verify against the block .syscfg.js):
- *  A1. The block uses the classic 7-segment SVPWM mapping with sector
- *      numbering 1..6, sector 1 = the 60° wedge between V100 (angle 0)
- *      and V110 (angle 60°), advancing counter-clockwise. If the block
- *      numbers sectors 0..5 instead, adjust SECTOR_BASE below.
- *  A2. Duty times Ta, Tb, T0 are expressed in PWM-period ticks of a
- *      centered (symmetric) PWM, normalized so that Ta+Tb+T0 = Tpwm for
- *      one half-period pair. We normalize Tpwm = 1.0 here; the harness
- *      scales to ticks.
- *  A3. The DC-link normalization is Vref_max = Vdc/sqrt(3) (inscribed
- *      circle of the inverter hexagon). Magnitudes in this file are given
- *      in units where the linear modulation limit is 1.0.
- *  A4. Angle convention: Valpha = |V|·cos(theta), Vbeta = |V|·sin(theta).
+ * Conventions:
+ *  - Classic 7-segment SVPWM mapping, sectors numbered 1..6, sector 1 = the
+ *    60 degree wedge between V100 (angle 0) and V110 (angle 60 degrees),
+ *    advancing counter-clockwise (SECTOR_BASE below).
+ *  - Dwell times Ta, Tb, T0 are fractions of one PWM period (Tpwm = 1.0), so
+ *    Ta + Tb + T0 = 1 for an unsaturated vector.
+ *  - DC-link normalization Vref_max = Vdc/sqrt(3) (inscribed circle of the
+ *    inverter hexagon): magnitudes are given in units where the linear
+ *    modulation limit is 1.0.
+ *  - Angle convention: Valpha = |V|*cos(theta), Vbeta = |V|*sin(theta).
  *
  * ----------------------------------------------------------------------------
- * DERIVATION (this is the "independent of the block" part — it is the
- * textbook space-vector algebra, written out so the oracle is auditable):
+ * DERIVATION
  *
- * Clarke input: (Valpha, Vbeta). Sector from the sign/geometry tests:
+ * The sector is found from the projections
  *
- *   Let  a = Vbeta
- *        b =  (sqrt(3)/2)·Valpha - (1/2)·Vbeta      (= projection on +60° axis)
- *        c = -(sqrt(3)/2)·Valpha - (1/2)·Vbeta      (= projection on +120° axis)
+ *   a = Vbeta
+ *   b =  (sqrt(3)/2)*Valpha - (1/2)*Vbeta      (projection on the +60 degree axis)
+ *   c = -(sqrt(3)/2)*Valpha - (1/2)*Vbeta      (projection on the +120 degree axis)
  *
- *   Then  N = sign(a) + 2·sign(b) + 4·sign(c)  with sign(x)=1 if x>0 else 0,
- *   and the sector is looked up:
+ *   N = sign(a) + 2*sign(b) + 4*sign(c)  with sign(x)=1 if x>0 else 0,
  *        N:      3  1  5  4  6  2
  *        sector: 1  2  3  4  5  6
  *
- * Sector-local dwell times (unnormalized, using the per-sector adjacent
- * active vectors), with X, Y, Z the standard intermediate quantities:
+ * Dwell times are not taken from a hand-copied per-sector table. In sector k
+ * the reference vector is synthesized as
  *
- *   X =  sqrt(3) · Vbeta
- *   Y =  (sqrt(3)/2)·Vbeta + (3/2)·Valpha
- *   Z =  (sqrt(3)/2)·Vbeta - (3/2)·Valpha
+ *     V = (T1/Tpwm)*Vk + (T2/Tpwm)*Vk+1
  *
- *        sector:   1   2   3   4   5   6
- *        Ta   :   -Z   Y  -X   Z   X  -Y
- *        Tb   :    X   Z  -Z  -Y  -X   Y     ... wait — see per-sector table
+ * where Vk, Vk+1 are the two adjacent active space vectors at angles
+ * (k-1)*60 and k*60 degrees (Vk+1 wraps from V6 to V1). Solving this 2x2
+ * linear system per sector gives T1, T2 uniquely; computeReference() below
+ * does exactly that. T0 = Tpwm - T1 - T2. Saturation: if T1 + T2 > Tpwm the
+ * vector is outside the hexagon and is scaled by Tpwm/(T1 + T2), which keeps
+ * its direction and pins T0 to 0.
  *
- * The standard per-sector table (this is the part people get wrong, so it is
- * written explicitly and then CHECKED NUMERICALLY in selfTest() below by
- * reconstructing the commanded vector from Ta/Tb and the two adjacent base
- * vectors — an algebraic identity that must hold for every row):
+ * Active base vectors (in (alpha, beta), unit DC-normalized; the common 2/3
+ * factor cancels in the normalization to the inscribed circle, so magnitude
+ * 1 vectors are used and the limit is |V| <= sqrt(3)/2 in these units,
+ * equivalent to |V| <= 1 in the units this file reports):
  *
- *        sector:   1   2   3   4   5   6
- *        T1   :   -Z   Y   X  -X  -Y   Z
- *        T2   :    X   Z  -Y   Z  -Z  -X    (T2 = second adjacent vector)
+ *     V1 = (1, 0)            angle   0
+ *     V2 = (1/2,  sqrt(3)/2) angle  60
+ *     V3 = (-1/2, sqrt(3)/2) angle 120
+ *     V4 = (-1, 0)           angle 180
+ *     V5 = (-1/2,-sqrt(3)/2) angle 240
+ *     V6 = (1/2, -sqrt(3)/2) angle 300
  *
- *   Wait — the two correct, mutually consistent forms are:
- *
- *     T1(sector) = [ -Z,  Y,  X, -X, -Y,  Z ][sector-1]
- *     T2(sector) = [  X,  Z, -Y,  Z, -Z, -X ][sector-1]
- *
- *   NO — stop. We do not hand-copy a table from memory and hope. Instead this
- *   file COMPUTES T1/T2 directly from the defining equations:
- *
- *     In sector k, the reference vector V is synthesized as
- *         V = (T1/Tpwm)·Vk + (T2/Tpwm)·Vk+1      (Vk+1 wraps V6->V... see below)
- *     where Vk, Vk+1 are the two adjacent active space vectors at angles
- *     (k-1)·60° and k·60°, each of magnitude (2/3)Vdc.
- *
- *   Solving the 2x2 linear system per sector gives T1, T2 uniquely. That is
- *   what computeReference() below does — no lookup table at all, just the
- *   linear solve. T0 = Tpwm - T1 - T2. Saturation: if T1+T2 > Tpwm the vector
- *   is outside the hexagon and must be scaled by Tpwm/(T1+T2) (the clamp the
- *   negative test attacks).
- *
- * Active base vectors (in (alpha,beta), unit DC-normalized; the common 2/3
- * factor cancels in the normalization to the inscribed circle, so we use
- * magnitude 1 vectors and the limit |V|<=sqrt(3)/2 in these units —
- * equivalent to |V|<=1 in the units this file reports):
- *
- *     V1 = (1, 0)            angle   0°
- *     V2 = (1/2,  sqrt(3)/2) angle  60°
- *     V3 = (-1/2, sqrt(3)/2) angle 120°
- *     V4 = (-1, 0)           angle 180°
- *     V5 = (-1/2,-sqrt(3)/2) angle 240°
- *     V6 = (1/2, -sqrt(3)/2) angle 300°
- *
- * In these units the inscribed circle has radius sqrt(3)/2 ≈ 0.8660254.
- * We report magnitudes normalized so that the inscribed circle = 1.0, i.e.
- * m_report = |V| / (sqrt(3)/2). With that normalization, the solve below
- * uses base vectors of magnitude 1 and the linear limit is T1+T2 <= Tpwm
- * iff m_report <= 1 (verified numerically in selfTest).
+ * In these units the inscribed circle has radius sqrt(3)/2 (about 0.8660254).
+ * Magnitudes are reported normalized so that the inscribed circle = 1.0,
+ * i.e. m_report = |V| / (sqrt(3)/2). With that normalization the linear
+ * limit is T1 + T2 <= Tpwm iff m_report <= 1 (checked numerically in
+ * selfTest).
  * ----------------------------------------------------------------------------
  */
 
 "use strict";
 
 const SQRT3 = Math.sqrt(3);
-const SECTOR_BASE = 1; // A1: sectors 1..6. Set to 0 if block uses 0..5.
+const SECTOR_BASE = 1; // sectors are numbered 1..6
 
 // Active base vectors, magnitude 1 in Clarke plane (see derivation note).
 const VB = [
@@ -224,7 +187,7 @@ function buildTable() {
 }
 
 /**
- * Self-test: prove the oracle is internally consistent WITHOUT the block.
+ * Self-test: the model is internally consistent, independent of any block.
  * For every unsaturated row, reconstruct V from (Ta,Tb,T0) and the sector's
  * base vectors and check it equals the commanded V (to fp tolerance).
  * For saturated rows, check direction is preserved and Ta+Tb == 1.

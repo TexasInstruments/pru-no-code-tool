@@ -1,12 +1,12 @@
 // pid_reference_vectors.js — Independent Q12 fixed-point PID reference model
-// iqmath_pid_block evidence
+// for iqmath_pid_block (used by scripts/pid_cosim.js).
 //
 // ============================================================================
-// EXPLICIT ASSUMPTIONS (stated at top per task requirements)
+// CONVENTIONS
 // ============================================================================
 //
-// ASSUMPTION 1: Sampling-time convention
-//   The gains Kp, Ki, Kd are assumed to be **already folded** with the sampling
+// 1. Sampling-time convention
+//   The gains Kp, Ki, Kd are **already folded** with the sampling
 //   time. That is:
 //     - Ki = ki * Ts  (integral gain includes the timestep)
 //     - Kd = kd / Ts  (derivative gain includes the inverse timestep)
@@ -15,22 +15,22 @@
 //   EVERY vector here will disagree — this is the single most likely source of
 //   model/firmware mismatch.
 //
-// ASSUMPTION 2: Q12 format
+// 2. Q12 format
 //   4096 == 1.0. All signals (setpoint, feedback, error, integral, derivative,
 //   output) and all gains (Kp, Ki, Kd) are Q12 fixed point.
 //
-// ASSUMPTION 3: Product truncation
-//   PRU shift-and-add multiplies truncate. We assume the firmware does NOT round
+// 3. Product truncation
+//   PRU shift-and-add multiplies truncate; the firmware does NOT round
 //   products. Therefore this reference model truncates: after computing the Q24
 //   sum (Kp*e + Ki*integral + Kd*derivative), we arithmetic-shift right by 12
 //   (toward -infinity for negative values) to return to Q12.
 //
-// ASSUMPTION 4: No integral clamping
+// 4. No integral clamping
 //   This reference does NOT clamp the integral accumulator. If the firmware
 //   implements anti-windup clamping, long sequences with sustained error will
-//   diverge from this reference. This is a PREDICTED DIVERGENCE, not a bug.
+//   diverge from this reference; that divergence is expected, not a bug.
 //
-// ASSUMPTION 5: State initialization
+// 5. State initialization
 //   integral[-1] = 0, e[-1] = 0 at the start of each sequence.
 //
 // ============================================================================

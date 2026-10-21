@@ -8,14 +8,13 @@
  * no bus to resolve and no peer node — inputs arrive in registers and the result
  * is read back out of registers.
  *
- * IMPORTANT — why this file exists at all. `scripts/svpwm_reference_vectors.js`
- * was authored against the textbook sector/Ta/Tb/T0 parameterisation. The block
- * does not implement that. It implements min-max (zero-sequence injection)
- * SVPWM: compute the three phase references, subtract the midpoint of their max
- * and min, scale by PERIOD. The two are mathematically equivalent as modulation
- * strategies but are NOT the same numbers, so those vectors cannot be compared to
- * this block's outputs directly. They remain valid as a check on the sector
- * boundaries, which is how they are used here.
+ * Why a separate model: `scripts/svpwm_reference_vectors.js` uses the textbook
+ * sector/Ta/Tb/T0 parameterisation. The block implements min-max (zero-sequence
+ * injection) SVPWM instead: compute the three phase references, subtract the
+ * midpoint of their max and min, scale by PERIOD. The two are mathematically
+ * equivalent as modulation strategies but are NOT the same numbers, so those
+ * vectors cannot be compared to this block's outputs directly. They remain valid
+ * as a check on the sector boundaries, which is how they are used here.
  *
  * Usage:  node scripts/svpwm_cosim.js
  * Exit:   0 all checks pass, 1 a check failed, 2 the harness itself failed.
@@ -323,11 +322,11 @@ if (require.main === module) {
   if (stViolations) fails.push(`shoot-through: ${stViolations} duty value(s) reached a rail`);
   else console.log('  864 duties across 4 modulation depths, none reached a rail');
 
-  // --- Prove the shoot-through gate can actually go red ----------------------
-  // A negative test that has only ever been seen passing is not evidence. Drive
+  // --- Check that the shoot-through gate can actually go red -----------------
+  // A negative check that has only ever been seen passing proves nothing. Drive
   // the real design constant (dead-time) to zero and require the same scan to
-  // report violations. If this ever stops finding them, the scan has stopped
-  // checking anything and the green above is worthless.
+  // report violations. If it ever stops reporting them, the scan has stopped
+  // checking anything and the pass above means nothing.
   console.log('\n--- Gate self-proof: dead-time forced to 0, shoot-through scan must go RED ---');
   let mutantViolations = 0;
   for (let deg = 0; deg < 360; deg += 5) {

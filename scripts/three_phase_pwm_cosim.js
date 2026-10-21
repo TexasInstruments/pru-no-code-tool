@@ -4,16 +4,15 @@
  *
  * Runs the REAL `three_phase_pwm_block` macro on the TI JS PRU core and checks
  * the resulting R30 pin waveform, not just a register result. This is the half of
- * that actually reaches the bridge: `svpwm_block` computes three numbers,
- * this block turns them into gate signals, and getting it wrong shorts a leg.
+ * the motor-control chain that actually reaches the bridge: `svpwm_block`
+ * computes three numbers, this block turns them into gate signals, and getting
+ * it wrong shorts a leg.
  *
  * WHY THIS CORE AND NOT TI's pru-simulator: the block drives the IEP timer
- * through c26 (count at 0x0c, CMP0 status at 0x44, CMP0 at 0x48) and its main
- * loop polls it. tools/pru-simulator-upstream has a generic constant table and a
- * PIN-level peripheral framework (perif/peripheral_interface.py: process_r30 /
- * get_r31_status), but NO IEP model - core/counters.py is performance counters
- * only. An LBCO from c26 there would read a memory region that never increments,
- * so `tp_wait_dead?` would spin forever. See docs/evidence/svpwm.md.
+ * through c26 and its main loop polls it. A TI pru-simulator revision without
+ * an IEP model (a generic constant table and a pin-level peripheral framework,
+ * but no IEP counter) would return a value that never increments for an LBCO
+ * from c26, so `tp_wait_dead?` would spin forever.
  *
  * Usage:  node scripts/three_phase_pwm_cosim.js
  * Exit:   0 pass, 1 a check failed, 2 the harness itself failed.
@@ -204,8 +203,8 @@ if (require.main === module) {
   }
 
   // --- 4. gate self-proof -----------------------------------------------------
-  // Dead-time 0 is NOT the right mutation here, and finding that out was the
-  // point of trying it: `clr R30,R30,AH` and `set R30,R30,AL` are separate
+  // Dead-time 0 is NOT the right mutation here: `clr R30,R30,AH` and
+  // `set R30,R30,AL` are separate
   // instructions on separate cycles, so the ordering alone prevents same-cycle
   // overlap even with no dead-time at all. The real guard against shoot-through
   // is the high-side turn-off itself, so that is what gets mutated.
@@ -233,8 +232,8 @@ if (require.main === module) {
   }
 
   // --- 5. dead-time 0 must not hang (regression) ------------------------------
-  // Before the qbeq guard, DEADTIME=0 underflowed the busy-wait counter to
-  // 0xFFFFFFFF and spun ~2^32 times, leaving the high side latched on for the
+  // Without the qbeq guard, DEADTIME=0 underflows the busy-wait counter to
+  // 0xFFFFFFFF and spins ~2^32 times, leaving the high side latched on for the
   // rest of the period. deadtimeCounts is a plain user-facing config field with
   // no minimum, so 0 is a value a user can simply type.
   console.log('\n--- Regression: dead-time 0 must still terminate ---');
@@ -242,12 +241,12 @@ if (require.main === module) {
   if (z.r30.length >= 6000) {
     fails.push(`dead-time 0 ran to the ${6000}-cycle cap - the busy-wait underflow guard is gone`);
   } else {
-    console.log(`  completed in ${z.r30.length} cycles (pre-guard: ran to the 6001 cap)`);
+    console.log(`  completed in ${z.r30.length} cycles (cap 6000)`);
   }
 
   // --- 6. waveform export -----------------------------------------------------
-  // This is the IEP waveform evidence the item asks for. svpwm_block drives no
-  // pins, so there was nothing to trace there; the waveform belongs here.
+  // The IEP-timed gate waveform. svpwm_block drives no pins, so the waveform
+  // of the motor-control chain is traced here.
   const NAMES = ['AH', 'AL', 'BH', 'BL', 'CH', 'CL', 'TRIGGER'];
   const sym = (i) => String.fromCharCode(33 + i);
   const vcd = [

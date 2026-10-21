@@ -3,9 +3,9 @@
  * Run the real `iqmath_pid_block` macro against the independent
  * reference model in `scripts/pid_reference_vectors.js`.
  *
- * The ledger cited `testPid()` as this block's evidence. That function never
- * existed, and the block declared `simulator-tested` on the strength of it.
- * This is the harness that earns the rung honestly.
+ * This is the simulator check behind the block's `simulator-tested` maturity:
+ * the real macro runs on the TI JS PRU core and every output is compared with
+ * the reference model.
  *
  * The block is stateful: STATE_PTR points at 16 bytes of DMEM laid out as
  * [Integral, Prev_Error, Error, Derivative]. So a single input pair proves
@@ -178,10 +178,10 @@ if (require.main === module) {
   console.log(`\n${steps} macro invocations across ${seqs.length} sequence(s)`);
 
   // --- gate self-proof -------------------------------------------------------
-  // Everything above passed first time, which on its own proves nothing. Break
-  // the state carry - the one thing that makes this a PID rather than a gain
-  // stage - and require the comparison to go red. If this ever stops finding a
-  // mismatch, the harness has stopped comparing and the green above is void.
+  // A comparison that only ever passes proves nothing. Break the state carry -
+  // the one thing that makes this a PID rather than a gain stage - and require
+  // the comparison to go red. If it ever stops reporting a mismatch, the
+  // harness has stopped comparing and the pass above means nothing.
   {
     const seq = seqs[0];
     let bad = 0;

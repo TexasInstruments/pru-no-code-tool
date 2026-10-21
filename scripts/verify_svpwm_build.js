@@ -1,34 +1,22 @@
 /**
- * Clpru build verifier for the SVPWM block macro.
+ * clpru build check for the SVPWM block macro.
  *
- * ============================================================================
- * IMPORTANT — AUTHORING CONSTRAINT:
- * Authored with NO shell and NO file-read access. This script was NOT run.
- * It is written to the shape described for scripts/verify_ssi_build.js (an
- * oracle + build-verifier pair emitting a .asm and invoking clpru), but the
- * author could not read that file, so the exact helper names it would share
- * are ASSUMED, not known. Every assumption is marked ASSUMPTION:. The
- * operator must reconcile the seams marked OPERATOR TODO and then run:
+ * What it does:
+ *   1. Expands the SVPWM block's PRU assembly macro (m_svpwm_duty) with real
+ *      registers and writes it to build_out/svpwm_build_test/svpwm_block.asm.
+ *   2. Assembles it with the TI clpru assembler (CGT_TI_PRU_PATH, or CLPRU
+ *      naming the clpru executable, or the default install location).
+ *   3. Fails on any assembler error and on any MULL instruction in the
+ *      emitted code: PRU has no MULL, so constant multiplies must be
+ *      shift-and-add sequences.
  *
- *     node scripts/verify_svpwm_build.js
- *
- * and paste the full transcript into docs/evidence/svpwm.md.
- * ============================================================================
- *
- * What this script does (when run):
- *   1. Emits the SVPWM block's PRU assembly macro to
- *      build_out/svpwm_build_test/svpwm_block.asm.
- *   2. Invokes the TI clpru assembler on it.
- *   3. Greps the assembler output for hard errors — specifically the
- *      PRU-forbidden MULL instruction, which clpru rejects (the hard rule:
- *      constant multiplies must be shift-and-add).
- *   4. Exits nonzero on any assembler error; prints the assembler transcript
- *      verbatim so it can be captured as evidence.
+ * Usage:  node scripts/verify_svpwm_build.js
+ * Exit:   0 clean build, 1 assembler error or MULL found, 2 the block could
+ *         not be loaded.
  *
  * NOTE on the SQRT3 multiplies: the SVPWM math needs sqrt(3)*Vbeta and
  * (sqrt(3)/2)*Vbeta etc. On PRU these MUST be emitted as shift-and-add
  * sequences against fixed-point constants, never as a multiply instruction.
- * This verifier's job is to prove the emitted macro honors that.
  */
 
 "use strict";
@@ -37,27 +25,20 @@ const fs = require("fs");
 const path = require("path");
 const { execFileSync } = require("child_process");
 
-// ASSUMPTION: the SSI verifier located clpru either on PATH or via an env var
-// like CLPRU. Try both; error clearly if absent.
-const CLPRU =
-  process.env.CLPRU || "C:/ti/ti-cgt-pru_2.3.3/bin/clpru.exe"; // same path verify_ssi_build.js uses
+const { findClpru } = require("./dual_oracle_harness.js");
+
+// CLPRU names the executable directly; otherwise CGT_TI_PRU_PATH or the
+// default install location (findClpru).
+const CLPRU = process.env.CLPRU || findClpru();
 
 const OUTDIR = path.join(__dirname, "..", "build_out", "svpwm_build_test");
 const ASM = path.join(OUTDIR, "svpwm_block.asm");
 
 function emitAsm() {
-  // OPERATOR TODO(seam): the author could not read the block module, so the
-  // exact require path and emitter entry point are placeholders. Replace with
-  // the real one, mirroring verify_ssi_build.js. Expected shape assumed:
-  //   const blk = require(".../svpwm_block.syscfg.js");
-  //   const asm = blk.emitAsm({ deadtimeTicks: 32, tpwmTicks: 2000 });
-  // If the block instead ships a static .asm template, copy it here.
-  // RESOLVED 2026-08-28. Three corrections to the placeholder above:
-  //  1. The block lives in data_handling/, not application_specific/.
-  //  2. There is no emitAsm/emit entry point. Blocks expose getMacro(call, opCode)
-  //     and return the macro as a single string - same as SSI and BiSS-C.
-  //  3. The module ends with `exports = svpwmModule`, rebinding the parameter, so
-  //     require() yields an empty object. It has to be evaluated and read back.
+  // The block lives in data_handling/ and exposes getMacro(call, opCode), which
+  // returns the macro as a single string. The module ends with
+  // `exports = svpwmModule`, rebinding the parameter, so require() yields an
+  // empty object: it has to be evaluated and read back.
   const blockPath = path.join(
     __dirname, "..", ".metadata", "sysconfig", ".meta", "pru_blocks",
     "data_handling", "svpwm_block.syscfg.js"
@@ -78,9 +59,9 @@ function emitAsm() {
   const used = blockPath;
   // getMacro returns a `.macro`/`.endm` DEFINITION with symbolic operand names.
   // clpru will happily assemble a macro that is never invoked, which would make
-  // this gate vacuous. Expand it the way build_out/ssi_build_test/ssi_test.asm
-  // does - substitute real registers, drop the .macro wrapper, and emit the body
-  // under .text/.global main - so the instructions are actually assembled.
+  // this gate vacuous. Expand it instead - substitute real registers, drop the
+  // .macro wrapper, and emit the body under .text/.global main - so the
+  // instructions are actually assembled.
   const REG = {
     OUT_A: "R10", OUT_B: "R11", OUT_C: "R12", SECTOR: "R13", SAMPLE: "R14",
     ALPHA: "R15", BETA: "R16",
@@ -117,9 +98,8 @@ function assemble() {
 }
 
 function checkNoMull(asmText, clpruOut) {
-  // Belt and suspenders: clpru rejecting MULL is the authoritative gate, but
-  // also scan the emitted source so a simulator-authored macro can't slip a
-  // MULL through a misconfigured assembler path.
+  // clpru rejecting MULL is the authoritative gate; also scan the emitted
+  // source so a MULL cannot slip through a misconfigured assembler path.
   // Strip `;` comments before scanning. The macro documents its own shift-and-add
   // with the comment "sqrt(3)*beta, shift/add approximation (no fictitious MULL)",
   // and a raw text scan matched THAT - failing a clean build over a comment that
