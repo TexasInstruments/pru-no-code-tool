@@ -1147,27 +1147,27 @@ function expandLoopDirectives(macroBody) {
     // Split the macroBody into lines and trim each line
     const lines = macroBody.split('\n').map(line => line.trim());
     const result = [];
-
+    
     let i = 0;
     while (i < lines.length) {
         const line = lines[i];
-
+        
         // Check if this line contains a .loop directive
         const loopMatch = line.match(/\.loop\s+(\d+)/);
         if (loopMatch) {
             const loopCount = parseInt(loopMatch[1], 10);
             const loopBodyLines = [];
-
+            
             // Collect all lines until we find .endloop
             let j = i + 1;
             while (j < lines.length && !lines[j].includes('.endloop')) {
                 loopBodyLines.push(lines[j]);
                 j++;
             }
-
+            
             // Skip the .loop line, loop body, and .endloop line
             i = j + 1;
-
+            
             // Add the loop body repeated loopCount times
             for (let k = 0; k < loopCount; k++) {
                 result.push(...loopBodyLines);
@@ -1178,7 +1178,7 @@ function expandLoopDirectives(macroBody) {
             i++;
         }
     }
-
+    
     return result.join('\n');
 }
 
@@ -1195,26 +1195,26 @@ function expandMacros(pruInstructionsWithMacros, pruInstructionsLabelWithMacros)
     let pruInstructions = [];
     let pruInstructionsLabels = [];
     let macroCount = 0;
-
+    
     for(let i = 0; i < pruInstructionModules.length; i++)
     {
         // First check if the module exists and has a getMacro function
-        let macroBody = (system.modules[pruInstructionModules[i]] &&
-                         typeof system.modules[pruInstructionModules[i]].getMacro === 'function') ?
-                        system.modules[pruInstructionModules[i]].getMacro(pruInstructionsWithMacros[i], "") :
+        let macroBody = (system.modules[pruInstructionModules[i]] && 
+                         typeof system.modules[pruInstructionModules[i]].getMacro === 'function') ? 
+                        system.modules[pruInstructionModules[i]].getMacro(pruInstructionsWithMacros[i], "") : 
                         undefined;
-
+        
         if(macroBody) {
             // Expand the loop directives in the macro body
             macroBody = expandLoopDirectives(macroBody);
             // If there is macro body, call seperateInstructionsAndLabels
-            let macroDefinition = seperateInstructionsAndLabels(macroCount,
-                                                    macroBody);
+            let macroDefinition = seperateInstructionsAndLabels(macroCount, 
+                                                    macroBody);   
 		    // Handle case when label is added before macro in auto generated code and first instruction in macro
 			pruInstructions.push(0);
 			pruInstructionsLabels.push(pruInstructionsLabelWithMacros[i]);
             pruInstructions = pruInstructions.concat(macroDefinition.macroInstructions);
-            pruInstructionsLabels = pruInstructionsLabels.concat(macroDefinition.macroInstructionsLabels);
+            pruInstructionsLabels = pruInstructionsLabels.concat(macroDefinition.macroInstructionsLabels);            
             //increment macro count
             macroCount++;
         }
@@ -1249,7 +1249,7 @@ function replaceTemporaryRegisters(instructions) {
         if (typeof instruction !== 'string') {
             return instruction;
         }
-
+        
         // Replace TEMP_REG1 with R28, TEMP_REG2 with R29, TEMP_REG3 with R26, TEMP_REG4 with R27
         return instruction
             .replace(/TEMP_REG1(\.\w+)?/g, 'R28$1')
@@ -1272,47 +1272,47 @@ function seperateInstructionsAndLabels(macroCount, macroBody)
     if (!macroBody) {
         return undefined;
     }
-
+    
     const macroInstructions = [];
     const macroInstructionsLabels = [];
-
+    
     // Split the macro body into lines
     const lines = macroBody.trim().split('\n');
-
+    
     // Process the macro body (assuming only either label or instruction can be present in one line)
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
-
+        
         // Skip empty lines and comments
         if (!line || line.startsWith(';')) {
             continue;
         }
-
+    
         // Case 1: Line with both label and instruction
         if (line.includes(':') && line.split(':')[1].trim()) {
             const parts = line.split(':');
             const label = parts[0].trim().replace(/\?/g, macroCount);
             let instruction = parts[1].trim().replace(/\?/g, macroCount);
-
+            
             macroInstructions.push(instruction);
             macroInstructionsLabels.push(label);
         }
         // Case 2: Line with only a label
         else if (line.includes(':')) {
             const label = line.split(':')[0].trim().replace(/\?/g, macroCount);
-
+            
             macroInstructions.push(0);
             macroInstructionsLabels.push(label);
         }
         // Case 3: Line with only an instruction
         else {
             const instruction = line.replace(/\?/g, macroCount);
-
+            
             macroInstructions.push(instruction);
             macroInstructionsLabels.push(0);
         }
     }
-
+    
     return {
         macroInstructions,
         macroInstructionsLabels
