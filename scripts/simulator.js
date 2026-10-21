@@ -1351,15 +1351,12 @@ class Simulator {
    *
    *     qbbc  xs_spin?, R1.b3, 0
    *
-   * That is what clpru assembles and what pru_core.js decodes. This decoder
-   * used to read operand 0 as the register and operand 2 as the label - the
-   * reverse - so _parseRegister("xs_spin?") failed, _handleParsingError bumped
-   * the pc, and the branch was SILENTLY not taken. Nothing was reported: the
-   * spin loop in m_xfr2spin_acquire fell straight through its own backward
-   * branch and a contended lock therefore looked like a single lost
-   * arbitration instead of a core parked in a loop. Every wait/spin loop run
-   * through Simulator.stepPaced had the same hole; no call site in the repo
-   * ever used the reversed order, so nothing depended on it.
+   * That is what clpru assembles and what pru_core.js decodes. Reading the
+   * operands in the reverse order (operand 0 as the register, operand 2 as the
+   * label) makes _parseRegister("xs_spin?") fail, _handleParsingError bump the
+   * pc, and the branch SILENTLY not taken: a spin loop falls straight through
+   * its own backward branch, so a contended lock looks like a single lost
+   * arbitration instead of a core parked in a loop.
    *
    * An unresolved target is counted as a parse error rather than silently
    * stepping to the next instruction, again matching pru_core.js: a branch to
@@ -1949,7 +1946,7 @@ class Simulator {
           pruState.unknownInstruction = "XOUT " + bank + ": QUEUE_EMPTY device 0xF0 is XIN-only (SPRUIM2J Table 6-60)";
           pruState.pc++;
         } else {
-          // SPAD: store registers to scratchpad bank (note: 48/49 are no longer here)
+          // SPAD: store registers to scratchpad bank (48/49 are handled above)
           for (let i = 0; i < count; i++) {
             if (srcRegN + i <= 31) {
               const spadBank = this._spad || {};
@@ -2045,7 +2042,7 @@ class Simulator {
             pruState.registers[destRegN] = status;
           }
         } else {
-          // SPAD: load from scratchpad bank (note: 48/49 are no longer here)
+          // SPAD: load from scratchpad bank (48/49 are handled above)
           if (this._spad && this._spad[bank]) {
             for (let i = 0; i < count; i++) {
               if (destRegN + i <= 31 && i < this._spad[bank].length) {

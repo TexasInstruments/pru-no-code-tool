@@ -286,8 +286,7 @@ test('factory: an unknown kind is refused', () => {
 test('factory: a kind not yet ported to the in-tool simulator is refused, not faked', () => {
     // The dropdown lists the full device catalogue; the in-tool simulator
     // only runs ported kinds. Refusing visibly beats substituting an
-    // unproven stand-in - that substitution is the failure this item exists
-    // to prevent.
+    // unproven stand-in that would make a wrong design look correct.
     // Derived from the catalogue, not restated here. A hardcoded list goes stale
     // the moment a kind is ported: on 2026-09-09 this test still demanded that
     // bissc refuse, three commits after ported it, and the assertion

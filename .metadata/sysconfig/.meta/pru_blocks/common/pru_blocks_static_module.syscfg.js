@@ -394,8 +394,8 @@ function collectDeviceBindings(inst) {
  * or nulls when the clock never toggled. This is a MEASUREMENT on the
  * waveform, not a restatement of the block's configured timing - the two
  * differ exactly when the firmware is wrong, which is when the number
- * matters. (lesson: a margin read from the config instead of the
- * trace is a formula standing in for a measurement.)
+ * matters. (A margin read from the config instead of the trace would be a
+ * formula standing in for a measurement.)
  */
 function measureClockWaveform(r30ValueHistory, clkPin) {
     const bit = 1 << clkPin;
@@ -616,8 +616,7 @@ function generatePinHistory(inst, pinNum) {
  * Build the device-binding manifest for the generated output.
  *
  * WHY THIS IS A FILE AND NOT A GUI FEATURE
- * Per decision C on, the Python device models on TI pru-simulator are
- * the oracle; the SysConfig GUI can only execute JavaScript and must never
+ * The Python device models on TI pru-simulator are the reference; the SysConfig GUI can only execute JavaScript and must never
  * become the authority. So the binding the user configures here is EMITTED,
  * and the build runs the real model against it. This function produces that
  * emission and nothing else - it does not simulate.
@@ -755,7 +754,7 @@ function buildDeviceBindingsWithModels(inst, modules) {
  * block gets `readers: []`, which the runner reports instead of guessing.
  *
  * Pure: the module map and the allocator are passed in, so the function can be
- * evaluated outside the SysConfig runtime (scripts/sim/test_device_bindings.js).
+ * evaluated outside the SysConfig runtime (by node tests).
  *
  * @param manifest   buildDeviceBindings() output; annotated in place and returned
  * @param modules    system.modules

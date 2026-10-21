@@ -12,9 +12,8 @@
  * The SysConfig dropdown (pru_blocks_static_module.syscfg.js) lists every
  * kind the Python DeviceModel contract covers. Only the two ported here are
  * selectable in the in-tool (JavaScript) simulator today; the factory refuses
- * the rest VISIBLY instead of substituting something unproven. A device mode
- * that quietly runs the wrong model is exactly the "polished seam over an
- * unproven oracle" failure this item was sequenced to avoid.
+ * the rest VISIBLY instead of substituting something unproven: a device mode
+ * that quietly ran the wrong model would make a wrong design look correct.
  *
  * FAULTS ARE THE POINT
  * A device model that can only produce plausible waveforms is decoration. Its

@@ -400,7 +400,7 @@ def test_binding_a_local_model_first_does_not_break_the_upstream_ones():
     Resolving one by mutating sys.path and leaving it mutated makes every
     later import depend on binding order. The suite can be green on that by
     luck of alphabetical parametrisation, so the order is pinned here: local
-    first, upstream second, which is the direction that used to fail.
+    first, upstream second, the order that exposes a leaked sys.path entry.
     """
     build_device(bound("spi_adc"))
     for kind in ("ssi", "quadrature", "tca9538", "uart"):

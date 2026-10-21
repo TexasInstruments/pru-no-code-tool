@@ -3,10 +3,10 @@
  * asm_label.js - one shared splitter for `label: instr` lines.
  *
  * The TI PRU assembler (clpru) accepts a label followed by an instruction on
- * the same line (e.g. `pb_ws?: sub r1, r1, 1`). Several JS macro expanders
- * used to treat a line as a label only when the whole trimmed line ended with
- * ':', so such a line was misread as an instruction, the label was never
- * defined, and a later branch to it had an unresolved target.
+ * the same line (e.g. `pb_ws?: sub r1, r1, 1`). An expander that treats a
+ * line as a label only when the whole trimmed line ends with ':' misreads
+ * such a line as an instruction, never defines the label, and leaves a later
+ * branch to it with an unresolved target.
  *
  * splitLabel(line) -> null when the line carries no code (blank or
  * comment-only), otherwise { label, rest } where `label` is the raw label

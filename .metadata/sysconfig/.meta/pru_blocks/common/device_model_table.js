@@ -8,7 +8,7 @@
  *
  * WHAT A DEVICE MODEL INSTANCE IS
  * An ADDITIONAL source of device bindings next to the GPI device fields in
- * Simulation Settings (decision on, option 1). The GPI fields are
+ * Simulation Settings. The GPI fields are
  * untouched and keep working. Both sources feed the same manifest, in the same
  * shape, so scripts/sim/device_bindings.py cannot tell them apart - which is
  * the point: one consumer, one set of safety checks.

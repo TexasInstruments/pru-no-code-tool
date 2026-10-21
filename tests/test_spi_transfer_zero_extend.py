@@ -85,7 +85,7 @@ needs_tools = pytest.mark.skipif(not T.HAVE_TOOLS, reason="clpru, SysConfig 1.28
 
 @needs_tools
 def test_transfer_design_generates_and_links_through_sysconfig_and_clpru():
-    """Red at eb71f49c: a stray `ldi r_dataReg, 0` above `.macro` made clpru fail with E0003."""
+    """A stray `ldi r_dataReg, 0` above `.macro` makes clpru fail with E0003; the design must link."""
     text = T.HEADER + (
         'const pru_spi_transfer = scripting.addModule("/pru_blocks/pru_io_blocks/pru_spi_transfer", {}, false);\n'
         'const c = load_constant_block.addInstance(); c.constant1 = 0x5A; c.$name = "TX_Word";\n'

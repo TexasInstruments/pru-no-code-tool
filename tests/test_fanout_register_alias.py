@@ -280,7 +280,7 @@ def test_gray_cascade_runs_correctly_without_memory_copies():
 
 @needs_tools
 def test_no_stage_xors_a_value_with_itself():
-    """Static form of the defect: an XOR/AND/OR/SUB whose two source operands are the same register."""
+    """Static form of the bug: an XOR/AND/OR/SUB whose two source operands are the same register."""
     _elf, asm, _reg = cached("cascade", lambda: cascade_syscfg())
     for i, s in enumerate(SHIFTS):
         dest, srcs = operands(asm, "Xor_%d" % s)

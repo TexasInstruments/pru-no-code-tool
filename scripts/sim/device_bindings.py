@@ -12,7 +12,7 @@ reads it and instantiates the real Python device models from TI pru-simulator,
 so the build runs the oracle the user selected in the GUI without the user
 naming a path or writing Python.
 
-Decision C on the Python models are the authority. The GUI is a
+The Python models are the authority. The GUI is a
 selector, not a simulator.
 
 WHY THE PIN TRANSLATION LIVES HERE AND NOT IN THE GUI
@@ -441,8 +441,8 @@ def driven_pins(model, stimulus=None):
     The default is the all-pins-low quiet case, then all-pins-high, then low
     again: the high-to-low step is a genuine active-low chip-select assertion
     EDGE, so a device that only drives inside a frame is observed driving. (The
-    all-low level alone no longer suffices: a first-tick level is the reset
-    state, not an edge - r3.) A model that returns a tuple is an upstream model that should have
+    all-low level alone does not suffice: a first-tick level is the reset
+    state, not an edge.) A model that returns a tuple is an upstream model that should have
     had `nets`; that is a registry error, not something to guess around, so it
     raises.
     """

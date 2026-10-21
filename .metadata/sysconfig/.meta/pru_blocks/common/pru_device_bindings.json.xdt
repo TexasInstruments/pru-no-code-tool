@@ -3,7 +3,7 @@
  * pru_device_bindings.json - the device-binding manifest.
  *
  * Emitted next to pru_syscfg.inc so the build, not the GUI, runs the oracle.
- * Decision C on the Python device models on TI pru-simulator are the
+ * The Python device models on TI pru-simulator are the
  * authority. This file is how the user's GUI selection reaches them without
  * the user naming a path or invoking Python.
  *

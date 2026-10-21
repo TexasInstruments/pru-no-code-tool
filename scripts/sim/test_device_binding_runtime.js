@@ -270,7 +270,7 @@ test('verdict: macro blocks report cannot execute macro blocks instead of device
 
 test('margin: the measurement reads the trace, not the configuration', () => {
     // A clock scripted at 10-cycle periods must measure 10 regardless of
-    // what any config field claims - lesson.
+    // what any config field claims.
     const history = new Array(201).fill(1);   // bit 0 high
     for (let start = 20; start < 200; start += 100) {
         for (let c = start; c < start + 5; c++) history[c] = 0;   // 5 low, 5 high

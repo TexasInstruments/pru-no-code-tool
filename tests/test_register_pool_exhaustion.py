@@ -101,7 +101,7 @@ def test_helper_flags_a_dropped_block():
 def test_too_many_live_values_fails_generation_naming_the_block():
     """More live values than the pool holds: generation must FAIL with an Out of registers error naming each block.
 
-    a 24-stage running sum no longer exhausts the pool (the allocator now releases a value after its last
+    A 24-stage running sum does not exhaust the pool (the allocator releases a value after its last
     consumer), so the exhausting design is 28 independent 4-byte constants - the whole 112-byte pool, all alive - plus
     two more 4-byte constants that cannot be placed."""
     extra = ('const x1 = load_constant_block.addInstance(); x1.$name = "X1"; x1.constant1 = 0x20000001;\n'
