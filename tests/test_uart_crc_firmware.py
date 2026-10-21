@@ -35,7 +35,7 @@ TI_DIR = os.path.join(os.environ.get("SystemDrive", "C:") + os.sep, "ti")
 SYSCFG_DIR = os.environ.get("SYSCFG_PATH", os.path.join(TI_DIR, "sysconfig_1.28.0"))
 SYSCFG_NODE = os.path.join(SYSCFG_DIR, "nodejs", "node.exe" if os.name == "nt" else "node")
 SYSCFG_CLI = os.path.join(SYSCFG_DIR, "dist", "cli.js")
-CGT_DIR = os.environ.get("PRU_CGT_PATH", os.path.join(TI_DIR, "ti-cgt-pru_2.3.3"))
+CGT_DIR = os.environ.get("CGT_TI_PRU_PATH") or os.environ.get("PRU_CGT_PATH") or os.path.join(TI_DIR, "ti-cgt-pru_2.3.3")
 CLPRU = os.path.join(CGT_DIR, "bin", "clpru.exe" if os.name == "nt" else "clpru")
 SIMDIR = os.environ.get("PRU_SIMULATOR_PATH", "")
 
