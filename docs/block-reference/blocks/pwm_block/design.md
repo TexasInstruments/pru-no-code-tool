@@ -13,15 +13,15 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("PWM (IEP-synced)\n[continuous]")):::core
-  CFG0["IEP clock (Hz)"]:::config -.-> CORE
+  CFG0["IEP Clock (Hz)"]:::config -.-> CORE
   CFG1["Period (ns)"]:::config -.-> CORE
   CFG2["Duty (%)"]:::config -.-> CORE
-  CFG3["Output R30 pin"]:::config -.-> CORE
-  CFG4["Active high"]:::config -.-> CORE
+  CFG3["Output R30 Pin"]:::config -.-> CORE
+  CFG4["Active High"]:::config -.-> CORE
   CFG5["Enable Complementary Output"]:::config -.-> CORE
-  CFG6["Complementary R30 pin"]:::config -.-> CORE
+  CFG6["Complementary R30 Pin"]:::config -.-> CORE
   CFG7["Deadband (ns)"]:::config -.-> CORE
-  CFG8["Period count (0 = continuous)"]:::config -.-> CORE
+  CFG8["Period Count (0=Continuous)"]:::config -.-> CORE
   CFG9["Number Of Cycles"]:::config -.-> CORE
 ```
 
@@ -38,15 +38,15 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `clkHz` | IEP clock (Hz) | `200000000` | — |
+| `clkHz` | IEP Clock (Hz) | `200000000` | — |
 | `periodNs` | Period (ns) | `5000` | — |
 | `dutyPct` | Duty (%) | `25` | — |
-| `pin` | Output R30 pin | `5` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `activeHigh` | Active high | `true` | — |
+| `pin` | Output R30 Pin | `5` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `activeHigh` | Active High | `true` | — |
 | `enableComplementary` | Enable Complementary Output | `false` | — |
-| `compPin` | Complementary R30 pin | `6` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `compPin` | Complementary R30 Pin | `6` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `deadbandNs` | Deadband (ns) | `100` | — |
-| `periodCount` | Period count (0 = continuous) | `0` | — |
+| `periodCount` | Period Count (0=Continuous) | `0` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

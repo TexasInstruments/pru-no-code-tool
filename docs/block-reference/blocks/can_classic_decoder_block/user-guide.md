@@ -12,11 +12,11 @@ Reads a bit-stuffed CAN Classic stream at a configurable bit rate, handles bit d
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `rxBit` | RX R31 bit | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `bitRateKbps` | CAN bit rate (kbit/s) | `1000` | — |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
-| `samplePointPercent` | Sample point (% of bit time) | `75` | — |
-| `sjwCycles` | Synchronisation jump width (PRU cycles) | `3` | — |
+| `rxBit` | RX R31 Bit | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `bitRateKbps` | CAN Bit Rate (kbit/s) | `1000` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
+| `samplePointPercent` | Sample Point (Percent of Bit Time) | `75` | — |
+| `sjwCycles` | Sync Jump Width (PRU Cycles) | `3` | — |
 | `noOfCycles` | Number Of Cycles | `-1` | — |
 
 ## Ports

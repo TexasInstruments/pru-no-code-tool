@@ -41,17 +41,17 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("SerDes (shift register)\n[oneshot]")):::core
-  CFG0["Bits per word"]:::config -.-> CORE
-  CFG1["Bit order"]:::config -.-> CORE
-  CFG2["Cycles per bit"]:::config -.-> CORE
-  CFG3["Setup (CLK low) share"]:::config -.-> CORE
-  CFG4["Hold (CLK high) share"]:::config -.-> CORE
-  CFG5["Data-out R30 bit"]:::config -.-> CORE
-  CFG6["Clock R30 bit"]:::config -.-> CORE
-  CFG7["Data-in R31 bit"]:::config -.-> CORE
+  CFG0["Bits Per Word"]:::config -.-> CORE
+  CFG1["Bit Order"]:::config -.-> CORE
+  CFG2["Cycles Per Bit"]:::config -.-> CORE
+  CFG3["Setup (CLK Low) Share"]:::config -.-> CORE
+  CFG4["Hold (CLK High) Share"]:::config -.-> CORE
+  CFG5["Data-out R30 Bit"]:::config -.-> CORE
+  CFG6["Clock R30 Bit"]:::config -.-> CORE
+  CFG7["Data-in R31 Bit"]:::config -.-> CORE
   CFG8["Transmit Mode"]:::config -.-> CORE
   CFG9["TX Input Register"]:::config -.-> CORE
-  CFG10["Demo word (hex)"]:::config -.-> CORE
+  CFG10["Demo Word (hex)"]:::config -.-> CORE
   CFG11["RX Output Register"]:::config -.-> CORE
   CFG12["Number Of Cycles"]:::config -.-> CORE
 ```
@@ -69,17 +69,17 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `width` | Bits per word | `8` | — |
-| `bitOrder` | Bit order | `MSB` | `MSB`, `LSB` |
-| `bitCycles` | Cycles per bit | `33` | — |
-| `preCycles` | Setup (CLK low) share | `4` | — |
-| `postCycles` | Hold (CLK high) share | `4` | — |
-| `doutBit` | Data-out R30 bit | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `clkBit` | Clock R30 bit | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `dinBit` | Data-in R31 bit | `2` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `width` | Bits Per Word | `8` | — |
+| `bitOrder` | Bit Order | `MSB` | `MSB`, `LSB` |
+| `bitCycles` | Cycles Per Bit | `33` | — |
+| `preCycles` | Setup (CLK Low) Share | `4` | — |
+| `postCycles` | Hold (CLK High) Share | `4` | — |
+| `doutBit` | Data-out R30 Bit | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `clkBit` | Clock R30 Bit | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `dinBit` | Data-in R31 Bit | `2` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `txMode` | Transmit Mode | `constant` | `constant`, `register` |
 | `txRegister` | TX Input Register | `R2` | — |
-| `demoWord` | Demo word (hex) | `0xA5` | — |
+| `demoWord` | Demo Word (hex) | `0xA5` | — |
 | `dataRegister` | RX Output Register | `R1` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 

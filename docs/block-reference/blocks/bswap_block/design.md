@@ -13,8 +13,8 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("BSWAP (ICSSG Byte Swap)\n[oneshot]")):::core
-  CFG0["BSWAP function"]:::config -.-> CORE
-  CFG1["Peak cycles"]:::config -.-> CORE
+  CFG0["BSWAP Function"]:::config -.-> CORE
+  CFG1["Peak Cycles"]:::config -.-> CORE
 ```
 
 
@@ -30,8 +30,8 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `mode` | BSWAP function | `word_swap` | `word_swap`, `swap_4_8`, `swap_4_16` |
-| `noOfCycles` | Peak cycles | `2` | — |
+| `mode` | BSWAP Function | `word_swap` | `word_swap`, `swap_4_8`, `swap_4_16` |
+| `noOfCycles` | Peak Cycles | `2` | — |
 
 ## Ports
 

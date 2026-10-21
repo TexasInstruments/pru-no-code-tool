@@ -14,8 +14,8 @@ Takes and drops one of the 64 ICSSG ownership flags through the internal spinloc
 |---|---|---|---|
 | `operation` | Operation | `acquire` | `acquire`, `try_acquire`, `release` |
 | `lockId` | Lock ID (0-63) | `0` | — |
-| `protectsVariable` | Protects shared variable | `` | — |
-| `noOfCycles` | Peak cycles | `-1` | — |
+| `protectsVariable` | Protects Shared Variable | `` | — |
+| `noOfCycles` | Peak Cycles | `-1` | — |
 
 ## Ports
 

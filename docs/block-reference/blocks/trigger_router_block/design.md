@@ -13,10 +13,10 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("Trigger Event Router\n[(unclassified)]")):::core
-  CFG0["Route 1 R31 bit"]:::config -.-> CORE
-  CFG1["Route 2 R31 bit"]:::config -.-> CORE
-  CFG2["Route 3 R31 bit"]:::config -.-> CORE
-  CFG3["Route 4 R31 bit"]:::config -.-> CORE
+  CFG0["Route 1 R31 Bit"]:::config -.-> CORE
+  CFG1["Route 2 R31 Bit"]:::config -.-> CORE
+  CFG2["Route 3 R31 Bit"]:::config -.-> CORE
+  CFG3["Route 4 R31 Bit"]:::config -.-> CORE
 ```
 
 
@@ -32,10 +32,10 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `route1` | Route 1 R31 bit | `255` | — |
-| `route2` | Route 2 R31 bit | `255` | — |
-| `route3` | Route 3 R31 bit | `255` | — |
-| `route4` | Route 4 R31 bit | `255` | — |
+| `route1` | Route 1 R31 Bit | `255` | — |
+| `route2` | Route 2 R31 Bit | `255` | — |
+| `route3` | Route 3 R31 Bit | `255` | — |
+| `route4` | Route 4 R31 Bit | `255` | — |
 
 ## Ports
 

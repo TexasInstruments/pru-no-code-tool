@@ -82,11 +82,11 @@ within/beyond window, boundary cases).
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `chAPin` | Channel A R31 pin | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `chBPin` | Channel B R31 pin | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `discrepancyCycles` | Discrepancy window (PRU cycles) | `500` | — |
-| `ossdMaxCycles` | OSSD max pulse width (PRU cycles) | `400` | — |
-| `statusRegister` | Status output register | `R4` | — |
+| `chAPin` | Channel A R31 Pin | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `chBPin` | Channel B R31 Pin | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `discrepancyCycles` | Discrepancy Window (PRU Cycles) | `500` | — |
+| `ossdMaxCycles` | OSSD Max Pulse Width (PRU Cycles) | `400` | — |
+| `statusRegister` | Status Output Register | `R4` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

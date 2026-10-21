@@ -17,7 +17,7 @@ flowchart LR
   CFG1["Trigger Source"]:::config -.-> CORE
   CFG2["Target Pin (R31)"]:::config -.-> CORE
   CFG3["Output Register (32-bit)"]:::config -.-> CORE
-  CFG4["PRU/IEP clock (Hz)"]:::config -.-> CORE
+  CFG4["PRU/IEP Clock (Hz)"]:::config -.-> CORE
   CFG5["Number Of Cycles"]:::config -.-> CORE
 ```
 
@@ -38,7 +38,7 @@ flowchart LR
 | `triggerSource` | Trigger Source | `iep` | `iep`, `gpio`, `internal` |
 | `pin` | Target Pin (R31) | `5` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `dataRegister` | Output Register (32-bit) | `R4` | — |
-| `clkHz` | PRU/IEP clock (Hz) | `200000000` | — |
+| `clkHz` | PRU/IEP Clock (Hz) | `200000000` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

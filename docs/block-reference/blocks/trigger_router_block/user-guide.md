@@ -11,10 +11,10 @@ Trigger Event Router
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `route1` | Route 1 R31 bit | `255` | — |
-| `route2` | Route 2 R31 bit | `255` | — |
-| `route3` | Route 3 R31 bit | `255` | — |
-| `route4` | Route 4 R31 bit | `255` | — |
+| `route1` | Route 1 R31 Bit | `255` | — |
+| `route2` | Route 2 R31 Bit | `255` | — |
+| `route3` | Route 3 R31 Bit | `255` | — |
+| `route4` | Route 4 R31 Bit | `255` | — |
 
 ## Ports
 

@@ -13,7 +13,7 @@ Queries queue empty status through the ICSSG QUEUE_EMPTY broadside unit (SPRUIM2
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
 | `operation` | Operation | `query` | `query` |
-| `noOfCycles` | Peak cycles | `1` | — |
+| `noOfCycles` | Peak Cycles | `1` | — |
 
 ## Ports
 

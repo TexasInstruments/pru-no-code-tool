@@ -83,11 +83,11 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("Safety dual-channel input monitor\n[continuous]")):::core
-  CFG0["Channel A R31 pin"]:::config -.-> CORE
-  CFG1["Channel B R31 pin"]:::config -.-> CORE
-  CFG2["Discrepancy window (PRU cycles)"]:::config -.-> CORE
-  CFG3["OSSD max pulse width (PRU cycles)"]:::config -.-> CORE
-  CFG4["Status output register"]:::config -.-> CORE
+  CFG0["Channel A R31 Pin"]:::config -.-> CORE
+  CFG1["Channel B R31 Pin"]:::config -.-> CORE
+  CFG2["Discrepancy Window (PRU Cycles)"]:::config -.-> CORE
+  CFG3["OSSD Max Pulse Width (PRU Cycles)"]:::config -.-> CORE
+  CFG4["Status Output Register"]:::config -.-> CORE
   CFG5["Number Of Cycles"]:::config -.-> CORE
 ```
 
@@ -104,11 +104,11 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `chAPin` | Channel A R31 pin | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `chBPin` | Channel B R31 pin | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `discrepancyCycles` | Discrepancy window (PRU cycles) | `500` | — |
-| `ossdMaxCycles` | OSSD max pulse width (PRU cycles) | `400` | — |
-| `statusRegister` | Status output register | `R4` | — |
+| `chAPin` | Channel A R31 Pin | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `chBPin` | Channel B R31 Pin | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `discrepancyCycles` | Discrepancy Window (PRU Cycles) | `500` | — |
+| `ossdMaxCycles` | OSSD Max Pulse Width (PRU Cycles) | `400` | — |
+| `statusRegister` | Status Output Register | `R4` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

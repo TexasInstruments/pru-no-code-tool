@@ -12,12 +12,12 @@ Emits a polling decoder with position and edge-count state in PRU registers.
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `aBit` | A input R31 pin | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `bBit` | B input R31 pin | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `zBit` | Z input R31 pin | `2` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `useIndex` | Use Z index | `false` | — |
-| `sampleCycles` | Sample delay trips | `10` | — |
-| `countMode` | Count mode | `x4` | `x1`, `x2`, `x4` |
+| `aBit` | A Input R31 Pin | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `bBit` | B Input R31 Pin | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `zBit` | Z Input R31 Pin | `2` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `useIndex` | Use Z Index | `false` | — |
+| `sampleCycles` | Sample Delay Trips | `10` | — |
+| `countMode` | Count Mode | `x4` | `x1`, `x2`, `x4` |
 | `posRegister` | Position Register (32-bit) | `R4` | — |
 | `edgeRegister` | Edge Count Register (32-bit) | `R5` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |

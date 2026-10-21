@@ -12,9 +12,9 @@ Applies zero-sequence/common-mode injection to Q12 alpha/beta commands, returns 
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `periodCounts` | PWM period counts | `1000` | — |
-| `deadtimeCounts` | Dead-time margin counts | `10` | — |
-| `noOfCycles` | Conservative instruction bound | `180` | — |
+| `periodCounts` | PWM Period Counts | `1000` | — |
+| `deadtimeCounts` | Dead-time Margin Counts | `10` | — |
+| `noOfCycles` | Conservative Instruction Bound | `180` | — |
 
 ## Ports
 

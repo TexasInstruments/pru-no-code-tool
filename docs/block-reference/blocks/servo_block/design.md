@@ -13,10 +13,10 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("RC Servo / ESC PWM\n[oneshot]")):::core
-  CFG0["Signal R30 pin"]:::config -.-> CORE
-  CFG1["Pulse width (us)"]:::config -.-> CORE
-  CFG2["Frame period (us)"]:::config -.-> CORE
-  CFG3["PRU clock (Hz)"]:::config -.-> CORE
+  CFG0["Signal R30 Pin"]:::config -.-> CORE
+  CFG1["Pulse Width (us)"]:::config -.-> CORE
+  CFG2["Frame Period (us)"]:::config -.-> CORE
+  CFG3["PRU Clock (Hz)"]:::config -.-> CORE
   CFG4["Number Of Cycles"]:::config -.-> CORE
 ```
 
@@ -33,10 +33,10 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `signalPin` | Signal R30 pin | `8` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `pulseUs` | Pulse width (us) | `1500` | — |
-| `frameUs` | Frame period (us) | `20000` | — |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
+| `signalPin` | Signal R30 Pin | `8` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `pulseUs` | Pulse Width (us) | `1500` | — |
+| `frameUs` | Frame Period (us) | `20000` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

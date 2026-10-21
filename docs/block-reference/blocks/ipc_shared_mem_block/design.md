@@ -16,7 +16,7 @@ flowchart LR
   CFG0["Variable Name"]:::config -.-> CORE
   CFG1["Memory Section"]:::config -.-> CORE
   CFG2["Data Type"]:::config -.-> CORE
-  CFG3["Also written by another core"]:::config -.-> CORE
+  CFG3["Also Written by Another Core"]:::config -.-> CORE
   CFG4["Number Of Cycles"]:::config -.-> CORE
 ```
 
@@ -36,7 +36,7 @@ flowchart LR
 | `variableName` | Variable Name | `encoder_data` | — |
 | `memorySection` | Memory Section | `PRU_SHARED_RAM` | `PRU_SHARED_RAM`, `PRU_DRAM_0` |
 | `dataType` | Data Type | `uint32_t` | `uint32_t`, `int32_t`, `float` |
-| `crossCoreWriters` | Also written by another core | `false` | — |
+| `crossCoreWriters` | Also Written by Another Core | `false` | — |
 | `noOfCycles` | Number Of Cycles | `4` | — |
 
 ## Ports

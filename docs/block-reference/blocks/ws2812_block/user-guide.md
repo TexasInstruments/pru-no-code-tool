@@ -12,10 +12,10 @@ Emits precise cycle-timed bit-banging assembly for WS2812 LEDs. The 24-bit color
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `pinId` | Output R30 pin | `5` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `pinId` | Output R30 Pin | `5` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `dataRegister` | Data Register (24-bit Color) | `R0` | — |
 | `numLeds` | Number of LEDs | `10` | — |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

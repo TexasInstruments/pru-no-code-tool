@@ -13,8 +13,8 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("Encoder Speed (IEP)\n[continuous]")):::core
-  CFG0["A input R31 pin"]:::config -.-> CORE
-  CFG1["B input R31 pin"]:::config -.-> CORE
+  CFG0["A Input R31 Pin"]:::config -.-> CORE
+  CFG1["B Input R31 Pin"]:::config -.-> CORE
   CFG2["Velocity Method"]:::config -.-> CORE
   CFG3["Position Register (32-bit)"]:::config -.-> CORE
   CFG4["Velocity Register (32-bit)"]:::config -.-> CORE
@@ -35,8 +35,8 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `aBit` | A input R31 pin | `3` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `bBit` | B input R31 pin | `4` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `aBit` | A Input R31 Pin | `3` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `bBit` | B Input R31 Pin | `4` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `velocityMethod` | Velocity Method | `iep` | `iep`, `pulse-count` |
 | `posRegister` | Position Register (32-bit) | `R4` | — |
 | `velRegister` | Velocity Register (32-bit) | `R5` | — |

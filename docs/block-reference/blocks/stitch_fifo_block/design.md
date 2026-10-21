@@ -13,9 +13,9 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("Stitch FIFO (ICSSG Broadside)\n[oneshot]")):::core
-  CFG0["Stitch FIFO operation"]:::config -.-> CORE
-  CFG1["Push byte count (1-4)"]:::config -.-> CORE
-  CFG2["Peak cycles"]:::config -.-> CORE
+  CFG0["Stitch FIFO Operation"]:::config -.-> CORE
+  CFG1["Push Byte Count (1-4)"]:::config -.-> CORE
+  CFG2["Peak Cycles"]:::config -.-> CORE
 ```
 
 
@@ -31,9 +31,9 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `operation` | Stitch FIFO operation | `push` | `push`, `pop`, `rewind`, `reset` |
-| `byteCount` | Push byte count (1-4) | `4` | — |
-| `noOfCycles` | Peak cycles | `3` | — |
+| `operation` | Stitch FIFO Operation | `push` | `push`, `pop`, `rewind`, `reset` |
+| `byteCount` | Push Byte Count (1-4) | `4` | — |
+| `noOfCycles` | Peak Cycles | `3` | — |
 
 ## Ports
 

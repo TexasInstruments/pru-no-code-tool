@@ -14,8 +14,8 @@ flowchart LR
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("SUM32 (ICSSG UDP Checksum Accelerator)\n[oneshot]")):::core
   CFG0["Operation"]:::config -.-> CORE
-  CFG1["BS RAM + SUM32 snoop (also writes BS RAM)"]:::config -.-> CORE
-  CFG2["Peak cycles"]:::config -.-> CORE
+  CFG1["BS RAM & SUM32 Snoop"]:::config -.-> CORE
+  CFG2["Peak Cycles"]:::config -.-> CORE
 ```
 
 
@@ -32,8 +32,8 @@ flowchart LR
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
 | `operation` | Operation | `accumulate` | `accumulate`, `read_and_clear` |
-| `bsRamSnoop` | BS RAM + SUM32 snoop (also writes BS RAM) | `false` | — |
-| `noOfCycles` | Peak cycles | `12` | — |
+| `bsRamSnoop` | BS RAM & SUM32 Snoop | `false` | — |
+| `noOfCycles` | Peak Cycles | `12` | — |
 
 ## Ports
 

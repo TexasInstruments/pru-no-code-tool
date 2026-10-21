@@ -12,12 +12,12 @@ Emits a parameterized STEP/DIR pulse train for a stepper motor. The generated de
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `stepPin` | Step R30 pin | `5` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `dirPin` | Direction R30 pin | `6` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `stepPin` | Step R30 Pin | `5` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `dirPin` | Direction R30 Pin | `6` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `numSteps` | Target Steps | `1000` | — |
 | `profile` | Velocity Profile | `constant` | `constant`, `linear` |
 | `maxSpeedSps` | Max Speed (steps/s) | `1000` | — |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

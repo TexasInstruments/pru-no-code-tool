@@ -43,16 +43,16 @@ The M-sequence transmit sends byte 0 only; multi-byte M-sequences are not implem
 | `comMode` | COM Mode | `COM3` | `COM1`, `COM2`, `COM3` |
 | `baudDivider` | ENDAT Clock Divider | `832` | — |
 | `baudHz` | Baud Rate (Hz) | `230400` | — |
-| `txBytes` | M-Sequence TX bytes | `4` | — |
-| `rxBytes` | Response RX bytes | `4` | — |
-| `frameSizeBits` | Frame size (bits) | `10` | — |
-| `bitPeriodNs` | Bit period (ns) | `4340` | — |
-| `dirPin` | DIR Pin (R30 bit) | `2` | — |
-| `wakePin` | Wake Pin (R30 bit) | `3` | — |
+| `txBytes` | M-Sequence TX Bytes | `4` | — |
+| `rxBytes` | Response RX Bytes | `4` | — |
+| `frameSizeBits` | Frame Size (bits) | `10` | — |
+| `bitPeriodNs` | Bit Period (ns) | `4340` | — |
+| `dirPin` | DIR Pin (R30 Bit) | `2` | — |
+| `wakePin` | Wake Pin (R30 Bit) | `3` | — |
 | `endatChannel` | ENDAT Channel | `0` | `0`, `1`, `2` |
-| `wakeLoops` | Wake-up delay loops | `6400` | — |
-| `turnaroundBitPeriods` | Turnaround (bit periods) | `5` | — |
-| `mSeqPreambleBytes` | M-Seq preamble bytes | `0` | — |
+| `wakeLoops` | Wake-up Delay Loops | `6400` | — |
+| `turnaroundBitPeriods` | Turnaround (Bit Periods) | `5` | — |
+| `mSeqPreambleBytes` | M-Seq Preamble Bytes | `0` | — |
 | `noOfCycles` | Number Of Cycles | `50000` | — |
 
 ## Ports

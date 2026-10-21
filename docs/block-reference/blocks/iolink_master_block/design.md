@@ -44,16 +44,16 @@ flowchart LR
   CFG0["COM Mode"]:::config -.-> CORE
   CFG1["ENDAT Clock Divider"]:::config -.-> CORE
   CFG2["Baud Rate (Hz)"]:::config -.-> CORE
-  CFG3["M-Sequence TX bytes"]:::config -.-> CORE
-  CFG4["Response RX bytes"]:::config -.-> CORE
-  CFG5["Frame size (bits)"]:::config -.-> CORE
-  CFG6["Bit period (ns)"]:::config -.-> CORE
-  CFG7["DIR Pin (R30 bit)"]:::config -.-> CORE
-  CFG8["Wake Pin (R30 bit)"]:::config -.-> CORE
+  CFG3["M-Sequence TX Bytes"]:::config -.-> CORE
+  CFG4["Response RX Bytes"]:::config -.-> CORE
+  CFG5["Frame Size (bits)"]:::config -.-> CORE
+  CFG6["Bit Period (ns)"]:::config -.-> CORE
+  CFG7["DIR Pin (R30 Bit)"]:::config -.-> CORE
+  CFG8["Wake Pin (R30 Bit)"]:::config -.-> CORE
   CFG9["ENDAT Channel"]:::config -.-> CORE
-  CFG10["Wake-up delay loops"]:::config -.-> CORE
-  CFG11["Turnaround (bit periods)"]:::config -.-> CORE
-  CFG12["M-Seq preamble bytes"]:::config -.-> CORE
+  CFG10["Wake-up Delay Loops"]:::config -.-> CORE
+  CFG11["Turnaround (Bit Periods)"]:::config -.-> CORE
+  CFG12["M-Seq Preamble Bytes"]:::config -.-> CORE
   CFG13["Number Of Cycles"]:::config -.-> CORE
 ```
 
@@ -73,16 +73,16 @@ flowchart LR
 | `comMode` | COM Mode | `COM3` | `COM1`, `COM2`, `COM3` |
 | `baudDivider` | ENDAT Clock Divider | `832` | — |
 | `baudHz` | Baud Rate (Hz) | `230400` | — |
-| `txBytes` | M-Sequence TX bytes | `4` | — |
-| `rxBytes` | Response RX bytes | `4` | — |
-| `frameSizeBits` | Frame size (bits) | `10` | — |
-| `bitPeriodNs` | Bit period (ns) | `4340` | — |
-| `dirPin` | DIR Pin (R30 bit) | `2` | — |
-| `wakePin` | Wake Pin (R30 bit) | `3` | — |
+| `txBytes` | M-Sequence TX Bytes | `4` | — |
+| `rxBytes` | Response RX Bytes | `4` | — |
+| `frameSizeBits` | Frame Size (bits) | `10` | — |
+| `bitPeriodNs` | Bit Period (ns) | `4340` | — |
+| `dirPin` | DIR Pin (R30 Bit) | `2` | — |
+| `wakePin` | Wake Pin (R30 Bit) | `3` | — |
 | `endatChannel` | ENDAT Channel | `0` | `0`, `1`, `2` |
-| `wakeLoops` | Wake-up delay loops | `6400` | — |
-| `turnaroundBitPeriods` | Turnaround (bit periods) | `5` | — |
-| `mSeqPreambleBytes` | M-Seq preamble bytes | `0` | — |
+| `wakeLoops` | Wake-up Delay Loops | `6400` | — |
+| `turnaroundBitPeriods` | Turnaround (Bit Periods) | `5` | — |
+| `mSeqPreambleBytes` | M-Seq Preamble Bytes | `0` | — |
 | `noOfCycles` | Number Of Cycles | `50000` | — |
 
 ## Ports

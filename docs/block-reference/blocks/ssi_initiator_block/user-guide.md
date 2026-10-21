@@ -14,18 +14,18 @@ Peripheral resources: bit-bangs one R30 clock output and one R31 data input; no 
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `totalWidth` | Total frame width (bits) | `25` | — |
-| `singleTurnBits` | Single-turn bits (LSBs) | `13` | — |
-| `multiTurnBits` | Multi-turn bits (above ST) | `12` | — |
-| `clkPin` | CLK Pin (R30 bit) | `0` | — |
-| `dataPin` | DATA Pin (R31 bit) | `1` | — |
-| `clockPolarity` | Clock idle polarity (1=high, SSI standard; 0=inverted line) | `1` | — |
-| `halfPeriodCycles` | Half-period delay loops | `10` | — |
-| `monoTimeCycles` | Monoflop timeout loops | `20` | — |
-| `parityEnable` | Parity bit present (last bit) | `false` | — |
-| `parityType` | Parity type (0=even,1=odd) | `0` | — |
-| `errorBitEnable` | Error bit present (bit before parity or last bit) | `false` | — |
-| `grayCode` | Gray-coded payload | `true` | — |
+| `totalWidth` | Total Frame Width (bits) | `25` | — |
+| `singleTurnBits` | Single-turn Bits (LSBs) | `13` | — |
+| `multiTurnBits` | Multi-turn Bits (Above ST) | `12` | — |
+| `clkPin` | CLK Pin (R30 Bit) | `0` | — |
+| `dataPin` | DATA Pin (R31 Bit) | `1` | — |
+| `clockPolarity` | Clock Idle Polarity | `1` | — |
+| `halfPeriodCycles` | Half-period Delay Loops | `10` | — |
+| `monoTimeCycles` | Monoflop Timeout Loops | `20` | — |
+| `parityEnable` | Parity Bit Present (Last Bit) | `false` | — |
+| `parityType` | Parity Type (0=Even, 1=Odd) | `0` | — |
+| `errorBitEnable` | Error Bit Present | `false` | — |
+| `grayCode` | Gray-coded Payload | `true` | — |
 | `noOfCycles` | Number Of Cycles | `1345` | — |
 
 ## Ports

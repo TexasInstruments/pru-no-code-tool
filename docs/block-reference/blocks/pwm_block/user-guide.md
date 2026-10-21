@@ -12,15 +12,15 @@ Emits a single-channel IEP-CMP PWM (CMP0=period, CMP1=duty) edge-aligned. By def
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `clkHz` | IEP clock (Hz) | `200000000` | — |
+| `clkHz` | IEP Clock (Hz) | `200000000` | — |
 | `periodNs` | Period (ns) | `5000` | — |
 | `dutyPct` | Duty (%) | `25` | — |
-| `pin` | Output R30 pin | `5` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `activeHigh` | Active high | `true` | — |
+| `pin` | Output R30 Pin | `5` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `activeHigh` | Active High | `true` | — |
 | `enableComplementary` | Enable Complementary Output | `false` | — |
-| `compPin` | Complementary R30 pin | `6` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `compPin` | Complementary R30 Pin | `6` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `deadbandNs` | Deadband (ns) | `100` | — |
-| `periodCount` | Period count (0 = continuous) | `0` | — |
+| `periodCount` | Period Count (0=Continuous) | `0` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

@@ -20,19 +20,19 @@ Peripheral resources (selection rule): the hard EnDat peripheral (PRU-ICSSG thre
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `singleTurnBits` | Single-turn bits (LSBs) | `13` | — |
-| `multiTurnBits` | Multi-turn bits (above ST) | `10` | — |
-| `totalBits` | Total telegram bits | `30` | — |
-| `modeCommand` | Mode command (6-bit) | `7` | — |
-| `clkPin` | CLOCK Pin (R30 bit) | `0` | — |
-| `dataTxPin` | DATA TX Pin (R30 bit) | `1` | — |
-| `dataRxPin` | DATA RX Pin (R31 bit) | `2` | — |
-| `dataEnPin` | DATA EN Pin (R30 bit) | `3` | — |
-| `halfPeriodCycles` | Half-period delay loops | `25` | — |
-| `t1Clocks` | t1 free clocks before command | `2` | — |
-| `trtCycles` | Turn-around delay loops (tRT) | `20` | — |
-| `trecCycles` | Recovery delay loops (tRec) | `1000` | — |
-| `timeoutCycles` | Start-bit timeout (clocks) | `100` | — |
+| `singleTurnBits` | Single-turn Bits (LSBs) | `13` | — |
+| `multiTurnBits` | Multi-turn Bits (Above ST) | `10` | — |
+| `totalBits` | Total Telegram Bits | `30` | — |
+| `modeCommand` | Mode Command (6-bit) | `7` | — |
+| `clkPin` | CLOCK Pin (R30 Bit) | `0` | — |
+| `dataTxPin` | DATA TX Pin (R30 Bit) | `1` | — |
+| `dataRxPin` | DATA RX Pin (R31 Bit) | `2` | — |
+| `dataEnPin` | DATA EN Pin (R30 Bit) | `3` | — |
+| `halfPeriodCycles` | Half-period Delay Loops | `25` | — |
+| `t1Clocks` | T1 Free Clocks Before Command | `2` | — |
+| `trtCycles` | Turn-around Delay Loops (tRT) | `20` | — |
+| `trecCycles` | Recovery Delay Loops (tRec) | `1000` | — |
+| `timeoutCycles` | Start-bit Timeout (clocks) | `100` | — |
 | `noOfCycles` | Number Of Cycles | `6538` | — |
 
 ## Ports

@@ -12,17 +12,16 @@ Executes a sequence of SPI conversions with fixed deadlines and t_conv waits.
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `bits_per_frame` | Bits per frame | `16` | — |
+| `bits_per_frame` | Bits Per Frame | `16` | — |
 | `spi_mode` | SPI Mode | `MODE0` | `MODE0` |
 | `t_conv` | Conversion Time (cycles) | `200` | — |
-| `sample_period` | Sample Period / Grid (cycles) | `5000` | — |
-| `channel_sequence` | Channel Sequence (CSV of MOSI words) | `0xA500` | — |
+| `sample_period` | Sample Period/Grid (cycles) | `5000` | — |
+| `channel_sequence` | Channel Sequence (CSV of MOSI Words) | `0xA500` | — |
 | `cs_pin` | CS Signal (R30) | `3` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `sclk_pin` | SCLK Signal (R30) | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `mosi_pin` | MOSI Signal (R30) | `2` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `miso_pin` | MISO Signal (R31) | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `base_data_reg` | Base Data Register | `R4` | — |
-| `numOfConstants` | — | `8` | — |
 | `noOfCycles` | Worst-case Cycles (calculated) | `1` | — |
 
 ## Ports

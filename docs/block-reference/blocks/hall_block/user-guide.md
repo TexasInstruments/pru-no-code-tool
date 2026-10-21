@@ -16,12 +16,12 @@ Illegal-state trap: 000/111 sets FAULT_REG=1, SECTOR_REG=0xFFFFFFFF and does NOT
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `aBit` | Hall A R31 pin | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `bBit` | Hall B R31 pin | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `cBit` | Hall C R31 pin | `2` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `sampleCycles` | Sample delay trips | `10` | — |
+| `aBit` | Hall A R31 Pin | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `bBit` | Hall B R31 Pin | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `cBit` | Hall C R31 Pin | `2` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `sampleCycles` | Sample Delay Trips | `10` | — |
 | `sectorRegister` | Sector Register (32-bit) | `R4` | — |
-| `velRegister` | Velocity Register (IEP delta) | `R5` | — |
+| `velRegister` | Velocity Register (IEP Delta) | `R5` | — |
 | `faultRegister` | Fault Register (0=ok,1=illegal) | `R6` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 

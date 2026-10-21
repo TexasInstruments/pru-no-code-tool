@@ -12,13 +12,13 @@ Transmits a 16-bit DShot frame (11-bit throttle, 1-bit telemetry, 4-bit CRC) ove
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `signalPin` | Signal R30 pin | `9` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `signalPin` | Signal R30 Pin | `9` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `variant` | DShot Variant | `dshot600` | `dshot150`, `dshot300`, `dshot600`, `dshot1200` |
 | `throttleMode` | Throttle Mode | `constant` | `constant`, `register` |
 | `throttleRegister` | Throttle Register | `R14` | — |
 | `throttle` | Throttle (0..2047) | `0` | — |
 | `telemetry` | Request Telemetry | `false` | — |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

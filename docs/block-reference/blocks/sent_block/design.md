@@ -13,12 +13,12 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("SENT (SAE J2716) TX\n[oneshot]")):::core
-  CFG0["Signal R30 pin"]:::config -.-> CORE
+  CFG0["Signal R30 Pin"]:::config -.-> CORE
   CFG1["Data Register (32-bit)"]:::config -.-> CORE
-  CFG2["Tick / UT (us)"]:::config -.-> CORE
-  CFG3["Data nibbles"]:::config -.-> CORE
-  CFG4["Low-pulse ticks"]:::config -.-> CORE
-  CFG5["PRU clock (Hz)"]:::config -.-> CORE
+  CFG2["Tick/UT (us)"]:::config -.-> CORE
+  CFG3["Data Nibbles"]:::config -.-> CORE
+  CFG4["Low-pulse Ticks"]:::config -.-> CORE
+  CFG5["PRU Clock (Hz)"]:::config -.-> CORE
   CFG6["Number Of Cycles"]:::config -.-> CORE
 ```
 
@@ -35,12 +35,12 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `signalPin` | Signal R30 pin | `10` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `signalPin` | Signal R30 Pin | `10` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `dataRegister` | Data Register (32-bit) | `R5` | — |
-| `tickUs` | Tick / UT (us) | `3` | — |
-| `numDataNibbles` | Data nibbles | `6` | — |
-| `lowTicks` | Low-pulse ticks | `5` | — |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
+| `tickUs` | Tick/UT (us) | `3` | — |
+| `numDataNibbles` | Data Nibbles | `6` | — |
+| `lowTicks` | Low-pulse Ticks | `5` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

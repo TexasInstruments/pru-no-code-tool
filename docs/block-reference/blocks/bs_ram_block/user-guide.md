@@ -13,11 +13,11 @@ Wraps the ICSSG per-core private 2KB BS RAM (SPRUIM2J 6.4.6.2.5, Fig 6-49, Table
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
 | `operation` | Operation | `write` | `write`, `read`, `snoop_write` |
-| `rowAddress` | Row address (0..63) | `0` | — |
+| `rowAddress` | Row Address (0..63) | `0` | — |
 | `byteCount` | Bytes | `4` | — |
-| `autoIndex` | AutoIndex (increment row after each transfer) | `false` | — |
-| `autoCount` | AutoIndex burst rows | `1` | — |
-| `noOfCycles` | Peak cycles | `1` | — |
+| `autoIndex` | AutoIndex | `false` | — |
+| `autoCount` | AutoIndex Burst Rows | `1` | — |
+| `noOfCycles` | Peak Cycles | `1` | — |
 
 ## Ports
 

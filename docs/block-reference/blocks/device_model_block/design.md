@@ -47,7 +47,7 @@ flowchart LR
   CFG0["Number Of Cycles"]:::config -.-> CORE
   CFG1["Device Kind"]:::config -.-> CORE
   CFG2["Pins"]:::config -.-> CORE
-  CFG3["Where to run"]:::config -.-> CORE
+  CFG3["Where to Run"]:::config -.-> CORE
   CFG4["Read by"]:::config -.-> CORE
 ```
 
@@ -67,7 +67,7 @@ flowchart LR
 | `noOfCycles` | Number Of Cycles | `0` | — |
 | `deviceKind` | Device Kind | `ssi` | — |
 | `pinSummary` | Pins | `` | — |
-| `runHint` | Where to run | `` | — |
+| `runHint` | Where to Run | `` | — |
 | `readBy` | Read by | `` | — |
 
 ## Ports

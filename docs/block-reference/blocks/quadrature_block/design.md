@@ -13,12 +13,12 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("Quadrature encoder decoder\n[continuous]")):::core
-  CFG0["A input R31 pin"]:::config -.-> CORE
-  CFG1["B input R31 pin"]:::config -.-> CORE
-  CFG2["Z input R31 pin"]:::config -.-> CORE
-  CFG3["Use Z index"]:::config -.-> CORE
-  CFG4["Sample delay trips"]:::config -.-> CORE
-  CFG5["Count mode"]:::config -.-> CORE
+  CFG0["A Input R31 Pin"]:::config -.-> CORE
+  CFG1["B Input R31 Pin"]:::config -.-> CORE
+  CFG2["Z Input R31 Pin"]:::config -.-> CORE
+  CFG3["Use Z Index"]:::config -.-> CORE
+  CFG4["Sample Delay Trips"]:::config -.-> CORE
+  CFG5["Count Mode"]:::config -.-> CORE
   CFG6["Position Register (32-bit)"]:::config -.-> CORE
   CFG7["Edge Count Register (32-bit)"]:::config -.-> CORE
   CFG8["Number Of Cycles"]:::config -.-> CORE
@@ -37,12 +37,12 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `aBit` | A input R31 pin | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `bBit` | B input R31 pin | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `zBit` | Z input R31 pin | `2` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `useIndex` | Use Z index | `false` | — |
-| `sampleCycles` | Sample delay trips | `10` | — |
-| `countMode` | Count mode | `x4` | `x1`, `x2`, `x4` |
+| `aBit` | A Input R31 Pin | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `bBit` | B Input R31 Pin | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `zBit` | Z Input R31 Pin | `2` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `useIndex` | Use Z Index | `false` | — |
+| `sampleCycles` | Sample Delay Trips | `10` | — |
+| `countMode` | Count Mode | `x4` | `x1`, `x2`, `x4` |
 | `posRegister` | Position Register (32-bit) | `R4` | — |
 | `edgeRegister` | Edge Count Register (32-bit) | `R5` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |

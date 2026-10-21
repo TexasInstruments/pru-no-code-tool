@@ -13,14 +13,14 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("I2C master (open-drain)\n[oneshot]")):::core
-  CFG0["SCL R30 bit"]:::config -.-> CORE
-  CFG1["SDA R30 bit"]:::config -.-> CORE
-  CFG2["Bit rate (kHz)"]:::config -.-> CORE
-  CFG3["7-bit target address"]:::config -.-> CORE
+  CFG0["SCL R30 Bit"]:::config -.-> CORE
+  CFG1["SDA R30 Bit"]:::config -.-> CORE
+  CFG2["Bit Rate (kHz)"]:::config -.-> CORE
+  CFG3["7-bit Target Address"]:::config -.-> CORE
   CFG4["Direction"]:::config -.-> CORE
   CFG5["RX Output Register (Read Mode)"]:::config -.-> CORE
   CFG6["NACK Flag Register (optional)"]:::config -.-> CORE
-  CFG7["PRU clock (Hz)"]:::config -.-> CORE
+  CFG7["PRU Clock (Hz)"]:::config -.-> CORE
   CFG8["Number Of Cycles"]:::config -.-> CORE
 ```
 
@@ -37,14 +37,14 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `sclBit` | SCL R30 bit | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `sdaBit` | SDA R30 bit | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `bitRateKhz` | Bit rate (kHz) | `400` | `100`, `400`, `1000` |
-| `addr7` | 7-bit target address | `0x50` | — |
+| `sclBit` | SCL R30 Bit | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `sdaBit` | SDA R30 Bit | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `bitRateKhz` | Bit Rate (kHz) | `400` | `100`, `400`, `1000` |
+| `addr7` | 7-bit Target Address | `0x50` | — |
 | `rw` | Direction | `write` | `write`, `read` |
 | `dataRegister` | RX Output Register (Read Mode) | `R7` | — |
 | `nackRegister` | NACK Flag Register (optional) | `` | — |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
 | `noOfCycles` | Number Of Cycles | `5500` | — |
 
 ## Ports

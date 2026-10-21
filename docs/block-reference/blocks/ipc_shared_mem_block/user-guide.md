@@ -15,7 +15,7 @@ Creates a shared memory bridge for passing data between PRU and R5F Host.
 | `variableName` | Variable Name | `encoder_data` | — |
 | `memorySection` | Memory Section | `PRU_SHARED_RAM` | `PRU_SHARED_RAM`, `PRU_DRAM_0` |
 | `dataType` | Data Type | `uint32_t` | `uint32_t`, `int32_t`, `float` |
-| `crossCoreWriters` | Also written by another core | `false` | — |
+| `crossCoreWriters` | Also Written by Another Core | `false` | — |
 | `noOfCycles` | Number Of Cycles | `4` | — |
 
 ## Ports

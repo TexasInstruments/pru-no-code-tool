@@ -13,13 +13,13 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("DShot Digital ESC\n[oneshot]")):::core
-  CFG0["Signal R30 pin"]:::config -.-> CORE
+  CFG0["Signal R30 Pin"]:::config -.-> CORE
   CFG1["DShot Variant"]:::config -.-> CORE
   CFG2["Throttle Mode"]:::config -.-> CORE
   CFG3["Throttle Register"]:::config -.-> CORE
   CFG4["Throttle (0..2047)"]:::config -.-> CORE
   CFG5["Request Telemetry"]:::config -.-> CORE
-  CFG6["PRU clock (Hz)"]:::config -.-> CORE
+  CFG6["PRU Clock (Hz)"]:::config -.-> CORE
   CFG7["Number Of Cycles"]:::config -.-> CORE
 ```
 
@@ -36,13 +36,13 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `signalPin` | Signal R30 pin | `9` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `signalPin` | Signal R30 Pin | `9` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `variant` | DShot Variant | `dshot600` | `dshot150`, `dshot300`, `dshot600`, `dshot1200` |
 | `throttleMode` | Throttle Mode | `constant` | `constant`, `register` |
 | `throttleRegister` | Throttle Register | `R14` | — |
 | `throttle` | Throttle (0..2047) | `0` | — |
 | `telemetry` | Request Telemetry | `false` | — |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

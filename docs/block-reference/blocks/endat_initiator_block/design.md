@@ -21,19 +21,19 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("EnDat 2.2 Initiator\n[oneshot]")):::core
-  CFG0["Single-turn bits (LSBs)"]:::config -.-> CORE
-  CFG1["Multi-turn bits (above ST)"]:::config -.-> CORE
-  CFG2["Total telegram bits"]:::config -.-> CORE
-  CFG3["Mode command (6-bit)"]:::config -.-> CORE
-  CFG4["CLOCK Pin (R30 bit)"]:::config -.-> CORE
-  CFG5["DATA TX Pin (R30 bit)"]:::config -.-> CORE
-  CFG6["DATA RX Pin (R31 bit)"]:::config -.-> CORE
-  CFG7["DATA EN Pin (R30 bit)"]:::config -.-> CORE
-  CFG8["Half-period delay loops"]:::config -.-> CORE
-  CFG9["t1 free clocks before command"]:::config -.-> CORE
-  CFG10["Turn-around delay loops (tRT)"]:::config -.-> CORE
-  CFG11["Recovery delay loops (tRec)"]:::config -.-> CORE
-  CFG12["Start-bit timeout (clocks)"]:::config -.-> CORE
+  CFG0["Single-turn Bits (LSBs)"]:::config -.-> CORE
+  CFG1["Multi-turn Bits (Above ST)"]:::config -.-> CORE
+  CFG2["Total Telegram Bits"]:::config -.-> CORE
+  CFG3["Mode Command (6-bit)"]:::config -.-> CORE
+  CFG4["CLOCK Pin (R30 Bit)"]:::config -.-> CORE
+  CFG5["DATA TX Pin (R30 Bit)"]:::config -.-> CORE
+  CFG6["DATA RX Pin (R31 Bit)"]:::config -.-> CORE
+  CFG7["DATA EN Pin (R30 Bit)"]:::config -.-> CORE
+  CFG8["Half-period Delay Loops"]:::config -.-> CORE
+  CFG9["T1 Free Clocks Before Command"]:::config -.-> CORE
+  CFG10["Turn-around Delay Loops (tRT)"]:::config -.-> CORE
+  CFG11["Recovery Delay Loops (tRec)"]:::config -.-> CORE
+  CFG12["Start-bit Timeout (clocks)"]:::config -.-> CORE
   CFG13["Number Of Cycles"]:::config -.-> CORE
 ```
 
@@ -50,19 +50,19 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `singleTurnBits` | Single-turn bits (LSBs) | `13` | — |
-| `multiTurnBits` | Multi-turn bits (above ST) | `10` | — |
-| `totalBits` | Total telegram bits | `30` | — |
-| `modeCommand` | Mode command (6-bit) | `7` | — |
-| `clkPin` | CLOCK Pin (R30 bit) | `0` | — |
-| `dataTxPin` | DATA TX Pin (R30 bit) | `1` | — |
-| `dataRxPin` | DATA RX Pin (R31 bit) | `2` | — |
-| `dataEnPin` | DATA EN Pin (R30 bit) | `3` | — |
-| `halfPeriodCycles` | Half-period delay loops | `25` | — |
-| `t1Clocks` | t1 free clocks before command | `2` | — |
-| `trtCycles` | Turn-around delay loops (tRT) | `20` | — |
-| `trecCycles` | Recovery delay loops (tRec) | `1000` | — |
-| `timeoutCycles` | Start-bit timeout (clocks) | `100` | — |
+| `singleTurnBits` | Single-turn Bits (LSBs) | `13` | — |
+| `multiTurnBits` | Multi-turn Bits (Above ST) | `10` | — |
+| `totalBits` | Total Telegram Bits | `30` | — |
+| `modeCommand` | Mode Command (6-bit) | `7` | — |
+| `clkPin` | CLOCK Pin (R30 Bit) | `0` | — |
+| `dataTxPin` | DATA TX Pin (R30 Bit) | `1` | — |
+| `dataRxPin` | DATA RX Pin (R31 Bit) | `2` | — |
+| `dataEnPin` | DATA EN Pin (R30 Bit) | `3` | — |
+| `halfPeriodCycles` | Half-period Delay Loops | `25` | — |
+| `t1Clocks` | T1 Free Clocks Before Command | `2` | — |
+| `trtCycles` | Turn-around Delay Loops (tRT) | `20` | — |
+| `trecCycles` | Recovery Delay Loops (tRec) | `1000` | — |
+| `timeoutCycles` | Start-bit Timeout (clocks) | `100` | — |
 | `noOfCycles` | Number Of Cycles | `6538` | — |
 
 ## Ports

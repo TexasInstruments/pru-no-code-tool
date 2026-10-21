@@ -12,9 +12,9 @@ Wraps the ICSSG 2-deep x 32-byte broadside FIFO at device ID 0x08 (SPRUIM2J 6.4.
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `operation` | Stitch FIFO operation | `push` | `push`, `pop`, `rewind`, `reset` |
-| `byteCount` | Push byte count (1-4) | `4` | — |
-| `noOfCycles` | Peak cycles | `3` | — |
+| `operation` | Stitch FIFO Operation | `push` | `push`, `pop`, `rewind`, `reset` |
+| `byteCount` | Push Byte Count (1-4) | `4` | — |
+| `noOfCycles` | Peak Cycles | `3` | — |
 
 ## Ports
 

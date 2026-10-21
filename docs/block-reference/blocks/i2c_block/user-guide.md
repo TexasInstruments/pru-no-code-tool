@@ -12,14 +12,14 @@ Emits a parameterized START / address-byte / ACK / STOP frame (in read mode, fol
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `sclBit` | SCL R30 bit | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `sdaBit` | SDA R30 bit | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `bitRateKhz` | Bit rate (kHz) | `400` | `100`, `400`, `1000` |
-| `addr7` | 7-bit target address | `0x50` | — |
+| `sclBit` | SCL R30 Bit | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `sdaBit` | SDA R30 Bit | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `bitRateKhz` | Bit Rate (kHz) | `400` | `100`, `400`, `1000` |
+| `addr7` | 7-bit Target Address | `0x50` | — |
 | `rw` | Direction | `write` | `write`, `read` |
 | `dataRegister` | RX Output Register (Read Mode) | `R7` | — |
 | `nackRegister` | NACK Flag Register (optional) | `` | — |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
 | `noOfCycles` | Number Of Cycles | `5500` | — |
 
 ## Ports

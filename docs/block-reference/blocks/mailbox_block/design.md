@@ -14,12 +14,12 @@ flowchart LR
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("Host mailbox / ring buffer\n[oneshot]")):::core
   CFG0["Mode"]:::config -.-> CORE
-  CFG1["Mailbox base offset"]:::config -.-> CORE
-  CFG2["Ring slots"]:::config -.-> CORE
-  CFG3["Bytes per slot"]:::config -.-> CORE
-  CFG4["Memory window"]:::config -.-> CORE
-  CFG5["Signal host event"]:::config -.-> CORE
-  CFG6["Host system event"]:::config -.-> CORE
+  CFG1["Mailbox Base Offset"]:::config -.-> CORE
+  CFG2["Ring Slots"]:::config -.-> CORE
+  CFG3["Bytes Per Slot"]:::config -.-> CORE
+  CFG4["Memory Window"]:::config -.-> CORE
+  CFG5["Signal Host Event"]:::config -.-> CORE
+  CFG6["Host System Event"]:::config -.-> CORE
   CFG7["Value Register"]:::config -.-> CORE
   CFG8["Number Of Cycles"]:::config -.-> CORE
 ```
@@ -38,12 +38,12 @@ flowchart LR
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
 | `mode` | Mode | `publish` | `publish`, `consume` |
-| `baseOffset` | Mailbox base offset | `0x0000` | — |
-| `slots` | Ring slots | `16` | — |
-| `slotBytes` | Bytes per slot | `4` | `4`, `8`, `16`, `32` |
-| `memory` | Memory window | `dmem0` | `dmem0`, `shared` |
-| `signalEvent` | Signal host event | `false` | — |
-| `hostEvent` | Host system event | `16` | — |
+| `baseOffset` | Mailbox Base Offset | `0x0000` | — |
+| `slots` | Ring Slots | `16` | — |
+| `slotBytes` | Bytes Per Slot | `4` | `4`, `8`, `16`, `32` |
+| `memory` | Memory Window | `dmem0` | `dmem0`, `shared` |
+| `signalEvent` | Signal Host Event | `false` | — |
+| `hostEvent` | Host System Event | `16` | — |
 | `dataRegister` | Value Register | `R10` | — |
 | `noOfCycles` | Number Of Cycles | `21` | — |
 

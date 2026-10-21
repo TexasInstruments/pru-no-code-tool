@@ -12,11 +12,11 @@ Emits parameterized counter loop in PRU assembly.
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `inputPin` | Input R31 pin | `5` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `inputPin` | Input R31 Pin | `5` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `dataRegister` | Count Output Register (32-bit) | `R4` | — |
 | `gateMs` | Gate Duration (ms) | `100` | — |
 | `edgeType` | Edge to Count | `rising` | `rising`, `falling`, `both` |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

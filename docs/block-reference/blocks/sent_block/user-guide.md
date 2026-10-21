@@ -12,12 +12,12 @@ Transmits a SENT frame using edge timing. Each nibble is encoded as the time bet
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `signalPin` | Signal R30 pin | `10` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `signalPin` | Signal R30 Pin | `10` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `dataRegister` | Data Register (32-bit) | `R5` | — |
-| `tickUs` | Tick / UT (us) | `3` | — |
-| `numDataNibbles` | Data nibbles | `6` | — |
-| `lowTicks` | Low-pulse ticks | `5` | — |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
+| `tickUs` | Tick/UT (us) | `3` | — |
+| `numDataNibbles` | Data Nibbles | `6` | — |
+| `lowTicks` | Low-pulse Ticks | `5` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

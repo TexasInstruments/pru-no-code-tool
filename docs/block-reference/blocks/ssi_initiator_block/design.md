@@ -15,18 +15,18 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("SSI Initiator\n[oneshot]")):::core
-  CFG0["Total frame width (bits)"]:::config -.-> CORE
-  CFG1["Single-turn bits (LSBs)"]:::config -.-> CORE
-  CFG2["Multi-turn bits (above ST)"]:::config -.-> CORE
-  CFG3["CLK Pin (R30 bit)"]:::config -.-> CORE
-  CFG4["DATA Pin (R31 bit)"]:::config -.-> CORE
-  CFG5["Clock idle polarity (1=high, SSI standard; 0=inverted line)"]:::config -.-> CORE
-  CFG6["Half-period delay loops"]:::config -.-> CORE
-  CFG7["Monoflop timeout loops"]:::config -.-> CORE
-  CFG8["Parity bit present (last bit)"]:::config -.-> CORE
-  CFG9["Parity type (0=even,1=odd)"]:::config -.-> CORE
-  CFG10["Error bit present (bit before parity or last bit)"]:::config -.-> CORE
-  CFG11["Gray-coded payload"]:::config -.-> CORE
+  CFG0["Total Frame Width (bits)"]:::config -.-> CORE
+  CFG1["Single-turn Bits (LSBs)"]:::config -.-> CORE
+  CFG2["Multi-turn Bits (Above ST)"]:::config -.-> CORE
+  CFG3["CLK Pin (R30 Bit)"]:::config -.-> CORE
+  CFG4["DATA Pin (R31 Bit)"]:::config -.-> CORE
+  CFG5["Clock Idle Polarity"]:::config -.-> CORE
+  CFG6["Half-period Delay Loops"]:::config -.-> CORE
+  CFG7["Monoflop Timeout Loops"]:::config -.-> CORE
+  CFG8["Parity Bit Present (Last Bit)"]:::config -.-> CORE
+  CFG9["Parity Type (0=Even, 1=Odd)"]:::config -.-> CORE
+  CFG10["Error Bit Present"]:::config -.-> CORE
+  CFG11["Gray-coded Payload"]:::config -.-> CORE
   CFG12["Number Of Cycles"]:::config -.-> CORE
 ```
 
@@ -43,18 +43,18 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `totalWidth` | Total frame width (bits) | `25` | — |
-| `singleTurnBits` | Single-turn bits (LSBs) | `13` | — |
-| `multiTurnBits` | Multi-turn bits (above ST) | `12` | — |
-| `clkPin` | CLK Pin (R30 bit) | `0` | — |
-| `dataPin` | DATA Pin (R31 bit) | `1` | — |
-| `clockPolarity` | Clock idle polarity (1=high, SSI standard; 0=inverted line) | `1` | — |
-| `halfPeriodCycles` | Half-period delay loops | `10` | — |
-| `monoTimeCycles` | Monoflop timeout loops | `20` | — |
-| `parityEnable` | Parity bit present (last bit) | `false` | — |
-| `parityType` | Parity type (0=even,1=odd) | `0` | — |
-| `errorBitEnable` | Error bit present (bit before parity or last bit) | `false` | — |
-| `grayCode` | Gray-coded payload | `true` | — |
+| `totalWidth` | Total Frame Width (bits) | `25` | — |
+| `singleTurnBits` | Single-turn Bits (LSBs) | `13` | — |
+| `multiTurnBits` | Multi-turn Bits (Above ST) | `12` | — |
+| `clkPin` | CLK Pin (R30 Bit) | `0` | — |
+| `dataPin` | DATA Pin (R31 Bit) | `1` | — |
+| `clockPolarity` | Clock Idle Polarity | `1` | — |
+| `halfPeriodCycles` | Half-period Delay Loops | `10` | — |
+| `monoTimeCycles` | Monoflop Timeout Loops | `20` | — |
+| `parityEnable` | Parity Bit Present (Last Bit) | `false` | — |
+| `parityType` | Parity Type (0=Even, 1=Odd) | `0` | — |
+| `errorBitEnable` | Error Bit Present | `false` | — |
+| `grayCode` | Gray-coded Payload | `true` | — |
 | `noOfCycles` | Number Of Cycles | `1345` | — |
 
 ## Ports

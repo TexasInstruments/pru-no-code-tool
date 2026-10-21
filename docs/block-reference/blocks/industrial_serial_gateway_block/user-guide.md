@@ -32,26 +32,26 @@ Peripheral resources: uses one ENDAT UART channel (CH0/1/2) for both TX and RX (
 | `baudRate` | Baud Rate (bps) | `115200` | — |
 | `uartChannel` | ENDAT UART Channel | `0` | `0`, `1`, `2` |
 | `clockSource` | Clock Source (0=192MHz, 1=200MHz) | `0` | — |
-| `dirPin` | RS-485 DIR pin (R30 bit) | `0` | — |
-| `turnaroundCycles` | Turnaround delay loops | `50` | — |
-| `framingMode` | Framing mode | `MODBUS_RTU` | `MODBUS_RTU`, `DMX512`, `CUSTOM` |
-| `modbusAddress` | Modbus slave address | `1` | — |
-| `dmxSlotCount` | DMX slot count | `16` | — |
-| `dmxBreakCycles` | DMX break delay loops | `200` | — |
-| `dmxMabCycles` | DMX MAB delay loops | `20` | — |
-| `customStartDelim` | Custom start delimiter (hex) | `0xAA` | — |
-| `customEscapeByte` | Custom escape byte (0=disabled) | `0x00` | — |
-| `customCrcType` | Custom CRC type | `CRC16_IBM` | `CRC8_DALLAS`, `CRC16_IBM`, `SUM8` |
-| `customMaxLen` | Custom max frame length | `64` | — |
+| `dirPin` | RS-485 DIR Pin (R30 Bit) | `0` | — |
+| `turnaroundCycles` | Turnaround Delay Loops | `50` | — |
+| `framingMode` | Framing Mode | `MODBUS_RTU` | `MODBUS_RTU`, `DMX512`, `CUSTOM` |
+| `modbusAddress` | Modbus Slave Address | `1` | — |
+| `dmxSlotCount` | DMX Slot Count | `16` | — |
+| `dmxBreakCycles` | DMX Break Delay Loops | `200` | — |
+| `dmxMabCycles` | DMX MAB Delay Loops | `20` | — |
+| `customStartDelim` | Custom Start Delimiter (hex) | `0xAA` | — |
+| `customEscapeByte` | Custom Escape Byte (0=Disabled) | `0x00` | — |
+| `customCrcType` | Custom CRC Type | `CRC16_IBM` | `CRC8_DALLAS`, `CRC16_IBM`, `SUM8` |
+| `customMaxLen` | Custom Max Frame Length | `64` | — |
 | `crcEnable` | Enable CRC16 (Modbus) | `true` | — |
-| `interByteTimeout` | Inter-byte timeout loops | `200` | — |
-| `collisionDetect` | Enable bus collision detect | `true` | — |
-| `mbBaseOffset` | Mailbox base offset | `0x2000` | — |
-| `mbSlots` | Mailbox slots | `16` | — |
-| `mbSlotBytes` | Mailbox bytes per slot | `32` | — |
-| `mbMemory` | Mailbox memory window | `dmem0` | — |
-| `mbSignalEvent` | Signal host event on publish | `false` | — |
-| `mbHostEvent` | Host system event | `16` | — |
+| `interByteTimeout` | Inter-byte Timeout Loops | `200` | — |
+| `collisionDetect` | Enable Bus Collision Detect | `true` | — |
+| `mbBaseOffset` | Mailbox Base Offset | `0x2000` | — |
+| `mbSlots` | Mailbox Slots | `16` | — |
+| `mbSlotBytes` | Mailbox Bytes Per Slot | `32` | — |
+| `mbMemory` | Mailbox Memory Window | `dmem0` | — |
+| `mbSignalEvent` | Signal Host Event On Publish | `false` | — |
+| `mbHostEvent` | Host System Event | `16` | — |
 | `noOfCycles` | Number Of Cycles | `5000` | — |
 
 ## Ports

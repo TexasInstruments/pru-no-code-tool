@@ -13,13 +13,13 @@ Drives or samples a CONTIGUOUS field of data pins with a single strobe pulse. Se
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
 | `direction` | Direction | `write` | `write`, `read` |
-| `dataPinsStr` | Data pins (comma separated R30/R31 bits) | `12,13,14,15,16,17,18,19` | — |
-| `strobePin` | Strobe pin | `20` | — |
-| `strobePolarity` | Strobe polarity | `active-low` | `active-low`, `active-high` |
-| `setupCycles` | Setup delay trips | `2` | — |
-| `holdCycles` | Hold delay trips | `2` | — |
+| `dataPinsStr` | Data Pins (R30/R31 Bits) | `12,13,14,15,16,17,18,19` | — |
+| `strobePin` | Strobe Pin | `20` | — |
+| `strobePolarity` | Strobe Polarity | `active-low` | `active-low`, `active-high` |
+| `setupCycles` | Setup Delay Trips | `2` | — |
+| `holdCycles` | Hold Delay Trips | `2` | — |
 | `busValue` | Write Value (Hex/Dec) | `0xA5` | — |
-| `dataRegister` | Read Output Register (unused: read result goes to the allocated output) | `R1` | — |
+| `dataRegister` | Read Output Register (Unused) | `R1` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

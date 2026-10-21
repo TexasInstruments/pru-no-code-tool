@@ -15,8 +15,8 @@ flowchart LR
   CORE(("XFR2SPIN (ICSSG Hardware Spinlock)\n[continuous]")):::core
   CFG0["Operation"]:::config -.-> CORE
   CFG1["Lock ID (0-63)"]:::config -.-> CORE
-  CFG2["Protects shared variable"]:::config -.-> CORE
-  CFG3["Peak cycles"]:::config -.-> CORE
+  CFG2["Protects Shared Variable"]:::config -.-> CORE
+  CFG3["Peak Cycles"]:::config -.-> CORE
 ```
 
 
@@ -34,8 +34,8 @@ flowchart LR
 |---|---|---|---|
 | `operation` | Operation | `acquire` | `acquire`, `try_acquire`, `release` |
 | `lockId` | Lock ID (0-63) | `0` | — |
-| `protectsVariable` | Protects shared variable | `` | — |
-| `noOfCycles` | Peak cycles | `-1` | — |
+| `protectsVariable` | Protects Shared Variable | `` | — |
+| `noOfCycles` | Peak Cycles | `-1` | — |
 
 ## Ports
 

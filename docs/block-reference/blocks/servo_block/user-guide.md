@@ -12,10 +12,10 @@ Produces a single cycle-exact pulse and waits the remainder of the frame period.
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `signalPin` | Signal R30 pin | `8` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `pulseUs` | Pulse width (us) | `1500` | — |
-| `frameUs` | Frame period (us) | `20000` | — |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
+| `signalPin` | Signal R30 Pin | `8` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `pulseUs` | Pulse Width (us) | `1500` | — |
+| `frameUs` | Frame Period (us) | `20000` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

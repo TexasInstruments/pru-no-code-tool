@@ -14,7 +14,7 @@ flowchart LR
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("QUEUE_EMPTY (ICSSG Queue Status Query)\n[oneshot]")):::core
   CFG0["Operation"]:::config -.-> CORE
-  CFG1["Peak cycles"]:::config -.-> CORE
+  CFG1["Peak Cycles"]:::config -.-> CORE
 ```
 
 
@@ -31,7 +31,7 @@ flowchart LR
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
 | `operation` | Operation | `query` | `query` |
-| `noOfCycles` | Peak cycles | `1` | — |
+| `noOfCycles` | Peak Cycles | `1` | — |
 
 ## Ports
 

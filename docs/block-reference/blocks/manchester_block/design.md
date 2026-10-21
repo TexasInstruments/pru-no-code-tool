@@ -13,11 +13,11 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("Manchester Encoder\n[oneshot]")):::core
-  CFG0["Signal R30 pin"]:::config -.-> CORE
-  CFG1["Byte to encode (Reg)"]:::config -.-> CORE
-  CFG2["Bit rate (Hz)"]:::config -.-> CORE
-  CFG3["Encoding convention"]:::config -.-> CORE
-  CFG4["PRU clock (Hz)"]:::config -.-> CORE
+  CFG0["Signal R30 Pin"]:::config -.-> CORE
+  CFG1["Byte to Encode (Reg)"]:::config -.-> CORE
+  CFG2["Bit Rate (Hz)"]:::config -.-> CORE
+  CFG3["Encoding Convention"]:::config -.-> CORE
+  CFG4["PRU Clock (Hz)"]:::config -.-> CORE
   CFG5["Number Of Cycles"]:::config -.-> CORE
 ```
 
@@ -34,11 +34,11 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `signalPin` | Signal R30 pin | `13` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `dataRegister` | Byte to encode (Reg) | `R5.b0` | — |
-| `bitRateHz` | Bit rate (Hz) | `1000000` | — |
-| `convention` | Encoding convention | `ieee` | `ieee`, `thomas` |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
+| `signalPin` | Signal R30 Pin | `13` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `dataRegister` | Byte to Encode (Reg) | `R5.b0` | — |
+| `bitRateHz` | Bit Rate (Hz) | `1000000` | — |
+| `convention` | Encoding Convention | `ieee` | `ieee`, `thomas` |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

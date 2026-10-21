@@ -17,19 +17,19 @@ flowchart LR
   CFG1["PSI-L Thread ID (XID N)"]:::config -.-> CORE
   CFG2["Direction"]:::config -.-> CORE
   CFG3["Use Shared Pair (0x58/0x59)"]:::config -.-> CORE
-  CFG4["RTU_PRU_PSI_SHARE_EN (MII_G_RT_ICSS_G_CFG[9])"]:::config -.-> CORE
-  CFG5["tx_sop (start of packet)"]:::config -.-> CORE
-  CFG6["tx_eop (end of packet)"]:::config -.-> CORE
-  CFG7["tx_sol (start of line)"]:::config -.-> CORE
-  CFG8["tx_eol (end of line)"]:::config -.-> CORE
-  CFG9["tx_lastw (no more data for this data_type)"]:::config -.-> CORE
-  CFG10["tx_drop"]:::config -.-> CORE
+  CFG4["RTU_PRU_PSI_SHARE_EN"]:::config -.-> CORE
+  CFG5["TX_SOP (Start of Packet)"]:::config -.-> CORE
+  CFG6["TX_EOP (End of Packet)"]:::config -.-> CORE
+  CFG7["TX_SOL (Start of Line)"]:::config -.-> CORE
+  CFG8["TX_EOL (End of Line)"]:::config -.-> CORE
+  CFG9["TX_LASTW"]:::config -.-> CORE
+  CFG10["TX_DROP"]:::config -.-> CORE
   CFG11["tx_pkt_error[3:0]"]:::config -.-> CORE
   CFG12["tx_data_type[7:0]"]:::config -.-> CORE
   CFG13["PSI-L Data Width (bits)"]:::config -.-> CORE
-  CFG14["XIN Byte Enable Mask (hex, e.g., 0xFF)"]:::config -.-> CORE
-  CFG15["Emit tx_ready/rx_ready check (XID 0) before transfer"]:::config -.-> CORE
-  CFG16["Consume rx_bytes / rx_xcnt in receive path"]:::config -.-> CORE
+  CFG14["XIN Byte Enable Mask (Hex)"]:::config -.-> CORE
+  CFG15["Check TX/RX Ready (XID 0)"]:::config -.-> CORE
+  CFG16["Consume RX_BYTES/RX_XCNT"]:::config -.-> CORE
   CFG17["Number Of Cycles"]:::config -.-> CORE
 ```
 
@@ -50,19 +50,19 @@ flowchart LR
 | `threadId` | PSI-L Thread ID (XID N) | `0` | — |
 | `direction` | Direction | `tx` | `tx`, `rx` |
 | `useSharedPair` | Use Shared Pair (0x58/0x59) | `false` | — |
-| `rtuPruPsiShareEn` | RTU_PRU_PSI_SHARE_EN (MII_G_RT_ICSS_G_CFG[9]) | `false` | — |
-| `txSop` | tx_sop (start of packet) | `false` | — |
-| `txEop` | tx_eop (end of packet) | `false` | — |
-| `txSol` | tx_sol (start of line) | `false` | — |
-| `txEol` | tx_eol (end of line) | `false` | — |
-| `txLastw` | tx_lastw (no more data for this data_type) | `false` | — |
-| `txDrop` | tx_drop | `false` | — |
+| `rtuPruPsiShareEn` | RTU_PRU_PSI_SHARE_EN | `false` | — |
+| `txSop` | TX_SOP (Start of Packet) | `false` | — |
+| `txEop` | TX_EOP (End of Packet) | `false` | — |
+| `txSol` | TX_SOL (Start of Line) | `false` | — |
+| `txEol` | TX_EOL (End of Line) | `false` | — |
+| `txLastw` | TX_LASTW | `false` | — |
+| `txDrop` | TX_DROP | `false` | — |
 | `txPktError` | tx_pkt_error[3:0] | `0` | — |
 | `txDataType` | tx_data_type[7:0] | `0` | — |
 | `dataWidth` | PSI-L Data Width (bits) | `64` | `64`, `128`, `256` |
-| `xinByteEnableMask` | XIN Byte Enable Mask (hex, e.g., 0xFF) | `0xFF` | — |
-| `checkReady` | Emit tx_ready/rx_ready check (XID 0) before transfer | `true` | — |
-| `consumeRxBytes` | Consume rx_bytes / rx_xcnt in receive path | `true` | — |
+| `xinByteEnableMask` | XIN Byte Enable Mask (Hex) | `0xFF` | — |
+| `checkReady` | Check TX/RX Ready (XID 0) | `true` | — |
+| `consumeRxBytes` | Consume RX_BYTES/RX_XCNT | `true` | — |
 | `noOfCycles` | Number Of Cycles | `3` | — |
 
 ## Ports

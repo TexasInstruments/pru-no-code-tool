@@ -13,8 +13,8 @@ Accumulates a running one's-complement sum over 32-byte DMEM blocks: input1 supp
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
 | `operation` | Operation | `accumulate` | `accumulate`, `read_and_clear` |
-| `bsRamSnoop` | BS RAM + SUM32 snoop (also writes BS RAM) | `false` | — |
-| `noOfCycles` | Peak cycles | `12` | — |
+| `bsRamSnoop` | BS RAM & SUM32 Snoop | `false` | — |
+| `noOfCycles` | Peak Cycles | `12` | — |
 
 ## Ports
 

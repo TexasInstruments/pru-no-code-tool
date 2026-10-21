@@ -15,17 +15,17 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("Three-phase complementary PWM\n[oneshot]")):::core
-  CFG0["PWM period counts"]:::config -.-> CORE
-  CFG1["Dead-time counts"]:::config -.-> CORE
-  CFG2["Period count (0 = single period)"]:::config -.-> CORE
-  CFG3["Phase A high-side pin"]:::config -.-> CORE
-  CFG4["Phase A low-side pin"]:::config -.-> CORE
-  CFG5["Phase B high-side pin"]:::config -.-> CORE
-  CFG6["Phase B low-side pin"]:::config -.-> CORE
-  CFG7["Phase C high-side pin"]:::config -.-> CORE
-  CFG8["Phase C low-side pin"]:::config -.-> CORE
-  CFG9["Center sample-trigger pin"]:::config -.-> CORE
-  CFG10["Conservative instruction bound"]:::config -.-> CORE
+  CFG0["PWM Period Counts"]:::config -.-> CORE
+  CFG1["Dead-time Counts"]:::config -.-> CORE
+  CFG2["Period Count (0=Single Period)"]:::config -.-> CORE
+  CFG3["Phase A high-side Pin"]:::config -.-> CORE
+  CFG4["Phase A low-side Pin"]:::config -.-> CORE
+  CFG5["Phase B high-side Pin"]:::config -.-> CORE
+  CFG6["Phase B low-side Pin"]:::config -.-> CORE
+  CFG7["Phase C high-side Pin"]:::config -.-> CORE
+  CFG8["Phase C low-side Pin"]:::config -.-> CORE
+  CFG9["Center sample-trigger Pin"]:::config -.-> CORE
+  CFG10["Conservative Instruction Bound"]:::config -.-> CORE
 ```
 
 
@@ -41,17 +41,17 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `periodCounts` | PWM period counts | `1000` | — |
-| `deadtimeCounts` | Dead-time counts | `10` | — |
-| `periodCount` | Period count (0 = single period) | `0` | — |
-| `phaseAHighPin` | Phase A high-side pin | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `phaseALowPin` | Phase A low-side pin | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `phaseBHighPin` | Phase B high-side pin | `2` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `phaseBLowPin` | Phase B low-side pin | `3` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `phaseCHighPin` | Phase C high-side pin | `4` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `phaseCLowPin` | Phase C low-side pin | `5` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `sampleTriggerPin` | Center sample-trigger pin | `6` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `noOfCycles` | Conservative instruction bound | `1260` | — |
+| `periodCounts` | PWM Period Counts | `1000` | — |
+| `deadtimeCounts` | Dead-time Counts | `10` | — |
+| `periodCount` | Period Count (0=Single Period) | `0` | — |
+| `phaseAHighPin` | Phase A high-side Pin | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `phaseALowPin` | Phase A low-side Pin | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `phaseBHighPin` | Phase B high-side Pin | `2` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `phaseBLowPin` | Phase B low-side Pin | `3` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `phaseCHighPin` | Phase C high-side Pin | `4` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `phaseCLowPin` | Phase C low-side Pin | `5` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `sampleTriggerPin` | Center sample-trigger Pin | `6` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `noOfCycles` | Conservative Instruction Bound | `1260` | — |
 
 ## Ports
 

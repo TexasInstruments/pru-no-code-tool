@@ -33,26 +33,26 @@ flowchart LR
   CFG0["Baud Rate (bps)"]:::config -.-> CORE
   CFG1["ENDAT UART Channel"]:::config -.-> CORE
   CFG2["Clock Source (0=192MHz, 1=200MHz)"]:::config -.-> CORE
-  CFG3["RS-485 DIR pin (R30 bit)"]:::config -.-> CORE
-  CFG4["Turnaround delay loops"]:::config -.-> CORE
-  CFG5["Framing mode"]:::config -.-> CORE
-  CFG6["Modbus slave address"]:::config -.-> CORE
-  CFG7["DMX slot count"]:::config -.-> CORE
-  CFG8["DMX break delay loops"]:::config -.-> CORE
-  CFG9["DMX MAB delay loops"]:::config -.-> CORE
-  CFG10["Custom start delimiter (hex)"]:::config -.-> CORE
-  CFG11["Custom escape byte (0=disabled)"]:::config -.-> CORE
-  CFG12["Custom CRC type"]:::config -.-> CORE
-  CFG13["Custom max frame length"]:::config -.-> CORE
+  CFG3["RS-485 DIR Pin (R30 Bit)"]:::config -.-> CORE
+  CFG4["Turnaround Delay Loops"]:::config -.-> CORE
+  CFG5["Framing Mode"]:::config -.-> CORE
+  CFG6["Modbus Slave Address"]:::config -.-> CORE
+  CFG7["DMX Slot Count"]:::config -.-> CORE
+  CFG8["DMX Break Delay Loops"]:::config -.-> CORE
+  CFG9["DMX MAB Delay Loops"]:::config -.-> CORE
+  CFG10["Custom Start Delimiter (hex)"]:::config -.-> CORE
+  CFG11["Custom Escape Byte (0=Disabled)"]:::config -.-> CORE
+  CFG12["Custom CRC Type"]:::config -.-> CORE
+  CFG13["Custom Max Frame Length"]:::config -.-> CORE
   CFG14["Enable CRC16 (Modbus)"]:::config -.-> CORE
-  CFG15["Inter-byte timeout loops"]:::config -.-> CORE
-  CFG16["Enable bus collision detect"]:::config -.-> CORE
-  CFG17["Mailbox base offset"]:::config -.-> CORE
-  CFG18["Mailbox slots"]:::config -.-> CORE
-  CFG19["Mailbox bytes per slot"]:::config -.-> CORE
-  CFG20["Mailbox memory window"]:::config -.-> CORE
-  CFG21["Signal host event on publish"]:::config -.-> CORE
-  CFG22["Host system event"]:::config -.-> CORE
+  CFG15["Inter-byte Timeout Loops"]:::config -.-> CORE
+  CFG16["Enable Bus Collision Detect"]:::config -.-> CORE
+  CFG17["Mailbox Base Offset"]:::config -.-> CORE
+  CFG18["Mailbox Slots"]:::config -.-> CORE
+  CFG19["Mailbox Bytes Per Slot"]:::config -.-> CORE
+  CFG20["Mailbox Memory Window"]:::config -.-> CORE
+  CFG21["Signal Host Event On Publish"]:::config -.-> CORE
+  CFG22["Host System Event"]:::config -.-> CORE
   CFG23["Number Of Cycles"]:::config -.-> CORE
 ```
 
@@ -72,26 +72,26 @@ flowchart LR
 | `baudRate` | Baud Rate (bps) | `115200` | — |
 | `uartChannel` | ENDAT UART Channel | `0` | `0`, `1`, `2` |
 | `clockSource` | Clock Source (0=192MHz, 1=200MHz) | `0` | — |
-| `dirPin` | RS-485 DIR pin (R30 bit) | `0` | — |
-| `turnaroundCycles` | Turnaround delay loops | `50` | — |
-| `framingMode` | Framing mode | `MODBUS_RTU` | `MODBUS_RTU`, `DMX512`, `CUSTOM` |
-| `modbusAddress` | Modbus slave address | `1` | — |
-| `dmxSlotCount` | DMX slot count | `16` | — |
-| `dmxBreakCycles` | DMX break delay loops | `200` | — |
-| `dmxMabCycles` | DMX MAB delay loops | `20` | — |
-| `customStartDelim` | Custom start delimiter (hex) | `0xAA` | — |
-| `customEscapeByte` | Custom escape byte (0=disabled) | `0x00` | — |
-| `customCrcType` | Custom CRC type | `CRC16_IBM` | `CRC8_DALLAS`, `CRC16_IBM`, `SUM8` |
-| `customMaxLen` | Custom max frame length | `64` | — |
+| `dirPin` | RS-485 DIR Pin (R30 Bit) | `0` | — |
+| `turnaroundCycles` | Turnaround Delay Loops | `50` | — |
+| `framingMode` | Framing Mode | `MODBUS_RTU` | `MODBUS_RTU`, `DMX512`, `CUSTOM` |
+| `modbusAddress` | Modbus Slave Address | `1` | — |
+| `dmxSlotCount` | DMX Slot Count | `16` | — |
+| `dmxBreakCycles` | DMX Break Delay Loops | `200` | — |
+| `dmxMabCycles` | DMX MAB Delay Loops | `20` | — |
+| `customStartDelim` | Custom Start Delimiter (hex) | `0xAA` | — |
+| `customEscapeByte` | Custom Escape Byte (0=Disabled) | `0x00` | — |
+| `customCrcType` | Custom CRC Type | `CRC16_IBM` | `CRC8_DALLAS`, `CRC16_IBM`, `SUM8` |
+| `customMaxLen` | Custom Max Frame Length | `64` | — |
 | `crcEnable` | Enable CRC16 (Modbus) | `true` | — |
-| `interByteTimeout` | Inter-byte timeout loops | `200` | — |
-| `collisionDetect` | Enable bus collision detect | `true` | — |
-| `mbBaseOffset` | Mailbox base offset | `0x2000` | — |
-| `mbSlots` | Mailbox slots | `16` | — |
-| `mbSlotBytes` | Mailbox bytes per slot | `32` | — |
-| `mbMemory` | Mailbox memory window | `dmem0` | — |
-| `mbSignalEvent` | Signal host event on publish | `false` | — |
-| `mbHostEvent` | Host system event | `16` | — |
+| `interByteTimeout` | Inter-byte Timeout Loops | `200` | — |
+| `collisionDetect` | Enable Bus Collision Detect | `true` | — |
+| `mbBaseOffset` | Mailbox Base Offset | `0x2000` | — |
+| `mbSlots` | Mailbox Slots | `16` | — |
+| `mbSlotBytes` | Mailbox Bytes Per Slot | `32` | — |
+| `mbMemory` | Mailbox Memory Window | `dmem0` | — |
+| `mbSignalEvent` | Signal Host Event On Publish | `false` | — |
+| `mbHostEvent` | Host System Event | `16` | — |
 | `noOfCycles` | Number Of Cycles | `5000` | — |
 
 ## Ports

@@ -16,19 +16,19 @@ Translates between XFR bus and PSI-L busses (SPRUIM2J 6.4.6.3.2). XID 0 is statu
 | `threadId` | PSI-L Thread ID (XID N) | `0` | — |
 | `direction` | Direction | `tx` | `tx`, `rx` |
 | `useSharedPair` | Use Shared Pair (0x58/0x59) | `false` | — |
-| `rtuPruPsiShareEn` | RTU_PRU_PSI_SHARE_EN (MII_G_RT_ICSS_G_CFG[9]) | `false` | — |
-| `txSop` | tx_sop (start of packet) | `false` | — |
-| `txEop` | tx_eop (end of packet) | `false` | — |
-| `txSol` | tx_sol (start of line) | `false` | — |
-| `txEol` | tx_eol (end of line) | `false` | — |
-| `txLastw` | tx_lastw (no more data for this data_type) | `false` | — |
-| `txDrop` | tx_drop | `false` | — |
+| `rtuPruPsiShareEn` | RTU_PRU_PSI_SHARE_EN | `false` | — |
+| `txSop` | TX_SOP (Start of Packet) | `false` | — |
+| `txEop` | TX_EOP (End of Packet) | `false` | — |
+| `txSol` | TX_SOL (Start of Line) | `false` | — |
+| `txEol` | TX_EOL (End of Line) | `false` | — |
+| `txLastw` | TX_LASTW | `false` | — |
+| `txDrop` | TX_DROP | `false` | — |
 | `txPktError` | tx_pkt_error[3:0] | `0` | — |
 | `txDataType` | tx_data_type[7:0] | `0` | — |
 | `dataWidth` | PSI-L Data Width (bits) | `64` | `64`, `128`, `256` |
-| `xinByteEnableMask` | XIN Byte Enable Mask (hex, e.g., 0xFF) | `0xFF` | — |
-| `checkReady` | Emit tx_ready/rx_ready check (XID 0) before transfer | `true` | — |
-| `consumeRxBytes` | Consume rx_bytes / rx_xcnt in receive path | `true` | — |
+| `xinByteEnableMask` | XIN Byte Enable Mask (Hex) | `0xFF` | — |
+| `checkReady` | Check TX/RX Ready (XID 0) | `true` | — |
+| `consumeRxBytes` | Consume RX_BYTES/RX_XCNT | `true` | — |
 | `noOfCycles` | Number Of Cycles | `3` | — |
 
 ## Ports

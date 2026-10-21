@@ -12,9 +12,9 @@ Logic Analyzer
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
 | `sampleRateHz` | Sample Rate (Hz) | `10000000` | — |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
 | `bufferSize` | Buffer Size (samples) | `1024` | — |
-| `triggerPin` | Trigger R31 pin | `0` | — |
+| `triggerPin` | Trigger R31 Pin | `0` | — |
 | `triggerSlope` | Trigger Slope | `rising` | `none`, `rising`, `falling` |
 
 ## Ports

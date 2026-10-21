@@ -13,12 +13,12 @@ Emits PRU-side publish/consume skeletons over DMEM/shared-memory windows. In con
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
 | `mode` | Mode | `publish` | `publish`, `consume` |
-| `baseOffset` | Mailbox base offset | `0x0000` | — |
-| `slots` | Ring slots | `16` | — |
-| `slotBytes` | Bytes per slot | `4` | `4`, `8`, `16`, `32` |
-| `memory` | Memory window | `dmem0` | `dmem0`, `shared` |
-| `signalEvent` | Signal host event | `false` | — |
-| `hostEvent` | Host system event | `16` | — |
+| `baseOffset` | Mailbox Base Offset | `0x0000` | — |
+| `slots` | Ring Slots | `16` | — |
+| `slotBytes` | Bytes Per Slot | `4` | `4`, `8`, `16`, `32` |
+| `memory` | Memory Window | `dmem0` | `dmem0`, `shared` |
+| `signalEvent` | Signal Host Event | `false` | — |
+| `hostEvent` | Host System Event | `16` | — |
 | `dataRegister` | Value Register | `R10` | — |
 | `noOfCycles` | Number Of Cycles | `21` | — |
 

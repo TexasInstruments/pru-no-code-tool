@@ -14,13 +14,13 @@ flowchart LR
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("Parallel Bus / Strobe\n[oneshot]")):::core
   CFG0["Direction"]:::config -.-> CORE
-  CFG1["Data pins (comma separated R30/R31 bits)"]:::config -.-> CORE
-  CFG2["Strobe pin"]:::config -.-> CORE
-  CFG3["Strobe polarity"]:::config -.-> CORE
-  CFG4["Setup delay trips"]:::config -.-> CORE
-  CFG5["Hold delay trips"]:::config -.-> CORE
+  CFG1["Data Pins (R30/R31 Bits)"]:::config -.-> CORE
+  CFG2["Strobe Pin"]:::config -.-> CORE
+  CFG3["Strobe Polarity"]:::config -.-> CORE
+  CFG4["Setup Delay Trips"]:::config -.-> CORE
+  CFG5["Hold Delay Trips"]:::config -.-> CORE
   CFG6["Write Value (Hex/Dec)"]:::config -.-> CORE
-  CFG7["Read Output Register (unused: read result goes to the allocated output)"]:::config -.-> CORE
+  CFG7["Read Output Register (Unused)"]:::config -.-> CORE
   CFG8["Number Of Cycles"]:::config -.-> CORE
 ```
 
@@ -38,13 +38,13 @@ flowchart LR
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
 | `direction` | Direction | `write` | `write`, `read` |
-| `dataPinsStr` | Data pins (comma separated R30/R31 bits) | `12,13,14,15,16,17,18,19` | — |
-| `strobePin` | Strobe pin | `20` | — |
-| `strobePolarity` | Strobe polarity | `active-low` | `active-low`, `active-high` |
-| `setupCycles` | Setup delay trips | `2` | — |
-| `holdCycles` | Hold delay trips | `2` | — |
+| `dataPinsStr` | Data Pins (R30/R31 Bits) | `12,13,14,15,16,17,18,19` | — |
+| `strobePin` | Strobe Pin | `20` | — |
+| `strobePolarity` | Strobe Polarity | `active-low` | `active-low`, `active-high` |
+| `setupCycles` | Setup Delay Trips | `2` | — |
+| `holdCycles` | Hold Delay Trips | `2` | — |
 | `busValue` | Write Value (Hex/Dec) | `0xA5` | — |
-| `dataRegister` | Read Output Register (unused: read result goes to the allocated output) | `R1` | — |
+| `dataRegister` | Read Output Register (Unused) | `R1` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

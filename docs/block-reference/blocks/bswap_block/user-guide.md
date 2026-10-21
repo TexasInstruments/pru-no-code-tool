@@ -12,8 +12,8 @@ Emits a real XIN against the ICSSG Byte Swap unit (SPRUIM2J 6.4.6.2.7, Table 6-9
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `mode` | BSWAP function | `word_swap` | `word_swap`, `swap_4_8`, `swap_4_16` |
-| `noOfCycles` | Peak cycles | `2` | — |
+| `mode` | BSWAP Function | `word_swap` | `word_swap`, `swap_4_8`, `swap_4_16` |
+| `noOfCycles` | Peak Cycles | `2` | — |
 
 ## Ports
 

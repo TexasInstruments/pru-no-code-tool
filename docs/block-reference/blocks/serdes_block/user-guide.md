@@ -40,17 +40,17 @@ ELF at bitCycles 14..64, both bit orders, against the configured number. NOT har
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `width` | Bits per word | `8` | — |
-| `bitOrder` | Bit order | `MSB` | `MSB`, `LSB` |
-| `bitCycles` | Cycles per bit | `33` | — |
-| `preCycles` | Setup (CLK low) share | `4` | — |
-| `postCycles` | Hold (CLK high) share | `4` | — |
-| `doutBit` | Data-out R30 bit | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `clkBit` | Clock R30 bit | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `dinBit` | Data-in R31 bit | `2` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `width` | Bits Per Word | `8` | — |
+| `bitOrder` | Bit Order | `MSB` | `MSB`, `LSB` |
+| `bitCycles` | Cycles Per Bit | `33` | — |
+| `preCycles` | Setup (CLK Low) Share | `4` | — |
+| `postCycles` | Hold (CLK High) Share | `4` | — |
+| `doutBit` | Data-out R30 Bit | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `clkBit` | Clock R30 Bit | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `dinBit` | Data-in R31 Bit | `2` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `txMode` | Transmit Mode | `constant` | `constant`, `register` |
 | `txRegister` | TX Input Register | `R2` | — |
-| `demoWord` | Demo word (hex) | `0xA5` | — |
+| `demoWord` | Demo Word (hex) | `0xA5` | — |
 | `dataRegister` | RX Output Register | `R1` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 

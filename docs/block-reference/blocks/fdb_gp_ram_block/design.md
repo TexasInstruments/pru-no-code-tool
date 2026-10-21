@@ -15,14 +15,14 @@ flowchart LR
   CORE(("FDB Generic RAM (ICSSG, PRU0/PRU1)\n[oneshot]")):::core
   CFG0["Operation"]:::config -.-> CORE
   CFG1["FDB Address (0..511, R10[8]=bank)"]:::config -.-> CORE
-  CFG2["R10 XFER size (must be 2)"]:::config -.-> CORE
-  CFG3["Byte count (1..32) for write/read"]:::config -.-> CORE
-  CFG4["Pattern bytes (1..16) for set_pattern"]:::config -.-> CORE
-  CFG5["FDB_GEN_MODE_BYTE_EN (16-bit mask, hex)"]:::config -.-> CORE
-  CFG6["Acknowledged: External Initialization Required"]:::config -.-> CORE
-  CFG7["Shared PRU0<->PRU1 IPC region"]:::config -.-> CORE
-  CFG8["Protected region name"]:::config -.-> CORE
-  CFG9["Peak cycles"]:::config -.-> CORE
+  CFG2["R10 XFER Size (Must Be 2)"]:::config -.-> CORE
+  CFG3["Byte Count (1..32) for Write/Read"]:::config -.-> CORE
+  CFG4["Pattern Bytes (1..16)"]:::config -.-> CORE
+  CFG5["FDB_GEN_MODE_BYTE_EN (Hex)"]:::config -.-> CORE
+  CFG6["External Initialization Acknowledged"]:::config -.-> CORE
+  CFG7["Shared PRU0<->PRU1 IPC Region"]:::config -.-> CORE
+  CFG8["Protected Region Name"]:::config -.-> CORE
+  CFG9["Peak Cycles"]:::config -.-> CORE
 ```
 
 
@@ -40,14 +40,14 @@ flowchart LR
 |---|---|---|---|
 | `operation` | Operation | `set_address` | `set_address`, `write`, `read`, `set_pattern`, `compare_result` |
 | `fdbAddress` | FDB Address (0..511, R10[8]=bank) | `0` | — |
-| `r10TransferSize` | R10 XFER size (must be 2) | `2` | — |
-| `byteCount` | Byte count (1..32) for write/read | `32` | — |
-| `patternBytes` | Pattern bytes (1..16) for set_pattern | `16` | — |
-| `fdbGenModeByteEn` | FDB_GEN_MODE_BYTE_EN (16-bit mask, hex) | `0xFFFF` | — |
-| `externalInitProvided` | Acknowledged: External Initialization Required | `false` | — |
-| `sharedAcrossPru` | Shared PRU0<->PRU1 IPC region | `false` | — |
-| `protectedRegion` | Protected region name | `fdb_gp_ram` | — |
-| `noOfCycles` | Peak cycles | `1` | — |
+| `r10TransferSize` | R10 XFER Size (Must Be 2) | `2` | — |
+| `byteCount` | Byte Count (1..32) for Write/Read | `32` | — |
+| `patternBytes` | Pattern Bytes (1..16) | `16` | — |
+| `fdbGenModeByteEn` | FDB_GEN_MODE_BYTE_EN (Hex) | `0xFFFF` | — |
+| `externalInitProvided` | External Initialization Acknowledged | `false` | — |
+| `sharedAcrossPru` | Shared PRU0<->PRU1 IPC Region | `false` | — |
+| `protectedRegion` | Protected Region Name | `fdb_gp_ram` | — |
+| `noOfCycles` | Peak Cycles | `1` | — |
 
 ## Ports
 
@@ -62,7 +62,7 @@ flowchart LR
 - FDB Generic RAM is attached to PRU0/PRU1 only (SPRUIM2J FDB Generic Mode, Table 6-60 IDs 30/31/35 are PRU1/0 only); placed core is '
 - FDB address must be an integer 0..511 (9-bit FDB_Address, Table 6-103; R10[8] selects the bank). Got '
 - R10 transfer size must be 2 bytes (XOUT R10, 2 -> BS ID 30, Table 6-103). Got '
-- FDB Generic Mode requires MII_G_RT_FDB_GEN_CFG2[7:8] to be enabled by an external application. Check the 'Acknowledged: External Initialization Required' box to confirm you have provided it.
+- FDB Generic Mode requires MII_G_RT_FDB_GEN_CFG2[7:8] to be enabled by an external application. Check the 'External Initialization Acknowledged' box to confirm you have provided it.
 - Byte count for
 - Pattern size must be an integer 1..16 bytes (XOUT R2..R5, ID 31). Got '
 - FDB_GEN_MODE_BYTE_EN must be a 16-bit mask 0x0000..0xFFFF (enables pattern bytes). Got '

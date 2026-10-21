@@ -14,9 +14,9 @@ flowchart LR
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("Event / Interrupt\n[(unclassified)]")):::core
   CFG0["Mode"]:::config -.-> CORE
-  CFG1["Input event R31 bit"]:::config -.-> CORE
-  CFG2["Output system event"]:::config -.-> CORE
-  CFG3["Clear event after wait"]:::config -.-> CORE
+  CFG1["Input Event R31 Bit"]:::config -.-> CORE
+  CFG2["Output System Event"]:::config -.-> CORE
+  CFG3["Clear Event After Wait"]:::config -.-> CORE
 ```
 
 
@@ -33,9 +33,9 @@ flowchart LR
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
 | `mode` | Mode | `wait` | `wait`, `signal`, `waitThenSignal` |
-| `inputEventBit` | Input event R31 bit | `30` | — |
-| `outputEvent` | Output system event | `16` | — |
-| `clearAfterWait` | Clear event after wait | `true` | — |
+| `inputEventBit` | Input Event R31 Bit | `30` | — |
+| `outputEvent` | Output System Event | `16` | — |
+| `clearAfterWait` | Clear Event After Wait | `true` | — |
 
 ## Ports
 

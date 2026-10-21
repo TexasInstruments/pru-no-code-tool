@@ -12,11 +12,11 @@ Bit-bangs the 1-Wire reset/presence pulse and read/write time slots.
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `dataPin` | Data signal (R30/R31) | `7` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `dataPin` | Data Signal (R30/R31) | `7` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `operation` | Operation | `reset` | `reset`, `writeByte`, `readByte` |
-| `speed` | Bus speed | `standard` | `standard`, `overdrive` |
-| `byteValue` | Byte to write (writeByte) | `204` | — |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
+| `speed` | Bus Speed | `standard` | `standard`, `overdrive` |
+| `byteValue` | Byte to Write (writeByte) | `204` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

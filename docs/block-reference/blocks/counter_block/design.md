@@ -13,11 +13,11 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("Transition Counter\n[oneshot]")):::core
-  CFG0["Input R31 pin"]:::config -.-> CORE
+  CFG0["Input R31 Pin"]:::config -.-> CORE
   CFG1["Count Output Register (32-bit)"]:::config -.-> CORE
   CFG2["Gate Duration (ms)"]:::config -.-> CORE
   CFG3["Edge to Count"]:::config -.-> CORE
-  CFG4["PRU clock (Hz)"]:::config -.-> CORE
+  CFG4["PRU Clock (Hz)"]:::config -.-> CORE
   CFG5["Number Of Cycles"]:::config -.-> CORE
 ```
 
@@ -34,11 +34,11 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `inputPin` | Input R31 pin | `5` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `inputPin` | Input R31 Pin | `5` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `dataRegister` | Count Output Register (32-bit) | `R4` | — |
 | `gateMs` | Gate Duration (ms) | `100` | — |
 | `edgeType` | Edge to Count | `rising` | `rising`, `falling`, `both` |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

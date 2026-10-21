@@ -10,7 +10,7 @@ Wire contract per IEEE 802.3 Clause 22 only: 32-bit preamble of 1s, ST=01, OP (0
 
 Vendor MDIO behaviours (TI ICSS doorbells, register layouts, driver sequencing) are intentionally NOT part of this block.
 
-Uses only TEMP_REG1 and TEMP_REG2 (2-TEMP_REG pattern). In read mode the 16-bit result is written to the data register (dataRegister) and is also exposed on output1 (RES), so it can be wired to a downstream block; write data is taken from the WRDATA argument register. dataRegister must be a full register token R<n> (e.g. R4): the read copies the 32-bit result with one mov, so a sub-register token such as R4.b0 or R4.w0 truncates the sample or leaves the register's upper bytes stale; the allocator reserves the whole register either way.
+Uses only TEMP_REG1 and TEMP_REG2 (2-TEMP_REG pattern). In read mode the 16-bit result is written to the data register (dataRegister) and is also exposed on output1 (RES), so it can be wired to a downstream block; write data is taken from the WRDATA argument register. dataRegister must be a full register token Rn (for example R4): the read copies the 32-bit result with one mov, so a sub-register token such as R4.b0 or R4.w0 truncates the sample or leaves the register's upper bytes stale; the allocator reserves the whole register either way.
 
 ## Block Diagram
 
@@ -19,14 +19,14 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("MDIO Clause 22 master\n[oneshot]")):::core
-  CFG0["MDC R30 bit"]:::config -.-> CORE
-  CFG1["MDIO R30/R31 bit"]:::config -.-> CORE
-  CFG2["PHY address (5-bit)"]:::config -.-> CORE
-  CFG3["Register address (5-bit)"]:::config -.-> CORE
+  CFG0["MDC R30 Bit"]:::config -.-> CORE
+  CFG1["MDIO R30/R31 Bit"]:::config -.-> CORE
+  CFG2["PHY Address (5-bit)"]:::config -.-> CORE
+  CFG3["Register Address (5-bit)"]:::config -.-> CORE
   CFG4["Direction"]:::config -.-> CORE
-  CFG5["MDC half-period delay trips"]:::config -.-> CORE
-  CFG6["RX/TX data register"]:::config -.-> CORE
-  CFG7["PRU clock (Hz)"]:::config -.-> CORE
+  CFG5["MDC half-period Delay Trips"]:::config -.-> CORE
+  CFG6["RX/TX Data Register"]:::config -.-> CORE
+  CFG7["PRU Clock (Hz)"]:::config -.-> CORE
   CFG8["Number Of Cycles"]:::config -.-> CORE
 ```
 
@@ -43,14 +43,14 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `mdcBit` | MDC R30 bit | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `mdioBit` | MDIO R30/R31 bit | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `phyAddr` | PHY address (5-bit) | `0` | — |
-| `regAddr` | Register address (5-bit) | `0` | — |
+| `mdcBit` | MDC R30 Bit | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `mdioBit` | MDIO R30/R31 Bit | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `phyAddr` | PHY Address (5-bit) | `0` | — |
+| `regAddr` | Register Address (5-bit) | `0` | — |
 | `rw` | Direction | `write` | `read`, `write` |
-| `halfTrips` | MDC half-period delay trips | `50` | — |
-| `dataRegister` | RX/TX data register | `R4` | — |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
+| `halfTrips` | MDC half-period Delay Trips | `50` | — |
+| `dataRegister` | RX/TX Data Register | `R4` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

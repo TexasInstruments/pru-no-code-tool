@@ -14,14 +14,14 @@
 |---|---|---|---|
 | `operation` | Operation | `set_address` | `set_address`, `write`, `read`, `set_pattern`, `compare_result` |
 | `fdbAddress` | FDB Address (0..511, R10[8]=bank) | `0` | — |
-| `r10TransferSize` | R10 XFER size (must be 2) | `2` | — |
-| `byteCount` | Byte count (1..32) for write/read | `32` | — |
-| `patternBytes` | Pattern bytes (1..16) for set_pattern | `16` | — |
-| `fdbGenModeByteEn` | FDB_GEN_MODE_BYTE_EN (16-bit mask, hex) | `0xFFFF` | — |
-| `externalInitProvided` | Acknowledged: External Initialization Required | `false` | — |
-| `sharedAcrossPru` | Shared PRU0<->PRU1 IPC region | `false` | — |
-| `protectedRegion` | Protected region name | `fdb_gp_ram` | — |
-| `noOfCycles` | Peak cycles | `1` | — |
+| `r10TransferSize` | R10 XFER Size (Must Be 2) | `2` | — |
+| `byteCount` | Byte Count (1..32) for Write/Read | `32` | — |
+| `patternBytes` | Pattern Bytes (1..16) | `16` | — |
+| `fdbGenModeByteEn` | FDB_GEN_MODE_BYTE_EN (Hex) | `0xFFFF` | — |
+| `externalInitProvided` | External Initialization Acknowledged | `false` | — |
+| `sharedAcrossPru` | Shared PRU0<->PRU1 IPC Region | `false` | — |
+| `protectedRegion` | Protected Region Name | `fdb_gp_ram` | — |
+| `noOfCycles` | Peak Cycles | `1` | — |
 
 ## Ports
 

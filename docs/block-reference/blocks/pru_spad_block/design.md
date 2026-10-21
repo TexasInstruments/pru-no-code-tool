@@ -14,13 +14,13 @@ flowchart LR
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("PRU<->PRU scratchpad (XFR)\n[oneshot]")):::core
   CFG0["Role"]:::config -.-> CORE
-  CFG1["Scratchpad bank"]:::config -.-> CORE
-  CFG2["First transfer register (R#)"]:::config -.-> CORE
-  CFG3["Data words (32-bit)"]:::config -.-> CORE
+  CFG1["Scratchpad Bank"]:::config -.-> CORE
+  CFG2["First Transfer Register (R#)"]:::config -.-> CORE
+  CFG3["Data Words (32-bit)"]:::config -.-> CORE
   CFG4["Handshake"]:::config -.-> CORE
-  CFG5["Signal peer PRU after xout"]:::config -.-> CORE
-  CFG6["PRU system event #"]:::config -.-> CORE
-  CFG7["Producer demo payload word"]:::config -.-> CORE
+  CFG5["Signal Peer PRU After Xout"]:::config -.-> CORE
+  CFG6["PRU System Event Number"]:::config -.-> CORE
+  CFG7["Producer Demo Payload Word"]:::config -.-> CORE
   CFG8["Number Of Cycles"]:::config -.-> CORE
 ```
 
@@ -38,13 +38,13 @@ flowchart LR
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
 | `role` | Role | `producer` | `producer`, `consumer` |
-| `bank` | Scratchpad bank | `0` | `0`, `1`, `2` |
-| `baseReg` | First transfer register (R#) | `5` | — |
-| `wordCount` | Data words (32-bit) | `4` | — |
+| `bank` | Scratchpad Bank | `0` | `0`, `1`, `2` |
+| `baseReg` | First Transfer Register (R#) | `5` | — |
+| `wordCount` | Data Words (32-bit) | `4` | — |
 | `handshake` | Handshake | `seq` | `none`, `seq` |
-| `signalEvent` | Signal peer PRU after xout | `false` | — |
-| `pruEvent` | PRU system event # | `18` | — |
-| `demoValue` | Producer demo payload word | `0` | — |
+| `signalEvent` | Signal Peer PRU After Xout | `false` | — |
+| `pruEvent` | PRU System Event Number | `18` | — |
+| `demoValue` | Producer Demo Payload Word | `0` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

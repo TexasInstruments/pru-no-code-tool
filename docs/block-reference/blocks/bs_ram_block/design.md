@@ -14,11 +14,11 @@ flowchart LR
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("BS RAM (ICSSG Broadside RAM)\n[oneshot]")):::core
   CFG0["Operation"]:::config -.-> CORE
-  CFG1["Row address (0..63)"]:::config -.-> CORE
+  CFG1["Row Address (0..63)"]:::config -.-> CORE
   CFG2["Bytes"]:::config -.-> CORE
-  CFG3["AutoIndex (increment row after each transfer)"]:::config -.-> CORE
-  CFG4["AutoIndex burst rows"]:::config -.-> CORE
-  CFG5["Peak cycles"]:::config -.-> CORE
+  CFG3["AutoIndex"]:::config -.-> CORE
+  CFG4["AutoIndex Burst Rows"]:::config -.-> CORE
+  CFG5["Peak Cycles"]:::config -.-> CORE
 ```
 
 
@@ -35,11 +35,11 @@ flowchart LR
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
 | `operation` | Operation | `write` | `write`, `read`, `snoop_write` |
-| `rowAddress` | Row address (0..63) | `0` | — |
+| `rowAddress` | Row Address (0..63) | `0` | — |
 | `byteCount` | Bytes | `4` | — |
-| `autoIndex` | AutoIndex (increment row after each transfer) | `false` | — |
-| `autoCount` | AutoIndex burst rows | `1` | — |
-| `noOfCycles` | Peak cycles | `1` | — |
+| `autoIndex` | AutoIndex | `false` | — |
+| `autoCount` | AutoIndex Burst Rows | `1` | — |
+| `noOfCycles` | Peak Cycles | `1` | — |
 
 ## Ports
 

@@ -13,11 +13,11 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("1-Wire Master\n[oneshot]")):::core
-  CFG0["Data signal (R30/R31)"]:::config -.-> CORE
+  CFG0["Data Signal (R30/R31)"]:::config -.-> CORE
   CFG1["Operation"]:::config -.-> CORE
-  CFG2["Bus speed"]:::config -.-> CORE
-  CFG3["Byte to write (writeByte)"]:::config -.-> CORE
-  CFG4["PRU clock (Hz)"]:::config -.-> CORE
+  CFG2["Bus Speed"]:::config -.-> CORE
+  CFG3["Byte to Write (writeByte)"]:::config -.-> CORE
+  CFG4["PRU Clock (Hz)"]:::config -.-> CORE
   CFG5["Number Of Cycles"]:::config -.-> CORE
 ```
 
@@ -34,11 +34,11 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `dataPin` | Data signal (R30/R31) | `7` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `dataPin` | Data Signal (R30/R31) | `7` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `operation` | Operation | `reset` | `reset`, `writeByte`, `readByte` |
-| `speed` | Bus speed | `standard` | `standard`, `overdrive` |
-| `byteValue` | Byte to write (writeByte) | `204` | — |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
+| `speed` | Bus Speed | `standard` | `standard`, `overdrive` |
+| `byteValue` | Byte to Write (writeByte) | `204` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

@@ -14,9 +14,9 @@ flowchart LR
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("Logic Analyzer\n[(unclassified)]")):::core
   CFG0["Sample Rate (Hz)"]:::config -.-> CORE
-  CFG1["PRU clock (Hz)"]:::config -.-> CORE
+  CFG1["PRU Clock (Hz)"]:::config -.-> CORE
   CFG2["Buffer Size (samples)"]:::config -.-> CORE
-  CFG3["Trigger R31 pin"]:::config -.-> CORE
+  CFG3["Trigger R31 Pin"]:::config -.-> CORE
   CFG4["Trigger Slope"]:::config -.-> CORE
 ```
 
@@ -34,9 +34,9 @@ flowchart LR
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
 | `sampleRateHz` | Sample Rate (Hz) | `10000000` | — |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
 | `bufferSize` | Buffer Size (samples) | `1024` | — |
-| `triggerPin` | Trigger R31 pin | `0` | — |
+| `triggerPin` | Trigger R31 Pin | `0` | — |
 | `triggerSlope` | Trigger Slope | `rising` | `none`, `rising`, `falling` |
 
 ## Ports

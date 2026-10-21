@@ -14,9 +14,9 @@ flowchart LR
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("IEP Timer\n[(unclassified)]")):::core
   CFG0["Sub-function"]:::config -.-> CORE
-  CFG1["IEP clock (Hz)"]:::config -.-> CORE
+  CFG1["IEP Clock (Hz)"]:::config -.-> CORE
   CFG2["Period (ns)"]:::config -.-> CORE
-  CFG3["Compare index"]:::config -.-> CORE
+  CFG3["Compare Index"]:::config -.-> CORE
   CFG4["CMP0 auto-reset"]:::config -.-> CORE
 ```
 
@@ -34,9 +34,9 @@ flowchart LR
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
 | `func` | Sub-function | `periodic` | `periodic`, `oneshot`, `capture` |
-| `clkHz` | IEP clock (Hz) | `200000000` | — |
+| `clkHz` | IEP Clock (Hz) | `200000000` | — |
 | `periodNs` | Period (ns) | `5000` | — |
-| `cmpIndex` | Compare index | `0` | — |
+| `cmpIndex` | Compare Index | `0` | — |
 | `autoReset` | CMP0 auto-reset | `true` | — |
 
 ## Ports

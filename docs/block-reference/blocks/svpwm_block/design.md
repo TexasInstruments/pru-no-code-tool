@@ -13,9 +13,9 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("SVPWM Duty Calculator\n[oneshot]")):::core
-  CFG0["PWM period counts"]:::config -.-> CORE
-  CFG1["Dead-time margin counts"]:::config -.-> CORE
-  CFG2["Conservative instruction bound"]:::config -.-> CORE
+  CFG0["PWM Period Counts"]:::config -.-> CORE
+  CFG1["Dead-time Margin Counts"]:::config -.-> CORE
+  CFG2["Conservative Instruction Bound"]:::config -.-> CORE
 ```
 
 
@@ -31,9 +31,9 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `periodCounts` | PWM period counts | `1000` | — |
-| `deadtimeCounts` | Dead-time margin counts | `10` | — |
-| `noOfCycles` | Conservative instruction bound | `180` | — |
+| `periodCounts` | PWM Period Counts | `1000` | — |
+| `deadtimeCounts` | Dead-time Margin Counts | `10` | — |
+| `noOfCycles` | Conservative Instruction Bound | `180` | — |
 
 ## Ports
 

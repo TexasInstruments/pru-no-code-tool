@@ -13,11 +13,11 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("CAN Classic Decoder (Slice)\n[oneshot]")):::core
-  CFG0["RX R31 bit"]:::config -.-> CORE
-  CFG1["CAN bit rate (kbit/s)"]:::config -.-> CORE
-  CFG2["PRU clock (Hz)"]:::config -.-> CORE
-  CFG3["Sample point (% of bit time)"]:::config -.-> CORE
-  CFG4["Synchronisation jump width (PRU cycles)"]:::config -.-> CORE
+  CFG0["RX R31 Bit"]:::config -.-> CORE
+  CFG1["CAN Bit Rate (kbit/s)"]:::config -.-> CORE
+  CFG2["PRU Clock (Hz)"]:::config -.-> CORE
+  CFG3["Sample Point (Percent of Bit Time)"]:::config -.-> CORE
+  CFG4["Sync Jump Width (PRU Cycles)"]:::config -.-> CORE
   CFG5["Number Of Cycles"]:::config -.-> CORE
 ```
 
@@ -34,11 +34,11 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `rxBit` | RX R31 bit | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `bitRateKbps` | CAN bit rate (kbit/s) | `1000` | — |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
-| `samplePointPercent` | Sample point (% of bit time) | `75` | — |
-| `sjwCycles` | Synchronisation jump width (PRU cycles) | `3` | — |
+| `rxBit` | RX R31 Bit | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `bitRateKbps` | CAN Bit Rate (kbit/s) | `1000` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
+| `samplePointPercent` | Sample Point (Percent of Bit Time) | `75` | — |
+| `sjwCycles` | Sync Jump Width (PRU Cycles) | `3` | — |
 | `noOfCycles` | Number Of Cycles | `-1` | — |
 
 ## Ports

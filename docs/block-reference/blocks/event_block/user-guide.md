@@ -12,9 +12,9 @@ Event / Interrupt
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
 | `mode` | Mode | `wait` | `wait`, `signal`, `waitThenSignal` |
-| `inputEventBit` | Input event R31 bit | `30` | — |
-| `outputEvent` | Output system event | `16` | — |
-| `clearAfterWait` | Clear event after wait | `true` | — |
+| `inputEventBit` | Input Event R31 Bit | `30` | — |
+| `outputEvent` | Output System Event | `16` | — |
+| `clearAfterWait` | Clear Event After Wait | `true` | — |
 
 ## Ports
 

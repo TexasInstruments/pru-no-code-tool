@@ -17,12 +17,12 @@ flowchart LR
   classDef config fill:#f9f6e5,stroke:#b1a457,stroke-width:1px,color:#333;
   classDef core fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000;
   CORE(("Hall commutation decoder\n[continuous]")):::core
-  CFG0["Hall A R31 pin"]:::config -.-> CORE
-  CFG1["Hall B R31 pin"]:::config -.-> CORE
-  CFG2["Hall C R31 pin"]:::config -.-> CORE
-  CFG3["Sample delay trips"]:::config -.-> CORE
+  CFG0["Hall A R31 Pin"]:::config -.-> CORE
+  CFG1["Hall B R31 Pin"]:::config -.-> CORE
+  CFG2["Hall C R31 Pin"]:::config -.-> CORE
+  CFG3["Sample Delay Trips"]:::config -.-> CORE
   CFG4["Sector Register (32-bit)"]:::config -.-> CORE
-  CFG5["Velocity Register (IEP delta)"]:::config -.-> CORE
+  CFG5["Velocity Register (IEP Delta)"]:::config -.-> CORE
   CFG6["Fault Register (0=ok,1=illegal)"]:::config -.-> CORE
   CFG7["Number Of Cycles"]:::config -.-> CORE
 ```
@@ -40,12 +40,12 @@ flowchart LR
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `aBit` | Hall A R31 pin | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `bBit` | Hall B R31 pin | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `cBit` | Hall C R31 pin | `2` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `sampleCycles` | Sample delay trips | `10` | — |
+| `aBit` | Hall A R31 Pin | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `bBit` | Hall B R31 Pin | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `cBit` | Hall C R31 Pin | `2` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `sampleCycles` | Sample Delay Trips | `10` | — |
 | `sectorRegister` | Sector Register (32-bit) | `R4` | — |
-| `velRegister` | Velocity Register (IEP delta) | `R5` | — |
+| `velRegister` | Velocity Register (IEP Delta) | `R5` | — |
 | `faultRegister` | Fault Register (0=ok,1=illegal) | `R6` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 

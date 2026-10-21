@@ -12,11 +12,11 @@ Cycle-exact half-bit timing on the PRU for jitter-free mid-bit edges: every half
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `signalPin` | Signal R30 pin | `13` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `dataRegister` | Byte to encode (Reg) | `R5.b0` | — |
-| `bitRateHz` | Bit rate (Hz) | `1000000` | — |
-| `convention` | Encoding convention | `ieee` | `ieee`, `thomas` |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
+| `signalPin` | Signal R30 Pin | `13` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `dataRegister` | Byte to Encode (Reg) | `R5.b0` | — |
+| `bitRateHz` | Bit Rate (Hz) | `1000000` | — |
+| `convention` | Encoding Convention | `ieee` | `ieee`, `thomas` |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

@@ -12,9 +12,9 @@ IEP Timer
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
 | `func` | Sub-function | `periodic` | `periodic`, `oneshot`, `capture` |
-| `clkHz` | IEP clock (Hz) | `200000000` | — |
+| `clkHz` | IEP Clock (Hz) | `200000000` | — |
 | `periodNs` | Period (ns) | `5000` | — |
-| `cmpIndex` | Compare index | `0` | — |
+| `cmpIndex` | Compare Index | `0` | — |
 | `autoReset` | CMP0 auto-reset | `true` | — |
 
 ## Ports

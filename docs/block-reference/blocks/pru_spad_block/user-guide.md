@@ -13,13 +13,13 @@ The PRU-ICSS scratchpad is 3 banks of 30 x 32-bit registers, shared by both PRU 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
 | `role` | Role | `producer` | `producer`, `consumer` |
-| `bank` | Scratchpad bank | `0` | `0`, `1`, `2` |
-| `baseReg` | First transfer register (R#) | `5` | — |
-| `wordCount` | Data words (32-bit) | `4` | — |
+| `bank` | Scratchpad Bank | `0` | `0`, `1`, `2` |
+| `baseReg` | First Transfer Register (R#) | `5` | — |
+| `wordCount` | Data Words (32-bit) | `4` | — |
 | `handshake` | Handshake | `seq` | `none`, `seq` |
-| `signalEvent` | Signal peer PRU after xout | `false` | — |
-| `pruEvent` | PRU system event # | `18` | — |
-| `demoValue` | Producer demo payload word | `0` | — |
+| `signalEvent` | Signal Peer PRU After Xout | `false` | — |
+| `pruEvent` | PRU System Event Number | `18` | — |
+| `demoValue` | Producer Demo Payload Word | `0` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

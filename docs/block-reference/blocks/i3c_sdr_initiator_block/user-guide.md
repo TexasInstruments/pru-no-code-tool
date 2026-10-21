@@ -12,11 +12,11 @@ Emits an I3C ENTDAA (Dynamic Address Assignment) macro-generation skeleton. Prov
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `sclBit` | SCL R30/R31 bit | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `sdaBit` | SDA R30/R31 bit | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `sclBit` | SCL R30/R31 Bit | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `sdaBit` | SDA R30/R31 Bit | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `targetDa` | Assigned Dynamic Address | `0x08` | — |
-| `pidRegister` | PID Output Register (Upper 32 bits) | `R7` | — |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
+| `pidRegister` | PID Output Register (Upper 32 Bits) | `R7` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
 | `noOfCycles` | Number Of Cycles | `100` | — |
 
 ## Ports

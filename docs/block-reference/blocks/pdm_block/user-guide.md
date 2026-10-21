@@ -12,13 +12,13 @@ Generates a jitter-free clock and samples on the correct edge every period. The 
 
 | Parameter | Display name | Default | Options |
 |---|---|---|---|
-| `clkPin` | PDM clock R30 pin | `11` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `dataPin` | PDM data R31 pin | `12` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `clkRateHz` | PDM clock rate (Hz) | `2048000` | — |
-| `channel` | Channel / sample edge | `mono` | `mono`, `stereoLeft`, `stereoRight` |
+| `clkPin` | PDM Clock R30 Pin | `11` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `dataPin` | PDM Data R31 Pin | `12` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `clkRateHz` | PDM Clock Rate (Hz) | `2048000` | — |
+| `channel` | Channel/Sample Edge | `mono` | `mono`, `stereoLeft`, `stereoRight` |
 | `dataRegister` | Output Register (32-bit) | `R5` | — |
-| `numBits` | Bits per word | `32` | — |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
+| `numBits` | Bits Per Word | `32` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
 | `noOfCycles` | Number Of Cycles | `1` | — |
 
 ## Ports

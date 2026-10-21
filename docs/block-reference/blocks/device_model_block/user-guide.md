@@ -46,7 +46,7 @@ Field names are `<kind>_<pin or parameter>`; only the selected kind's fields app
 | `noOfCycles` | Number Of Cycles | `0` | — |
 | `deviceKind` | Device Kind | `ssi` | — |
 | `pinSummary` | Pins | `` | — |
-| `runHint` | Where to run | `` | — |
+| `runHint` | Where to Run | `` | — |
 | `readBy` | Read by | `` | — |
 
 ## Ports

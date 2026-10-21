@@ -16,48 +16,48 @@ Drives up to 4 stepper axes (Step+Dir+Enable on R30) from one fixed-length sched
 | `stepPin0` | Axis 0 - Step Pin (GPO) | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `dirPin0` | Axis 0 - Dir Pin (GPO) | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `enablePin0` | Axis 0 - Enable Pin (GPO) | `2` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `homeSwPin0` | Axis 0 - Home Switch (GPI, reserved - not used by the macro) | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `limitPPin0` | Axis 0 - Limit+ (GPI, reserved - not used by the macro) | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `limitNPin0` | Axis 0 - Limit- (GPI, reserved - not used by the macro) | `2` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `homeSwPin0` | Axis 0 - Home Switch (Reserved) | `0` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `limitPPin0` | Axis 0 - Limit+ (Reserved) | `1` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `limitNPin0` | Axis 0 - Limit- (Reserved) | `2` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `targetSteps0` | Axis 0 - Target Steps | `1000` | — |
-| `maxSpeedSps0` | Axis 0 - Speed (steps/s, constant) | `1000` | — |
-| `accel0` | Axis 0 - Acceleration (steps/s^2, reserved - ignored, no ramp) | `5000` | — |
+| `maxSpeedSps0` | Axis 0 - Speed (Steps/s) | `1000` | — |
+| `accel0` | Axis 0 - Acceleration (Reserved) | `5000` | — |
 | `initDir0` | Axis 0 - Initial Direction | `1` | `0`, `1` |
 | `stepPin1` | Axis 1 - Step Pin (GPO) | `3` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `dirPin1` | Axis 1 - Dir Pin (GPO) | `4` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `enablePin1` | Axis 1 - Enable Pin (GPO) | `5` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `homeSwPin1` | Axis 1 - Home Switch (GPI, reserved - not used by the macro) | `3` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `limitPPin1` | Axis 1 - Limit+ (GPI, reserved - not used by the macro) | `4` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `limitNPin1` | Axis 1 - Limit- (GPI, reserved - not used by the macro) | `5` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `homeSwPin1` | Axis 1 - Home Switch (Reserved) | `3` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `limitPPin1` | Axis 1 - Limit+ (Reserved) | `4` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `limitNPin1` | Axis 1 - Limit- (Reserved) | `5` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `targetSteps1` | Axis 1 - Target Steps | `1000` | — |
-| `maxSpeedSps1` | Axis 1 - Speed (steps/s, constant) | `1000` | — |
-| `accel1` | Axis 1 - Acceleration (steps/s^2, reserved - ignored, no ramp) | `5000` | — |
+| `maxSpeedSps1` | Axis 1 - Speed (Steps/s) | `1000` | — |
+| `accel1` | Axis 1 - Acceleration (Reserved) | `5000` | — |
 | `initDir1` | Axis 1 - Initial Direction | `1` | `0`, `1` |
 | `stepPin2` | Axis 2 - Step Pin (GPO) | `6` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `dirPin2` | Axis 2 - Dir Pin (GPO) | `7` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `enablePin2` | Axis 2 - Enable Pin (GPO) | `8` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `homeSwPin2` | Axis 2 - Home Switch (GPI, reserved - not used by the macro) | `6` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `limitPPin2` | Axis 2 - Limit+ (GPI, reserved - not used by the macro) | `7` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `limitNPin2` | Axis 2 - Limit- (GPI, reserved - not used by the macro) | `8` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `homeSwPin2` | Axis 2 - Home Switch (Reserved) | `6` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `limitPPin2` | Axis 2 - Limit+ (Reserved) | `7` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `limitNPin2` | Axis 2 - Limit- (Reserved) | `8` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `targetSteps2` | Axis 2 - Target Steps | `1000` | — |
-| `maxSpeedSps2` | Axis 2 - Speed (steps/s, constant) | `1000` | — |
-| `accel2` | Axis 2 - Acceleration (steps/s^2, reserved - ignored, no ramp) | `5000` | — |
+| `maxSpeedSps2` | Axis 2 - Speed (Steps/s) | `1000` | — |
+| `accel2` | Axis 2 - Acceleration (Reserved) | `5000` | — |
 | `initDir2` | Axis 2 - Initial Direction | `1` | `0`, `1` |
 | `stepPin3` | Axis 3 - Step Pin (GPO) | `9` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `dirPin3` | Axis 3 - Dir Pin (GPO) | `10` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `enablePin3` | Axis 3 - Enable Pin (GPO) | `11` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `homeSwPin3` | Axis 3 - Home Switch (GPI, reserved - not used by the macro) | `9` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `limitPPin3` | Axis 3 - Limit+ (GPI, reserved - not used by the macro) | `10` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
-| `limitNPin3` | Axis 3 - Limit- (GPI, reserved - not used by the macro) | `11` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `homeSwPin3` | Axis 3 - Home Switch (Reserved) | `9` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `limitPPin3` | Axis 3 - Limit+ (Reserved) | `10` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `limitNPin3` | Axis 3 - Limit- (Reserved) | `11` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `targetSteps3` | Axis 3 - Target Steps | `1000` | — |
-| `maxSpeedSps3` | Axis 3 - Speed (steps/s, constant) | `1000` | — |
-| `accel3` | Axis 3 - Acceleration (steps/s^2, reserved - ignored, no ramp) | `5000` | — |
+| `maxSpeedSps3` | Axis 3 - Speed (Steps/s) | `1000` | — |
+| `accel3` | Axis 3 - Acceleration (Reserved) | `5000` | — |
 | `initDir3` | Axis 3 - Initial Direction | `1` | `0`, `1` |
-| `eStopPin` | E-Stop Input (GPI, active high) | `15` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
+| `eStopPin` | E-Stop Input (GPI, Active High) | `15` | `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19` |
 | `syncEnable` | Synchronized Start | `true` | — |
-| `clkHz` | PRU clock (Hz) | `200000000` | — |
-| `dmemBase` | DMEM state table base (hex, reserved - not used by the macro) | `0x0100` | — |
-| `pulseWidthCycles` | Step pulse width (PRU cycles) | `10` | — |
+| `clkHz` | PRU Clock (Hz) | `200000000` | — |
+| `dmemBase` | DMEM State Table Base (Hex) | `0x0100` | — |
+| `pulseWidthCycles` | Step Pulse Width (PRU Cycles) | `10` | — |
 | `noOfCycles` | Number Of Cycles | `50` | — |
 
 ## Ports
