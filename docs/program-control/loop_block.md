@@ -12,7 +12,7 @@ Repeats a sequence of blocks a fixed number of times or infinitely. This is a co
 - Uses the PRU hardware `LOOP` instruction for fixed loops (minimal overhead)
 - Pre-Initialization Blocks — run selected blocks once before the loop starts
 - Resizable container (default 500×250 px)
-- Nested loops supported (place a Loop inside another Loop)
+- PRU hardware `LOOP` instructions cannot nest; SysConfig rejects a fixed Loop or a Delay (count greater than 1) in a fixed-count Loop body (an infinite Loop and preInitBlocks are exempt)
 - Loop counter register auto-sized based on iteration count
 
 ### Configuration
@@ -109,7 +109,7 @@ Example: 100 iterations, body = 11 cycles → 3 + (100 × 11) = 1103 cycles = 5.
 ### Important Notes
 
 - Maximum loop count is **65,535** (16-bit PRU LOOP instruction limit)
-- For higher iteration counts, use nested loops (e.g., 65,535 × 65,535 ≈ 4 billion)
+- For higher iteration counts, split work into sequential finite loops or schedule it from the host. The PRU provides only one hardware `LOOP` context, so hardware loops cannot nest.
 - Infinite loops **never exit** — the `next` port is hidden and no code after the loop is reachable
 - Loop counter occupies a register during loop execution
 - Pre-init blocks are still visually inside the container but their instructions are hoisted out
