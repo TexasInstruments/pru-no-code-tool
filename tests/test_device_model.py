@@ -526,13 +526,19 @@ def test_the_generated_names_are_unique_and_none_is_blank():
 
 
 def test_the_manifest_reader_table_and_the_blocks_reader_table_are_the_same():
-    """The block's 'Read by' display and resolveDeviceReaders must agree on which module reads which kind."""
+    """The block's 'Read by' display and resolveDeviceReaders must agree on which module reads which kind.
+
+    Both read one table, device_model_table.READER_BLOCKS: resolveDeviceReaders through deviceModelTable and keeps
+    no inline copy, and the display through findReaderInstances in the same module.
+    """
     src = (META / "pru_blocks" / "common" / "pru_blocks_static_module.syscfg.js").read_text(encoding="utf-8")
     body = src[src.index("function resolveDeviceReaders"):]
     body = body[:body.index("// Byte ranges")]
-    module_names = dict(re.findall(r'(\w+):\s*\[\{ module: "([^"]+)", dataPinField: "dataPin" \}\]', body))
+    assert "deviceModelTable.READER_BLOCKS" in body
+    assert "module:" not in body, "resolveDeviceReaders carries its own reader table"
+    assert "READER_BLOCKS[kind]" in TABLE_JS.read_text(encoding="utf-8")
     readers = node_json("t.READER_BLOCKS")
-    assert {k: v[0]["module"] for k, v in readers.items()} == module_names
+    assert readers and all(v and v[0]["module"].startswith("/pru_blocks/") for v in readers.values()), readers
 
 
 def test_with_no_device_model_the_merged_builder_returns_exactly_the_gpi_builder_output():

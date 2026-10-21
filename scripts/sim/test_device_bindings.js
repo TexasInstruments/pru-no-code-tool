@@ -165,8 +165,10 @@ function loadResolver() {
     assert.notStrictEqual(start, -1, 'resolveDeviceReaders not found in the module');
     const rest = source.slice(start);
     const end = rest.indexOf('\n}\n');
+    // The function reads the reader table through the module-level deviceModelTable (common/device_model_table.js).
+    const deviceModelTable = require(path.join(path.dirname(SRC), 'device_model_table.js'));
     // eslint-disable-next-line no-new-func
-    return new Function(rest.slice(0, end + 2) + '; return resolveDeviceReaders;')();
+    return new Function('deviceModelTable', rest.slice(0, end + 2) + '; return resolveDeviceReaders;')(deviceModelTable);
 }
 const resolveDeviceReaders = loadResolver();
 const BISS = '/pru_blocks/application_specific/biss_c_initiator_block';
