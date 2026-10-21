@@ -42,15 +42,15 @@ def test_red_arm_parenthesized_if_with_comment_has_exact_shared_and_legacy_count
     got = json.loads(result.stdout)
     assert got == {"shared": 1, "bypassed": 0, "instructions": ["ldi R10, 1"]}
 
-    # The red arm: an evaluator without this handling must fail for the named
-    # reason, rather than merely with a non-zero exit code.
+    # An evaluator without this handling must fail for the named reason,
+    # rather than merely with a non-zero exit code.
     red = run_node(NODE_COUNTS + r"""
 const assert = require('assert');
 assert.strictEqual(bypassed.instructions.length, 1,
-  'RED ARM: legacy evaluator lost parenthesized .if instruction');
+  'evaluator without paren handling lost the parenthesized .if instruction');
 """, FIXTURE)
     assert red.returncode != 0
-    assert "RED ARM: legacy evaluator lost parenthesized .if instruction" in red.stderr
+    assert "evaluator without paren handling lost the parenthesized .if instruction" in red.stderr
 
 
 def test_shared_evaluator_accepts_html_escaped_ordering_operator():
@@ -144,8 +144,8 @@ console.log(JSON.stringify({
 
 
 def test_iqmath_park_clarke_keeps_its_only_sine_lut():
-    """cf9af21 pruned `.if !$defined(SINE_LUT_DEFINED)` and deleted the LUT that
-    `ldi32 R29, sine_lut` still references."""
+    """Expansion keeps the `.if !$defined(SINE_LUT_DEFINED)` branch and its LUT, which
+    `ldi32 R29, sine_lut` references; pruning that branch would delete the only sine_lut."""
     got = node_json(r"""
 const { expandBlock } = require('./scripts/emit_all_blocks');
 const r = expandBlock('iqmath_park_clarke_block');

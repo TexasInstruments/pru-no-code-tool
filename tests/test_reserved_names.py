@@ -1,10 +1,10 @@
 """SysConfig validation ERROR for clpru reserved instance names.
 
-Problem: SysConfig accepted an instance name the assembler rejects — a
-crc_block named ``c0`` emits ``c0 .byte ...`` and clpru fails with
-[E0300] c0 is a reserved identifier. Fix: every block that emits its
-instance name (or a name derived from it) as an asm label or symbol rejects
-reserved names in validate(), through ONE shared helper
+An instance name the assembler rejects must be a SysConfig error, not a clpru
+failure: a crc_block named ``c0`` emits ``c0 .byte ...`` and clpru fails with
+[E0300] c0 is a reserved identifier. Every block that emits its instance
+name (or a name derived from it) as an asm label or symbol rejects reserved
+names in validate(), through ONE shared helper
 (.metadata/sysconfig/.meta/pru_blocks/common/pru_reserved_names.js).
 
 Oracle = the assembler. Case rules are the assembler's own (each probed
@@ -12,7 +12,7 @@ with clpru as a data symbol AND as a code label): register names r*/c* are
 case-insensitive (R0 fails); mnemonics fail exact-lowercase (add) and
 exact-ALL-UPPERCASE (ADD) but mixed-case (Add, Ldi32) ASSEMBLES and is
 accepted; byte lanes fail lowercase only (b0 fails, B0 assembles and is
-accepted). The brief's oracle says names that assemble are not reserved.
+accepted). Names that assemble are not treated as reserved.
 
 Derived emissions (conditional `<name>_TRUE/_FALSE`, group
 `<groupName>_start`, pid `<name>_pid_state`) assemble even for a reserved

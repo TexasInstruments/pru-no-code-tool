@@ -548,9 +548,9 @@ def test_two_readers_design_really_fails_on_the_simulator(tmp_path):
 
 @needs_node
 @needs_sysconfig
-def test_f1_message_says_the_matched_reader_clocks_another_pad(tmp_path):
-    """F1: the reader (matched by DATA pin) clocks GPO4; SSI_Second clocks the device's pad GPO0. It is still an error,
-    and the message now says which block is mis-wired instead of only blaming SSI_Second."""
+def test_message_says_the_matched_reader_clocks_another_pad(tmp_path):
+    """The reader (matched by DATA pin) clocks GPO4; SSI_Second clocks the device's pad GPO0. It is still an error,
+    and the message says which block is mis-wired instead of only blaming SSI_Second."""
     text = two_ssi_text(3).replace('ssi_initiator_block1.$name = "SSI_Encoder_Read";',
                                    'ssi_initiator_block1.$name = "SSI_Encoder_Read";\nssi_initiator_block1.clkPin = 4;')
     assert "clkPin = 4" in text

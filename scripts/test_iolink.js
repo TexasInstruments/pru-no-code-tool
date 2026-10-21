@@ -264,8 +264,8 @@ function assert(label, condition, detail) {
 // =======================================================================
 console.log('=== IO-Link Master Block Headless Test ===\n');
 
-// ---- T1: Module loads ----
-console.log('--- T1: Module metadata ---');
+// ---- Module loads ----
+console.log('--- Module metadata ---');
 var mod;
 try {
     mod = loadBlockModule('iolink_master_block', 'application_specific');
@@ -285,8 +285,8 @@ try {
     process.exit(1);
 }
 
-// ---- T2: Macro emission ----
-console.log('\n--- T2: Macro emission ---');
+// ---- Macro emission ----
+console.log('\n--- Macro emission ---');
 var macroStr;
 try {
     macroStr = mod.getMacro('', 'm_iolink_master');
@@ -323,8 +323,8 @@ try {
     assert('Macro emission', false, e.message);
 }
 
-// ---- T3: Validation ----
-console.log('\n--- T3: Validation ---');
+// ---- Validation ----
+console.log('\n--- Validation ---');
 try {
     var inst = {
         comMode: 'COM3',
@@ -364,8 +364,8 @@ try {
     assert('Validation', false, e.message);
 }
 
-// ---- T4: Ports enumeration ----
-console.log('\n--- T4: Ports ---');
+// ---- Ports enumeration ----
+console.log('\n--- Ports ---');
 try {
     var ports = mod.ports({ numOfInputPorts: 2 });
     var portNames = ports.map(function(p) { return p.name; });
@@ -378,8 +378,8 @@ try {
     assert('Ports', false, e.message);
 }
 
-// ---- T5: R30 waveform simulation (wake-up pulse) ----
-console.log('\n--- T5: R30 waveform (wake-up + DIR control) ---');
+// ---- R30 waveform simulation (wake-up pulse) ----
+console.log('\n--- R30 waveform (wake-up + DIR control) ---');
 try {
     macroStr = mod.getMacro('', 'm_iolink_master');
     var expanded = expandMacro(macroStr, {

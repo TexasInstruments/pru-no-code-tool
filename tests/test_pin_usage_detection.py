@@ -158,7 +158,7 @@ def _tool_root(tmp_path, files):
 
 @needs_node
 def test_comment_only_module_is_not_enrolled_and_a_declaring_one_is(tmp_path):
-    """Red/green pair in one tree: the mention-only module contains the token (the old substring
+    """Red/green pair in one tree: the mention-only module contains the token (a plain substring
     rule enrols it) but no declaration; the declaring module is the positive control."""
     root = _tool_root(tmp_path, {"mention": MENTION_ONLY, "decl": DECLARING})
     assert "getPinUsage" in MENTION_ONLY

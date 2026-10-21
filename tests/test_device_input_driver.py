@@ -1,24 +1,25 @@
 """a second block driving the GPO that clocks an attached device model is an ERROR.
 
-Found by the red arm: SSI Initiator CLK on R30.0, a Device Model SSI encoder listening on pin 0, and a SPI
-write whose SCLK is also GPO 0, connected after the SSI read. SysConfig said {"summary":[]}, `gmake all` rc 0, and
-`gmake sim` FAILED with encoder faults (clock period 14 cycles below the encoder's minimum of 20; clock continued past
-the end of the 25-bit word).
+Example: SSI Initiator CLK on R30.0, a Device Model SSI encoder listening on pin 0, and a SPI write whose SCLK is
+also GPO 0, connected after the SSI read. Without this rule the design generates and builds cleanly, and `gmake sim`
+fails with encoder faults (clock period 14 cycles below the encoder's minimum of 20; clock continued past the end of
+the 25-bit word).
 
-WHY NOTHING WAS FLAGGED: the duplicate-GPO rule exempts two blocks that are both SEQUENTIAL
+The duplicate-GPO rule alone does not flag it: it exempts two blocks that are both SEQUENTIAL
 (pru_blocks_static_module.syscfg.js validateBidiPinCollisionsGlobal, `if (!cont.length) continue;`; the same line in
-scripts/check_pin_collisions.js checkSyscfg). SSI read and SPI write are both sequential, so sharing GPO0 was "a
-hand-off". It IS a hand-off while nothing listens on the pad; an attached device listens on it.
+scripts/check_pin_collisions.js checkSyscfg). SSI read and SPI write are both sequential, so sharing GPO0 is a
+hand-off while nothing listens on the pad; an attached device listens on it.
 
 THE RULE: a GPO that feeds an input pin of an attached device (Device Model block, or a Simulation Settings GPI device)
 may be driven only by that device's reader. The reader is the block READER_BLOCKS names for the kind whose data pin is
 the device's primary pin (the pairing the manifest `readers` record and the Device Model "Read by" field use). When a
 reader exists every other driver of the pad - another SSI block with a different data pin included - is an ERROR. With
 no reader at all a block of the reader module is taken as the intended (mis-wired) reader and a foreign block is only a
-WARNING. Other kinds (EnDat, sigma-delta, SPI ADC, STEP/DIR, WS2812, MDIO, BiSS Line) are checked since (tests/test_device_input_drivers.py). GUI and CI call one function,
+WARNING. The other kinds (EnDat, sigma-delta, SPI ADC, STEP/DIR, WS2812, MDIO, BiSS Line) are checked in
+tests/test_device_input_drivers.py. The GUI and the command-line pin check call one function,
 device_model_table.js findDeviceInputConflicts, so they agree by construction; these tests also compare their text.
 
-Every red arm asserts specific text. Chain tests need PRU_SIMULATOR_PATH (they SKIP without it; report the skip count).
+Every error case asserts specific text. Chain tests need PRU_SIMULATOR_PATH and are reported as SKIPPED without it.
 """
 import os
 from pathlib import Path

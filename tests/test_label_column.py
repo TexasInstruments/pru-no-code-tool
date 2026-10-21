@@ -39,7 +39,7 @@ def run_node(source, *args):
                           capture_output=True, check=False)
 
 
-# Proven harness spec (tests/test_ctppr_setup.py): expands without
+# Same harness spec shape as tests/test_ctppr_setup.py: expands without
 # clpru. The prelude carries the synthetic same-line + bare labels straight
 # through emit_block_asm's formatter, so no special block macro is needed.
 LABEL_SPEC = dict(block="logic_analyzer_block", subdir="utils", macroCall="",
@@ -72,8 +72,8 @@ console.log(JSON.stringify([
 
 
 def test_dual_oracle_formatter_keeps_labels_in_column_1():
-    """The formatter executeDualOracle (and the sensor-gateway script) uses,
-    reached here via its dual_oracle_harness export."""
+    """The formatter executeDualOracle uses, reached here via its
+    dual_oracle_harness export."""
     result = run_node(NODE_FMT)
     assert result.returncode == 0, result.stderr
     got = json.loads(result.stdout)

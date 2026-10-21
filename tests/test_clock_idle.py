@@ -56,9 +56,9 @@ pytestmark = pytest.mark.skipif(
     reason="needs gmake, SysConfig 1.28, clpru, imports.mak, and PRU_SIMULATOR_PATH",
 )
 
-# --- clock-order variants: the current macro body and the high-then-low order re-applied as a mutant (red arms) ---
+# --- clock-order variants: the current macro body and the high-then-low order applied as a mutation ---
 
-BISS_NEW = """\
+BISS_LOW_THEN_HIGH = """\
 `m_biss_c_loop?:`,
             `    ; MA idles HIGH between frames: pulse it low, then back high.`,
             `    ; Ending each bit on clr would leave MA low after the frame, and the`,
@@ -70,7 +70,7 @@ BISS_NEW = """\
             `    ; Set MA clock pin high: rising edge k, slave presents bit k after it`,
             `    set   R30, R30, CLK`,
 """
-BISS_OLD = """\
+BISS_HIGH_THEN_LOW = """\
 `m_biss_c_loop?:`,
             `    ; Set MA clock pin high`,
             `    set   R30, R30, CLK               ; (clkPin: MA clock output bit)`,
@@ -106,12 +106,12 @@ def _swap(text, old, new):
     return text.replace(old, new)
 
 
-def _old_biss(text):
-    return _swap(text, BISS_NEW, BISS_OLD)
+def _high_then_low_biss(text):
+    return _swap(text, BISS_LOW_THEN_HIGH, BISS_HIGH_THEN_LOW)
 
 
-def _old_endat(text):
-    """Pre-every set/clr of CLK_PIN swapped back (clock idles low)."""
+def _idle_low_endat(text):
+    """Every set/clr of CLK_PIN swapped (clock idles low)."""
     text = re.sub(r"(set|clr)(   R30, R30, CLK_PIN)",
                   lambda m: ("clr" if m.group(1) == "set" else "set") + m.group(2), text)
     return _swap(text, "; clock idles HIGH (EnDat); each bit is a low pulse, so the frame ends high",
@@ -180,10 +180,10 @@ def test_biss_c_odd_position_decodes_and_leaves_ma_idle_high(position):
     assert "RESULT: PASS" in out
 
 
-def test_red_arm_old_biss_c_macro_leaves_ma_low():
-    """Same flow, pre-fix macro: still decodes (so the decode could never see it),
+def test_high_then_low_clock_order_leaves_ma_low():
+    """Same flow, high-then-low clock order: still decodes (so the decode alone cannot see it),
     but the clock is left LOW and the idle assertion fails for that reason."""
-    root = _scratch_root("biss_old", "biss_c_initiator_block.syscfg.js", _old_biss)
+    root = _scratch_root("biss_high_then_low", "biss_c_initiator_block.syscfg.js", _high_then_low_biss)
     out = run_gmake_sim(root, 1234567)
     assert decoded(out) == (1234567, 1234567), out
     with pytest.raises(AssertionError, match=r"MA left at 0, idle is HIGH"):
@@ -265,9 +265,9 @@ def test_endat_model_reacts_to_the_block_clock():
     assert dev.model.faults() or dev.model.events(), "the EnDat model never saw a command edge"
 
 
-def test_red_arm_old_endat_macro_leaves_clock_low():
-    root = _scratch_root("endat_old", "endat_initiator_block.syscfg.js", _old_endat)
-    dev = run_endat(root, "endat_old")
+def test_idle_low_endat_clock_is_caught():
+    root = _scratch_root("endat_idle_low", "endat_initiator_block.syscfg.js", _idle_low_endat)
+    dev = run_endat(root, "endat_idle_low")
     with pytest.raises(AssertionError, match=r"EnDat CLOCK left at 0, idle is HIGH"):
         assert_endat_clock_idle_high(dev)
 

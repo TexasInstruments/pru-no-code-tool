@@ -117,7 +117,8 @@ var iolinkModule = {
         '**Status:** metadata only. The ENDAT programming follows the UART blocks',
         '(`uart_config`, `uart_tx_op`, `uart_rx_op`), but the in-tool simulator does',
         "NOT model the internal ENDAT FIFO/TX/RX state machine, so the transaction",
-        "is not simulated; only the R30 wake-up/DIR waveform is checked."
+        "is not simulated; only the R30 wake-up/DIR waveform is checked.",
+        "The M-sequence transmit sends byte 0 only; multi-byte M-sequences are not implemented."
     ].join("\n"),
 
     uiView: "graph",
@@ -422,7 +423,7 @@ var iolinkModule = {
         lines.push("    ; Pack TX data byte into 10-bit UART frame");
         lines.push("    ; Frame: [0]=start(0), [8:1]=data, [9]=stop(1)");
         lines.push("    ; SIMPLIFIED: pack byte 0 only (1-byte TX)");
-        lines.push("    ; Full multi-byte packing TBD in follow-up");
+        lines.push("    ; Multi-byte M-sequences are not implemented: only byte 0 is sent");
         lines.push("    mov     TEMP_REG4.b1, DATA_IN_LO   ; 8-bit data");
         lines.push("    lsl     TEMP_REG4.b1, TEMP_REG4.b1, 1  ; shift for start bit");
         lines.push("    set     TEMP_REG4.b1, TEMP_REG4.b1, 9  ; stop bit at position 9");

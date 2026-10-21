@@ -337,7 +337,7 @@ class TestSsiModel:
 
     def test_decode_ssi_samples_first_bit_and_rejects_missing_terminator(self):
         # 0b101 has an odd-position bit set. Four falling pulses are F1, R1..R3,
-        # F4; decoding must retain all three bits, not the stale two-bit result.
+        # F4; decoding must retain all three bits, not a two-bit result.
         trace = [(0, 0b01), (1, 0b00), (2, 0b11), (3, 0b10),
                  (4, 0b01), (5, 0b00), (6, 0b11), (7, 0b10)]
         dec = buscosim.decode_ssi(trace, 0, 1, cpol=1, expected_bits=3)

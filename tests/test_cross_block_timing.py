@@ -26,9 +26,9 @@ class CycleWord:
         return cycle & 0xFFFFF
 
 
-def samples(tmp_path, clk_hz, legacy=False):
+def samples(tmp_path, clk_hz, naive=False):
     c = constants("logic_analyzer_block", "utils", {"clkHz": clk_hz, "sampleRateHz": 10_000_000})
-    count = round(clk_hz / 10_000_000) if legacy else int(c["constant1"])
+    count = round(clk_hz / 10_000_000) if naive else int(c["constant1"])
     spec = dict(block="logic_analyzer_block", subdir="utils", macroCall="", opCode="m_logic_analyzer_block",
                 macroArgs=dict(RES="R0.b1", periodCycles=str(count), bufferSize="16",
                                triggerPin="0", triggerSlope="0"), postlude=["halt"])
@@ -59,9 +59,9 @@ def test_logic_analyzer_realised_period(tmp_path, clk_hz):
     assert_rate_period(samples(tmp_path, clk_hz), clk_hz)
 
 
-def test_old_logic_formula_is_red(tmp_path):
+def test_naive_period_formula_is_rejected(tmp_path):
     with pytest.raises(AssertionError, match=r"logic_analyzer sample period 47 cycles exceeds configured 20 cycles"):
-        assert_rate_period(samples(tmp_path, 200_000_000, legacy=True), 200_000_000)
+        assert_rate_period(samples(tmp_path, 200_000_000, naive=True), 200_000_000)
 
 
 @pytest.mark.parametrize("clk_hz", [100_000_000, 200_000_000])

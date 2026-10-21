@@ -499,7 +499,7 @@ def _scratch_meta(tmp_path, mutate):
 
 
 def test_a_blank_configurable_name_in_the_module_is_rejected_by_the_gate(tmp_path):
-    """Red arm: the failure that stopped the GUI opening the product (queue_empty_block, 2026-10-03)."""
+    """A blank configurable name makes the SysConfig GUI refuse the whole product; the gate must reject it."""
     scratch = _scratch_meta(tmp_path, lambda t: t.replace(
         '{ name: "$topLabel", hidden: true, default: "" },',
         '{ name: "$topLabel", hidden: true, default: "" },\n        { name: "", hidden: true, default: 0 },', 1))
