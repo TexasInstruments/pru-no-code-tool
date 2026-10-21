@@ -397,6 +397,8 @@ function toBinding(inst) {
  * so the two cannot disagree about which block reads a device.
  */
 const READER_BLOCKS = {
+    bissc: [{ module: "/pru_blocks/application_specific/biss_c_initiator_block", dataPinField: "dataPin" }],
+    ssi:   [{ module: "/pru_blocks/application_specific/ssi_initiator_block", dataPinField: "dataPin" }]
 };
 
 /**
@@ -406,6 +408,7 @@ const READER_BLOCKS = {
  * (either may be omitted). The first matching instance wins.
  */
 const COMPANION_PIN_BLOCKS = {
+    ssi: [{ module: "/pru_blocks/application_specific/ssi_initiator_block", matchField: "dataPin", clockField: "clkPin" }],
     quadrature: [{ module: "/pru_blocks/pru_io_blocks/quadrature_block", matchField: "aBit", clockField: "bBit", indexField: "zBit" }]
 };
 
@@ -486,11 +489,11 @@ const PRU_IO = "/pru_blocks/pru_io_blocks/";
 const SPI_BLOCKS = [PRU_IO + "pru_spi_transfer", PRU_IO + "pru_spi_read", PRU_IO + "pru_spi_write"];
 const DRIVER_BLOCKS = {
     ssi: { noun: "reader", frameBased: true, pads: {
-        clk: { what: "extra clocks", rules: [] } } },
+        clk: { what: "extra clocks", rules: [{ module: "/pru_blocks/application_specific/ssi_initiator_block", via: [["data", "dataPin"]], padField: "clkPin" }] } } },
     bissc: { noun: "reader", frameBased: true, pads: {
-        ma: { what: "extra clocks", rules: [] } } },
+        ma: { what: "extra clocks", rules: [{ module: "/pru_blocks/application_specific/biss_c_initiator_block", via: [["slo", "dataPin"]], padField: "clkPin" }] } } },
     endat: { noun: "reader", frameBased: true, pads: {
-        clock: { what: "extra clocks", rules: [] } } },
+        clock: { what: "extra clocks", rules: [{ module: "/pru_blocks/application_specific/endat_initiator_block", via: [["data", "dataRxPin"]], padField: "clkPin" }] } } },
     sigma_delta: { noun: "reader", pads: {
         clk: { what: "extra clocks", rules: [{ module: PRU_IO + "pdm_block", via: [["data", "dataPin"]], padField: "clkPin" }] } } },
     // No block in this tool speaks BiSS Line: its MASTER clock can only be a hand-built generator.
