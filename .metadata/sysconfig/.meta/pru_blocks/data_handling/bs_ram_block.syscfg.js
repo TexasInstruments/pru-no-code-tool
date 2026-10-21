@@ -298,7 +298,7 @@ const bsRamModule = {
             { name: "snoop_write", displayName: "Snoop write (XOUT 49, BS RAM+SUM32)" }
         ] },
         { name: "rowAddress", displayName: "Row address (0..63)", default: 0, description: "BS RAM row 0..63 (2KB = 64 x 32B, TRM p.624). Table 6-92 (p.625) says 9-bit / 16KB; the TRM is inconsistent, so rows 64..511 are refused." },
-        { name: "byteCount", displayName: "Bytes", default: 4, description: "Transfer size in bytes, starting at R2 (R2..R9). Write: 1..4 (only R2 is loaded from the input). Read: 1..32 (XIN length). Snoop write: must be exactly 32 (SPRUIM2J Table 6-91; R3..R9 are zero-filled)." },
+        { name: "byteCount", displayName: "Bytes", default: 4, description: "Bytes from R2 up. Write: 1..4. Read: 1..32 (XIN length). Snoop write: exactly 32 (R3..R9 zero-filled).", longDescription: "Transfer size in bytes, starting at R2 (R2..R9). Write: 1..4 (only R2 is loaded from the input). Read: 1..32 (XIN length). Snoop write: must be exactly 32 (SPRUIM2J Table 6-91; R3..R9 are zero-filled)." },
         { name: "autoIndex", displayName: "AutoIndex (increment row after each transfer)", default: false },
         { name: "autoCount", displayName: "AutoIndex burst rows", default: 1, description: "When AutoIndex is on, number of sequential rows. Refused if row+count-1 >63." },
 
