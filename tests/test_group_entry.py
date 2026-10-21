@@ -65,7 +65,8 @@ GROUP_ENTRY = re.compile(
     r"[ \t]*ldi[ \t]+TEMP_REG1,[ \t]*0x100[ \t]*\r?\n"
     r"[ \t]*ldi32[ \t]+TEMP_REG2,[ \t]*0x22028[ \t]*\r?\n"
     r"[ \t]*sbbo[ \t]+&TEMP_REG1,[ \t]*TEMP_REG2,[ \t]*0,[ \t]*4")
-CT_SETUP = re.compile(r"[ \t]*; C28 = CTPPR0.*?sbbo[^\n]*\n", re.S)
+# The template's comment starts "; c28 = CTPPR0..." (case is not significant).
+CT_SETUP = re.compile(r"[ \t]*; C28 = CTPPR0.*?sbbo[^\n]*\n", re.S | re.I)
 
 
 def _group_with_mailbox(text):
