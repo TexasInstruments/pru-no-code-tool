@@ -8,10 +8,9 @@
 // SAME call pru_syscfg.inc.xdt makes -- and then executed. There is no
 // test-only macro path in the block and none is constructed here.
 //
-// The end-to-end proof that a GENERATED firmware (not just this in-process
-// call) carries the spinlock access lives in scripts/sysconfig_arm.sh,
-// which runs the real TI SysConfig CLI and the real clpru and greps their
-// output. This file covers behaviour the generator cannot show: the ownership
+// Whether a GENERATED firmware (not just this in-process call) carries the
+// spinlock access needs the real TI SysConfig CLI and clpru over complete
+// designs; that end-to-end check is not part of this file. This file covers behaviour the generator cannot show: the ownership
 // bit, and mutual exclusion between two cores.
 //
 // Oracle note: the 0x90 device model in scripts/simulator.js and this block
