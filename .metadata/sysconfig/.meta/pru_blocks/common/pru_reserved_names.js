@@ -17,11 +17,11 @@
  * sp, pc, main, call, ret, TEMP_REG1 and ordinary names all assemble fine.
  *
  * Case (each claim probed with clpru itself, both as a data symbol and as
- * a code label; see docs/ncp-268-report.md): register names r0-r31/c0-c31
+ * a code label): register names r0-r31/c0-c31
  * are case-insensitive (R5, C0 fail) — ANY case is rejected. Mnemonics are
  * rejected in exact-lowercase (add) and exact-ALL-UPPERCASE (ADD) only; a
- * mixed-case form (Add, Ldi32) ASSEMBLES and must be accepted, because the
- * brief's oracle says names that assemble are not reserved. Byte lanes are
+ * mixed-case form (Add, Ldi32) ASSEMBLES and must be accepted, because a
+ * name that assembles is not reserved. Byte lanes are
  * rejected lowercase only (b0 fails; B0 ASSEMBLES and is accepted).
  *
  * Loading: blocks reach this file through

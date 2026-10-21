@@ -10,8 +10,10 @@ import pytest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SYS_CONFIG = Path(os.environ.get("SYSCONFIG_CLI", r"C:\ti\sysconfig_1.28.0\dist\cli.js"))
-NODE = Path(os.environ.get("SYSCONFIG_NODE", r"C:\ti\sysconfig_1.28.0\nodejs\node.exe"))
+# Default install location of TI tools, as in imports.mak (TOOLS_PATH); override with SYSCONFIG_CLI / SYSCONFIG_NODE.
+TOOLS = Path(os.environ.get("TOOLS_PATH", (os.environ.get("SystemDrive", "C:") + "/ti") if os.name == "nt" else Path.home() / "ti"))
+SYS_CONFIG = Path(os.environ.get("SYSCONFIG_CLI", TOOLS / "sysconfig_1.28.0" / "dist" / "cli.js"))
+NODE = Path(os.environ.get("SYSCONFIG_NODE", TOOLS / "sysconfig_1.28.0" / "nodejs" / ("node.exe" if os.name == "nt" else "node")))
 PRODUCT = ROOT / ".metadata" / "product.json"
 DEVICE = "AM243x_ALX_beta"
 PACKAGE = "ALX"
@@ -43,18 +45,11 @@ def _run(module_path: str) -> subprocess.CompletedProcess[str]:
         f'scripting.addModule("{module_path}", {{}}, false).addInstance();\n',
         encoding="utf-8",
     )
-    env = os.environ.copy()
-    local = temp / "local"
-    roaming = temp / "roaming"
-    local.mkdir(exist_ok=True)
-    roaming.mkdir(exist_ok=True)
-    env["LOCALAPPDATA"] = str(local)
-    env["APPDATA"] = str(roaming)
     return subprocess.run(
         [str(NODE), str(SYS_CONFIG), "--product", str(PRODUCT), "--device", DEVICE,
          "--package", PACKAGE, "--part", PACKAGE, "--script", str(script),
          "--context", CONTEXT, "--output", str(temp / "out")],
-        cwd=ROOT, env=env, text=True, capture_output=True, timeout=60,
+        cwd=ROOT, text=True, capture_output=True, timeout=60,
     )
 
 

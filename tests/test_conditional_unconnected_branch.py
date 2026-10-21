@@ -1,6 +1,6 @@
 """An unconnected T or F port on If/Else is a validate() ERROR.
 
-Problem (LORA-52 F4): SysConfig only warned 'f_next port is not connected',
+Problem: SysConfig only warned 'f_next port is not connected',
 then clpru failed with [E0300] undefined symbol cmp_FALSE. Fix: fail early,
 at validate time, with a clear message naming the port. A fully connected
 design must still validate without that error.
