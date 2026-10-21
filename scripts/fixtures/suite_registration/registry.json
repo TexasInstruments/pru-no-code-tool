@@ -1,0 +1,9 @@
+{
+    "_comment": "Fixture registry for the registration self-test. It deliberately lists ONLY the registered control; test_unregistered_fixture.py must stay out so the checker proves it goes red.",
+    "roots": [
+        { "dir": "suites/tests", "include": "test_*.py" }
+    ],
+    "suites": [
+        { "path": "suites/tests/test_registered_control.py", "runner": "pytest" }
+    ]
+}

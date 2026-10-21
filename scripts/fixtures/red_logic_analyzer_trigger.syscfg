@@ -1,0 +1,7 @@
+/**
+ * @cliArgs --device "AM243x_ALV_beta" --package "ALV" --part "ALV" --context "icss_g0_pru0" --product "PRU_NO_CODE_TOOL@01.00.01" --product "MCU_PLUS_SDK_AM243x@11.01.00"
+ */
+const A=(n)=>scripting.addModule("/pru_blocks/pru_io_blocks/"+n).addInstance();
+// Red arm: rising-edge trigger reads R31 bit 2, which PWM drives.
+const l=A("../utils/logic_analyzer_block"); l.$name="LA"; l.triggerPin=2; l.triggerSlope="rising";
+const w=A("pwm_block"); w.$name="PWM"; w.pin="2";

@@ -1,0 +1,7 @@
+/**
+ * @cliArgs --device "AM243x_ALV_beta" --package "ALV" --part "ALV" --context "icss_g0_pru0" --product "PRU_NO_CODE_TOOL@01.00.01" --product "MCU_PLUS_SDK_AM243x@11.01.00"
+ */
+const A=(n)=>scripting.addModule("/pru_blocks/pru_io_blocks/"+n).addInstance();
+// Red arm: a write-mode parallel bus DRIVES its data pins, so a foreign GPI on one collides.
+const b=A("parallel_bus_block"); b.$name="BUS"; b.direction="write"; b.dataPinsStr="9,10"; b.strobePin=20;
+const p=A("pru_gpi_block"); p.$name="P"; p.constant1="R31, 1 << 9";
