@@ -1043,7 +1043,7 @@ function validatePruInstructions(inst, report) {
         let parts = u.split('\t');
         if (parts.length > 0) definedSymbols.add(parts[0].trim());
     });
-    
+
     let dataSects = getDataSectionContents();
     dataSects.forEach(d => {
         if (d.symbolName) definedSymbols.add(d.symbolName.trim());
@@ -1075,7 +1075,7 @@ function validatePruInstructions(inst, report) {
                     }
                 }
             }
-            
+
             // C. Invalid graph link targets
             if (b_inst.numOfInputPorts > 0) {
                 for (let i = 1; i <= b_inst.numOfInputPorts; i++) {
@@ -1156,20 +1156,20 @@ function validatePruInstructions(inst, report) {
         let call = pruInstructionsWithMacros[i];
         let moduleName = pruInstructionModules[i];
         let b_inst = pruInstructionInstances[i];
-        
+
         if (!call || call === 0 || call === "0" || !moduleName || !b_inst) continue;
         let mod = system.modules[moduleName];
-        
+
         if (mod && typeof mod.getMacro === 'function') {
             let callArgsStr = call.substring(call.indexOf(' ') + 1).trim();
             let callArgs = callArgsStr ? callArgsStr.split(',').map(s=>s.trim()).filter(s=>s!=="") : [];
             let callArity = callArgs.length;
-            
+
             if (callArgs.some(arg => arg === "undefined")) {
                 report.logError("Macro call contains 'undefined' argument. Call: " + call, b_inst);
             }
-            
-            
+
+
             // The arity check needs the macro DEFINITION, not the inline expansion.
             // Blocks switch on an empty first argument to emit the `.macro` line
             // (see uart_tx getMacroSingleShot, uart_rx getMacro), so calling with

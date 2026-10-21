@@ -1605,7 +1605,7 @@ function allocatePruRegisters() {
                         instanceName : instanceName,
                         groupContents : groupContents
                     });
-                    
+
                     // A group listed inside a loop's $groupContents is emitted outside the loop
                     // and never called. We reject this.
                     if (containerOf[instanceName]) {
