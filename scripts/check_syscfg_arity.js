@@ -61,6 +61,7 @@ const STANDALONE_UNREACHABLE = {
 // Blocks with a getMacro that this probe cannot get a generated macro call out of, with the reason.
 // Counted in the coverage line, never silently skipped; an entry that is reached now is STALE and fails.
 const UNREACHABLE = {
+    "/pru_blocks/application_specific/application_host_block": "getMacro returns '' (the block emits no .macro definition) although a call 'm_host_app_none R0.b0' is generated: nothing to arity-check",
     "/pru_blocks/pru_io_blocks/fdb_gp_ram_block": "validation requires externalInitProvided=true before code is generated: needs a configured fixture",
     "/pru_blocks/pru_io_blocks/xfr2spin_block": "validation requires a matching release block for the acquire: needs a paired fixture",
     "/pru_blocks/pru_io_blocks/xfr2tr_block": "validation requires an RTU_PRU core; the probe context is icss_g0_pru0",

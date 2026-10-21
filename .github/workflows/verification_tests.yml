@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (C) 2026 Texas Instruments Incorporated - http://www.ti.com/
+#
+# Headless Verification Suite CI — runs Node.js simulator and evidence ledger checks.
+# Triggered on push or pull request to key branches.
+
+name: Headless Verification Suite
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ "**" ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Headless Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pytest
+        run: python3 -m pip install pytest
+
+      # Every device-model / block suite must be registered in
+      # scripts/suite_registry.json or this step is red. --self-test also
+      # proves the enforcement itself with committed red/green fixtures.
+      - name: Check suite registration (enforced, with red/green self-test)
+        run: |
+          node scripts/check_suite_registration.js --self-test
+          node scripts/check_suite_registration.js
+
+      - name: Run verification suite
+        run: node scripts/run_all_tests.js
+
+      - name: Check block-reference docs are up to date
+        run: node scripts/check_block_docs.js
