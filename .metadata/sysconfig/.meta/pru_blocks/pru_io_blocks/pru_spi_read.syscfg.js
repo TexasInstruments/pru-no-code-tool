@@ -708,97 +708,11 @@ SKIP_BIT_ENTRY_0?:
     return macroBody;
 }
 
-function getAIContext() {
-    return getLongDescription() + ` 
-## How to Configure (For AI/Scripting)
 
-This section describes how to programmatically configure the SPI Read block in a .syscfg file.
-
-### Adding a SPI Read Instance
-
-\\\`\\\`\\\`javascript
-const pru_spi_read = scripting.addModule("/pru_blocks/pru_io_blocks/pru_spi_read", {}, false);
-const spi_read1 = pru_spi_read.addInstance();
-\\\`\\\`\\\`
-
-### Configuration Parameters
-
-| Parameter | Type | Valid Values | Default | Description |
-|-----------|------|--------------|---------|-------------|
-| Device Mode | String | "controller", "peripheral" | "controller" | SPI role selection |
-| SPI Mode | String | "MODE0", "MODE1", "MODE2", "MODE3" | "MODE1" | Clock polarity and phase |
-| packetSize | Integer | 8-32 | 8 | Number of bits to read |
-| Endiness | String | "most significant bit first", "least significant bit first" | "least significant bit first" | Bit order |
-| SCLK Signal | String | "0"-"19" | "0" | GPIO pin for clock |
-| SDI Signal | String | "0"-"19" | "1" | GPIO pin for data input |
-| CS Signal | String | "0"-"19" | "2" | GPIO pin for chip select |
-| sclk high pulse width (in PRU cycles) | Integer | 1-0xFFFFFFFF | 7 | Clock high time (Controller only) |
-| sclk low pulse width (in PRU cycles) | Integer | 1-0xFFFFFFFF | 7 | Clock low time (Controller only) |
-| CS Setup Time | Integer | 0-10000 | 35 | CS setup time in nanoseconds (Controller only) |
-| CS Hold Time | Integer | 0-10000 | 10 | CS hold time in nanoseconds (Controller only) |
-| Data Setup Time | Integer | 0-10000 | 0 | Data setup time in nanoseconds, converted to PRU cycles internally (Controller only) |
-| CS Filter Cycles | Integer | 1-0xFFFFFFFF | 2 | CS glitch filter cycles (Peripheral only) |
-
-### Example Configurations
-
-**SPI Controller Read, MODE1, 8-bit, LSB first:**
-\\\`\\\`\\\`javascript
-spi_read1.$name = "SPI_Read_0";
-spi_read1["Device Mode"] = "controller";
-spi_read1["SPI Mode"] = "MODE1";
-spi_read1.packetSize = 8;
-spi_read1["Endiness"] = "least significant bit first";
-spi_read1["SCLK Signal"] = "0";
-spi_read1["SDI Signal"] = "1";
-spi_read1["CS Signal"] = "2";
-spi_read1["sclk high pulse width (in PRU cycles)"] = 7;
-spi_read1["sclk low pulse width (in PRU cycles)"] = 7;
-spi_read1["CS Setup Time"] = 35;
-spi_read1["CS Hold Time"] = 10;
-\\\`\\\`\\\`
-
-**SPI Peripheral Read, MODE3, 16-bit, MSB first:**
-\\\`\\\`\\\`javascript
-spi_read1.$name = "SPI_Peripheral_Read";
-spi_read1["Device Mode"] = "peripheral";
-spi_read1["SPI Mode"] = "MODE3";
-spi_read1.packetSize = 16;
-spi_read1["Endiness"] = "most significant bit first";
-spi_read1["SCLK Signal"] = "4";         // Input pin for clock
-spi_read1["SDI Signal"] = "5";
-spi_read1["CS Signal"] = "6";           // Input pin for CS
-spi_read1["CS Filter Cycles"] = 2;
-\\\`\\\`\\\`
-
-### Connecting to Other Blocks
-
-\\\`\\\`\\\`javascript
-// Connect SPI Read output to downstream processing block
-scripting.connect(spi_read1, "output1", process_block, "input1");
-
-// Connect control flow
-scripting.connect(prev_block, "next", spi_read1, "prev");
-scripting.connect(spi_read1, "next", next_block, "prev");
-\\\`\\\`\\\`
-
-### Important Notes
-
-1. **Pin Assignment**: In Controller mode, SCLK and CS are outputs (GPO). In Peripheral mode, SCLK and CS are inputs (GPI). SDI is always input (GPI).
-
-2. **Pin Uniqueness**: All three signals (CS, SCLK, SDI) must use different GPIO pins.
-
-3. **Minimum Pulse Widths** (Controller mode, per SPI mode):
-	- MODE0: Min High=4, Min Low=3
-	- MODE1: Min High=1, Min Low=6
-	- MODE2: Min High=3, Min Low=4
-	- MODE3: Min High=6, Min Low=1
-
-4. **Read-Only Operation**: This block only reads data from the SPI bus. Use SPI Write or SPI Transfer for sending data.
-`;
-}
 
 function getLongDescription() {
-		return `
+		return `NOTE: Before making any assumptions about this block's parameters, behavior, or configuration, always read the docs file at: docs_ai/pru_io_blocks/pru_spi_read.md 
+
 ## PRU SPI Read Block
 
 ### Purpose
@@ -1000,7 +914,6 @@ exports = {
 	displayName: "PRU SPI Read",
 	defaultInstanceName: `${PRU_USED}_SPI_Read_`,
 	longDescription: getLongDescription(),
-    getAIContext: getAIContext,
 	uiView: "graph",
 	templates: {
 		//need to check what can be passed as argument to template file, right now no argument is required
@@ -1230,8 +1143,8 @@ exports = {
 				// HIGH half overhead: SET SCLK + sub (1) + dataSetup = 2 + dataSetup
 				else if (mode === "MODE1") value = high - 2 - dataSetup;
 
-				// MODE2: DATA_SETUP_TIME is not in this half (accounted for in delay_component2)
-				// LOW half overhead: overhead compensation of 4 = low - 4
+				// MODE2: DATA_SETUP_TIME is in the HIGH half (before CLR SCLK sampling edge)
+				// HIGH half overhead: sub(1) + dataSetup + DELAY_COMPEN_1 → delay_component1 = low - 1 - dataSetup (using low as HIGH pulse base)
 				else if (mode === "MODE2") value = low - 4 ;
 
 				// MODE3: DATA_SETUP_TIME is now in the LOW half (before SET SCLK sampling edge)
@@ -1273,8 +1186,8 @@ exports = {
 				// LOW half overhead: CLR SCLK + bit handling (4) + qbne (1) = 6
 				else if (mode === "MODE1") value = low - 5;
 
-				// MODE2: DATA_SETUP_TIME is in the HIGH half (before CLR SCLK sampling edge)
-				// HIGH half overhead: overhead compensation of 3 + dataSetup = high - 3 - dataSetup
+				// MODE2: DATA_SETUP_TIME is in the HIGH half (not here — DELAY_COMPEN_2 is in LOW half)
+				// LOW half overhead: read SDI(4) + SET SCLK(1) + add/sub(1) + qbne(1) = 7... using base of 3
 				else if (mode === "MODE2") value = high - 3 - dataSetup;
 
 				// MODE3: DATA_SETUP_TIME is in the LOW half (not here)

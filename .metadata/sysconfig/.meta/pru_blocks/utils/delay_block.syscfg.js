@@ -48,68 +48,11 @@ endloop?:`;
     return macroBody;
 }
 
-function getAIContext() {
-    return getLongDescription() + `
 
-## How to Configure (For AI/Scripting)
-
-This section describes how to programmatically configure the Delay block in a .syscfg file.
-
-### Adding a Delay Instance
-
-\\\`\\\`\\\`javascript
-const delay_block = scripting.addModule("/pru_blocks/utils/delay_block", {}, false);
-const delay1 = delay_block.addInstance();
-\\\`\\\`\\\`
-
-### Configuration Parameters
-
-| Parameter | Type | Valid Values | Default | Description |
-|-----------|------|--------------|---------|-------------|
-| delayCount | Integer | 1-255 | 1 | Number of PRU clock cycles to wait |
-
-### Example Configurations
-
-**Short delay (50ns at 200MHz):**
-\\\`\\\`\\\`javascript
-delay1.$name = "Delay_Short";
-delay1.delayCount = 10;           // 10 cycles = 50ns
-\\\`\\\`\\\`
-
-**Medium delay (500ns at 200MHz):**
-\\\`\\\`\\\`javascript
-delay1.$name = "Delay_Medium";
-delay1.delayCount = 100;          // 100 cycles = 500ns
-\\\`\\\`\\\`
-
-**Maximum single-block delay (1.275us at 200MHz):**
-\\\`\\\`\\\`javascript
-delay1.$name = "Delay_Max";
-delay1.delayCount = 255;          // 255 cycles = 1.275us
-\\\`\\\`\\\`
-
-### Connecting to Other Blocks
-
-\\\`\\\`\\\`javascript
-// Connect control flow (Delay is a pass-through block)
-scripting.connect(prev_block, "next", delay1, "prev");
-scripting.connect(delay1, "next", next_block, "prev");
-\\\`\\\`\\\`
-
-### Important Notes
-
-1. **Maximum Delay**: Single Delay block limited to 255 cycles. Use Loop block for longer delays.
-
-2. **Timing**: At 200MHz PRU clock, 1 cycle = 5ns. delayCount of 200 = 1 microsecond.
-
-3. **Pass-through**: Delay block has no data ports - it only introduces timing delay in the control flow.
-
-4. **Single Cycle Special Case**: When delayCount=1, generates single NOP instruction instead of loop.
-`;
-}
 
 function getLongDescription() {
-	return `
+	return `NOTE: Before making any assumptions about this block's parameters, behavior, or configuration, always read the docs file at: docs_ai/utils/delay_block.md 
+
 ## Delay Block
 
 ### Purpose
@@ -201,7 +144,6 @@ exports = {
 	displayName: "Delay",
 	defaultInstanceName: "Delay_",
 	longDescription: getLongDescription(),
-    getAIContext: getAIContext,
 	uiView: "graph",
 	templates: {
 		//need to check what can be passed as argument to template file, right now no argument is required

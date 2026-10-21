@@ -108,6 +108,10 @@ sysconfig_generated_start:
 %if(typeof(labels[iterator]) == "string" && labels[iterator] !== "")
 %{
 `labels[iterator]`:
+%if(labels[iterator].endsWith("_end"))
+%{
+
+%}
 %}
 %    if((!pruInstructions[iterator].includes("-1")) && (pruInstructions[iterator] != "0") && (!pruInstructions[iterator].includes("undefined")))
 %    {
@@ -128,6 +132,10 @@ sysconfig_generated_start:
 %if(typeof(labels[iterator]) == "string" && labels[iterator] !== "")
 %{
 `labels[iterator]`:
+%if(labels[iterator].endsWith("_end"))
+%{
+
+%}
 %}
 %    if((!pruInstructions[iterator].includes("-1")) && (pruInstructions[iterator] != "0") && (!pruInstructions[iterator].includes("undefined")))
 %    {

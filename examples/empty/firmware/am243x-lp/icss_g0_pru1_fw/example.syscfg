@@ -15,7 +15,7 @@ const flow_control_block1 = flow_control_block.addInstance();
  * Write custom configuration values to the imported modules.
  */
 flow_control_block1.$name  = "Flow_Control_0";
-flow_control_block1.opCode = "HALT";
+
 
 /**
  * (x,y) coordinates for modules that are displayed in a graph.

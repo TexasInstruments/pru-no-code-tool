@@ -327,7 +327,8 @@ no_stop_carry?:
 }
 
 function getLongDescription() {
-    return `
+    return `NOTE: Before making any assumptions about this block's parameters, behavior, or configuration, always read the docs file at: docs_ai/pru_io_blocks/uart_rx_op.md 
+
 ## UART RX Op (Per-Reception Operation)
 
 ### Purpose
@@ -386,98 +387,12 @@ allocator needs to know at design time.
 `;
 }
 
-function getAIContext() {
-    return getLongDescription() + `
-## How to Configure (For AI/Scripting)
 
-This section describes how to programmatically configure the UART RX Op block in a .syscfg file.
-
-**CRITICAL**: The UART RX Op block requires a paired \`UART Config\` block with RX enabled.
-The op block reads all RX parameters (channel, baud rate, oversample, bit order, start bit polarity)
-from the config block automatically. Only \`rxFrameSize\` is set on the op block itself.
-
-### Step 1 — Add and configure a UART Config block (RX enabled)
-
-\`\`\`javascript
-const uart_config = scripting.addModule("/pru_blocks/pru_io_blocks/uart_config", {}, false);
-const uart_config1 = uart_config.addInstance();
-uart_config1.$name    = "PRU_UART_CONFIG_0";
-uart_config1.enableTX = false;         // TX-only or TX+RX — set as needed
-uart_config1.enableRX = true;
-uart_config1.rxChannel         = 2;    // Channel 2 (GPI11 = PERIF2_IN)
-uart_config1.rxClockSource     = 0;    // 192 MHz (UART_CLK)
-uart_config1.rxBaudRate        = 12;   // 12 MHz
-uart_config1.rxOversampleSize  = 7;    // 8x oversample
-uart_config1.rxStartBitPolarity = 1;   // Rising edge
-uart_config1.rxBitSwap         = true; // LSB first (standard UART)
-\`\`\`
-
-### Step 2 — Add and configure the UART RX Op block
-
-\`\`\`javascript
-const uart_rx_op = scripting.addModule("/pru_blocks/pru_io_blocks/uart_rx_op", {}, false);
-const uart_rx_op1 = uart_rx_op.addInstance();
-uart_rx_op1.$name       = "PRU_UART_RX_OP_0";
-uart_rx_op1.rxFrameSize = 18;          // 16 data bits + start + stop = 18
-uart_rx_op1.uartConfig  = uart_config1; // Link to config block
-\`\`\`
-
-### Step 3 — Connect control flow and data
-
-\`\`\`javascript
-// Control flow: config must run before op
-scripting.connect(uart_config1, "next", uart_rx_op1, "prev");
-
-// Data: connect op output to downstream block
-scripting.connect(uart_rx_op1, "output1", next_block, "input1");
-
-// Control flow out of op
-scripting.connect(uart_rx_op1, "next", next_block, "prev");
-\`\`\`
-
-### Configuration Parameters
-
-| Parameter | Type | Valid Values | Default | Description |
-|-----------|------|--------------|---------|-------------|
-| rxFrameSize | Integer | 3–64 | 10 | Total frame bits (dataBits + 2). Values > 32 use 64-bit output port |
-
-All other RX parameters (channel, baud rate, oversample, bit order, start bit polarity) are
-read from the paired \`UART Config\` block — do not duplicate them here.
-
-### Output Port Type by Frame Size
-
-| rxFrameSize | Data Bits | Output Port | Notes |
-|-------------|-----------|-------------|-------|
-| 3–32 | 1–30 | 32-bit (output32) | Single register output |
-| 33–64 | 31–62 | 64-bit (output64) | Two consecutive registers; downstream block must accept 64-bit input |
-
-### Common Frame Sizes
-
-| Protocol | Data Bits | rxFrameSize |
-|----------|-----------|-------------|
-| Standard UART 8-bit | 8 | 10 |
-| UART 16-bit payload | 16 | 18 |
-| UART 24-bit payload | 24 | 26 |
-| UART 30-bit payload | 30 | 32 |
-| UART 31-bit payload (extended) | 31 | 33 |
-
-### Important Notes
-
-1. **UART Config must appear before UART RX Op** in the control flow (connect config "next" to op "prev").
-
-2. **rxFrameSize > 32 activates extended mode** — output port becomes 64-bit. Downstream blocks must be wired to accept a 64-bit input.
-
-3. **No peripheral register writes in this block** — only rx_en assert/de-assert and the bit polling loop. All register setup is in \`UART Config\`.
-
-4. **uartConfig linkage is mandatory** — always set \`uart_rx_op1.uartConfig = uart_config1\` or the block will error during validation.
-`;
-}
 
 exports = {
     displayName: "PRU UART RX Op",
     defaultInstanceName: "PRU_UART_RX_OP_",
     longDescription: getLongDescription(),
-    getAIContext: getAIContext,
     uiView: "graph",
     templates: {
         "/pru_blocks/common/pru_syscfg.asm.xdt": null
