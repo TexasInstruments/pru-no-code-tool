@@ -2233,6 +2233,8 @@ function validateXfr2trGlobal(inst, report) {
 // region and the field that asserts a second writer. A block is registered here in the same
 // change that adds it.
 const CROSS_CORE_WRITER_BLOCKS = [
+    { module: "/pru_blocks/application_specific/ipc_shared_mem_block", label: "IPC Shared Memory",
+      variableField: "variableName", crossCoreField: "crossCoreWriters" }
 ];
 
 function validateXfr2spinGlobal(inst, report) {
