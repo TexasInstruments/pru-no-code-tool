@@ -41,3 +41,4 @@ __pycache__/
 !*boardcfg_*.bin
 source/sysconfig/
 source/board/pmic/pmic_lld/
+build_out/

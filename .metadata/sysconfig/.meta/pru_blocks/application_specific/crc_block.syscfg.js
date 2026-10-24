@@ -61,6 +61,13 @@ function    getLookUptable(instance)
 }
 
 function validate(inst, report) {
+	// $name is emitted as the CRC lookup-table symbol ("<name> .byte/.ushort/.uint ..." in .initdmem); reject clpru reserved identifiers via the shared helper.
+	if (typeof system !== "undefined" && system.getScript) {
+		var reservedNames = system.getScript("/pru_blocks/common/pru_reserved_names.js");
+		if (reservedNames && typeof reservedNames.validateInstanceName === "function") {
+			reservedNames.validateInstanceName(inst, report, "This block emits the instance name as the CRC lookup-table symbol in .initdmem.");
+		}
+	}
 	if(inst["input1"].length == 0)
 	{
 		report.logWarning("crc is not intialized",inst)	
@@ -153,17 +160,33 @@ function getMacro(pruInstructionMacro, opCode)
     }
 	
     if (macroName && macroName.trim().startsWith("m_calculate_crc16")) {
+        // LUT entries are 2 bytes: the byte offset is index*2, which does not
+        // fit in a .b0 operand, so the scaled offset is added into the base
+        // and the LBBO offset register is zeroed (LDI TEMP_REG2, 0) first. The
+        // LDI is required on every model: without it the .b0 offset left in
+        // TEMP_REG2 is added a second time on top of the scaled base.
         macroBody += `    LDI32   TEMP_REG1, ${lutAddress}
     LSR     TEMP_REG2.b0, ${crcInit}, 8
     XOR     TEMP_REG2.b0, TEMP_REG2.b0, ${dataByte}
+    AND     TEMP_REG2, TEMP_REG2, 0xFF
+    LSL     TEMP_REG2, TEMP_REG2, 1
+    ADD     TEMP_REG1, TEMP_REG1, TEMP_REG2
+    LDI     TEMP_REG2, 0
     LBBO    &${crcResult}, TEMP_REG1, TEMP_REG2.b0, 2
     LSL     TEMP_REG2, ${crcInit}, 8
     XOR     ${crcResult}, TEMP_REG2.w0, ${crcResult}`;
     }
     if (macroName && macroName.trim().startsWith("m_calculate_crc32")) {
+        // LUT entries are 4 bytes: the byte offset is index*4 (up to 1020),
+        // which does not fit in a .b0 operand, so the scaled offset is added
+        // into the base and the LBBO offset register is zeroed first.
         macroBody += `    LDI32   TEMP_REG1, ${lutAddress}
     LSR     TEMP_REG2.b0, ${crcInit}, 24
     XOR     TEMP_REG2.b0, TEMP_REG2.b0, ${dataByte}
+    AND     TEMP_REG2, TEMP_REG2, 0xFF
+    LSL     TEMP_REG2, TEMP_REG2, 2
+    ADD     TEMP_REG1, TEMP_REG1, TEMP_REG2
+    LDI     TEMP_REG2, 0
     LBBO    &${crcResult}, TEMP_REG1, TEMP_REG2.b0, 4
     LSL     TEMP_REG2,  ${crcInit}, 8
     XOR     ${crcResult}, TEMP_REG2, ${crcResult}`;
@@ -302,22 +325,30 @@ Calculates CRC checksums for error detection in data transmission and storage. C
 - LDI32  TEMP_REG1, CRC_LUT_address   ; Load LUT address
 - LSR    TEMP_REG2.b0, init, 8        ; Extract high byte
 - XOR    TEMP_REG2.b0, TEMP_REG2.b0, dataByte  ; XOR with data
+- AND    TEMP_REG2, TEMP_REG2, 0xFF   ; Zero-extend the table index
+- LSL    TEMP_REG2, TEMP_REG2, 1      ; Scale: entries are 2 bytes (index*2)
+- ADD    TEMP_REG1, TEMP_REG1, TEMP_REG2  ; Base += scaled byte offset
+- LDI    TEMP_REG2, 0                 ; Zero the LBBO offset register
 - LBBO   &result, TEMP_REG1, TEMP_REG2.b0, 2   ; Lookup
 - LSL    TEMP_REG2, init, 8           ; Shift init left
-- XOR    result, TEMP_REG2.w0, result ; XOR with lookup (9 cycles)
+- XOR    result, TEMP_REG2.w0, result ; XOR with lookup (13 cycles)
 
 **Generated Assembly** (CRC32 example):
 - LDI32  TEMP_REG1, CRC_LUT_address   ; Load LUT address
 - LSR    TEMP_REG2.b0, init, 24       ; Extract high byte
 - XOR    TEMP_REG2.b0, TEMP_REG2.b0, dataByte  ; XOR with data
+- AND    TEMP_REG2, TEMP_REG2, 0xFF   ; Zero-extend the table index
+- LSL    TEMP_REG2, TEMP_REG2, 2      ; Scale: entries are 4 bytes (index*4)
+- ADD    TEMP_REG1, TEMP_REG1, TEMP_REG2  ; Base += scaled byte offset
+- LDI    TEMP_REG2, 0                 ; Zero the LBBO offset register
 - LBBO   &result, TEMP_REG1, TEMP_REG2.b0, 4   ; Lookup
 - LSL    TEMP_REG2, init, 8           ; Shift init left
-- XOR    result, TEMP_REG2, result    ; XOR with lookup (9 cycles)
+- XOR    result, TEMP_REG2, result    ; XOR with lookup (13 cycles)
 
 **Performance**:
 - CRC8: 6 PRU cycles per byte
-- CRC16: 9 PRU cycles per byte
-- CRC32: 9 PRU cycles per byte
+- CRC16: 13 PRU cycles per byte
+- CRC32: 13 PRU cycles per byte
 
 **Lookup Table**: Automatically generated 256-entry table based on polynomial
 - CRC8: 256 bytes (256 × 1 byte)
@@ -589,14 +620,14 @@ exports = {
 				{
 					return 6
 				}
-				if(inst["opCode"] == "m_calculate_crc16")
-				{
-					return 9
-				}
-				if(inst["opCode"] == "m_calculate_crc32")
-				{
-					return 9
-				}
+			if(inst["opCode"] == "m_calculate_crc16")
+			{
+				return 13
+			}
+			if(inst["opCode"] == "m_calculate_crc32")
+			{
+				return 13
+			}
 			}
 		}
 	],

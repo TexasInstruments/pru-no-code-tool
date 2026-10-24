@@ -1,0 +1,7 @@
+/**
+ * @cliArgs --device "AM243x_ALV_beta" --package "ALV" --part "ALV" --context "icss_g0_pru0" --product "PRU_NO_CODE_TOOL@01.00.01" --product "MCU_PLUS_SDK_AM243x@11.01.00"
+ */
+const A=(n)=>scripting.addModule("/pru_blocks/pru_io_blocks/"+n).addInstance();
+// Green arm: Z (default bit 2) is read only when useIndex is on, so PWM on 2 is fine.
+const q=A("quadrature_block"); q.$name="QEP"; q.aBit="0"; q.bBit="1";
+const w=A("pwm_block"); w.$name="PWM"; w.pin="2";

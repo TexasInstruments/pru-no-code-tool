@@ -41,6 +41,8 @@ SECTIONS {
 	.stack		>  PRU1_DMEM_1, PAGE 1
 	.bss		>  PRU1_DMEM_1, PAGE 1
 	.udmem		>  PRU1_DMEM_1, PAGE 1
+	.usmem		>  PRU_SHAREDMEM, PAGE 2
+	.udmem		>  PRU1_DMEM_1, PAGE 1
 	.initdmem   >  PRU1_DMEM_1, PAGE 1
 	.cio		>  PRU1_DMEM_1, PAGE 1
 	.data		>  PRU1_DMEM_1, PAGE 1

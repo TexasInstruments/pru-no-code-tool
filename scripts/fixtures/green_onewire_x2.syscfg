@@ -1,0 +1,7 @@
+/**
+ * @cliArgs --device "AM243x_ALV_beta" --package "ALV" --part "ALV" --context "icss_g0_pru0" --product "PRU_NO_CODE_TOOL@01.00.01" --product "MCU_PLUS_SDK_AM243x@11.01.00"
+ */
+const A=(n)=>scripting.addModule("/pru_blocks/pru_io_blocks/"+n).addInstance();
+// Green arm: two 1-wire instances on one data pad are one protocol, sequential.
+const o=A("onewire_block"); o.$name="OW"; o.dataPin="9";
+const p=A("onewire_block"); p.$name="OW2"; p.dataPin="9";
