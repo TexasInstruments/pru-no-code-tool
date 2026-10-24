@@ -1,0 +1,25 @@
+/**
+ * @cliArgs --device "AM243x_ALV_beta" --package "ALV" --part "ALV" --context "icss_g0_pru0" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * Minimal fixture proving arithmetic_block emits through the inline
+ * opcode path even though it intentionally has no getMacro().
+ */
+const constants = scripting.addModule("/pru_blocks/data_handling/load_constant_block", {}, false);
+const lhs = constants.addInstance();
+lhs.$name = "lhs";
+lhs.constant1 = 4;
+const rhs = constants.addInstance();
+rhs.$name = "rhs";
+rhs.constant1 = 5;
+
+const arithmetic = scripting.addModule("/pru_blocks/data_handling/arithmetic_block", {}, false).addInstance();
+arithmetic.$name = "sum";
+arithmetic.opCode = "ADD";
+
+const stop = scripting.addModule("/pru_blocks/program_control/flow_control_block", {}, false).addInstance();
+stop.$name = "stop";
+stop.opCode = "HALT";
+
+scripting.connect(lhs, "output1", arithmetic, "input1");
+scripting.connect(rhs, "output1", arithmetic, "input2");
+scripting.connect(lhs, "next", arithmetic, "prev");
+scripting.connect(arithmetic, "next", stop, "prev");

@@ -2,6 +2,9 @@
 
 The **Simulation Settings** module lets you run a software simulation of your PRU block design without any hardware. You configure the PRU clock frequency, how many cycles to run, which output (GPO) signals to display, and what input (GPI) data to inject. After configuration, the tool executes your PRU instructions and shows the resulting waveforms in the Simulation tab.
 
+> [!NOTE]
+> For instructions on how to use the GUI and CLI simulators, see [Using the Simulator](./using-the-simulator.md).
+
 ---
 
 ## Configuration Parameters
@@ -25,6 +28,30 @@ Select the PRU core clock frequency that matches your target hardware:
 ### Number of PRU Cycles to Simulate
 
 The total number of PRU clock cycles to execute. The default is **2000 cycles**. Increase this for longer transactions (e.g., multiple SPI frames) or if your waveform gets cut off before the transaction completes.
+
+---
+
+## Run on TI pru-simulator, and the live web view
+
+**Run on TI pru-simulator** (Real Simulation) saves nothing for you: it generates, builds with `clpru` and runs the **saved** `.syscfg` on TI pru-simulator against the attached device models (the same path as `gmake sim`). The verdict in the panel comes from that run's exit code only. Save the design first; a result for an earlier design is shown as STALE.
+
+### Open live web view after the run
+
+Tick **Open live web view after the run** (`tiRunLiveView`, off by default) to also get TI pru-simulator's browser dashboard on the ELF the button just built, with the bound devices attached. The dashboard adds a verdict banner (`/live/verdict`) and the waveform (`/live/vcd`); press Run in the dashboard to watch the exchange.
+
+| Field | Meaning |
+| --- | --- |
+| **Open live web view after the run** | Off by default. When on, the view is started after a PASS, FAIL or NOT CHECKED run. It is **not** started when the run was REFUSED (unsaved or stale design, another run in progress, toolchain missing) or the build failed: there is then no ELF for the design on screen. |
+| **Live web view port** (`tiRunLivePort`) | Shown only when the box is ticked. Default 8765, loopback only (`127.0.0.1`). |
+
+- **Replacement, not duplicates.** The next Run with the box ticked stops the view the previous Run started (recorded in `.ti_live_view.json` beside the makefile, with its pid) and starts a new one. Only that recorded pid is stopped, and only if it is really a `live_view.py` process; anything else is left alone.
+- **A busy port is reported, not taken.** If something else holds the port the panel says `Live web view: not started - port N is in use ...`. Pick another port.
+- **Detached.** The view keeps running after the Run finishes and after SysConfig's wait ends; its log is `syscfg/ti_live_view.log`. Close it by closing the console-less process (for example from Task Manager) or by pressing Run again with the box ticked; the panel prints its pid.
+- **The panel line.** `Live web view: http://127.0.0.1:8765 (opened in your browser; pid N)`, or `Live web view: not started - <reason>` / `failed - <reason> (log: ...)`. It is shown only for a result that matches the design on screen.
+- **It never changes the verdict.** The view is a convenience: a view that fails to start leaves the verdict and exit code exactly as the run produced them. Both fields are saved in the `.syscfg` (a per-design preference) but are ignored by the design digest, so ticking the box does not make the last result STALE.
+- **Scope.** The live view shows **simulator results only**: TI pru-simulator running the real `clpru` ELF against behavioural device models. It is not hardware. Edits made by hand in the dashboard (memory, peripheral configuration, a replaced simulator) withhold the verdict until the live view is restarted; a register or pin edit is cleared by Reset.
+
+From a shell the same view is `gmake live` (it runs `gmake sim` first, so the verdict exists before the browser opens).
 
 ---
 

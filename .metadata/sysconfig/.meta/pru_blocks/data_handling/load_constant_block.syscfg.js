@@ -5,7 +5,13 @@ function validate(inst, report) {
 		{
 			report.logWarning("input"+iterator.toString()+" port not connected to output port",inst)	
 		}
-	}	
+	}
+	// an explicit output width must be able to hold the constant
+	const width = inst["outputWidth"];
+	if(width !== "auto" && getNumOfBytes(inst["constant1"]) > parseInt(width))
+	{
+		report.logError("Constant " + inst["constant1"] + " needs " + getNumOfBytes(inst["constant1"]) + " byte(s) but Output Width is " + width + " byte(s). Choose a wider Output Width or Auto.", inst, "outputWidth");
+	}
 }
 function getNumOfBytes(value)
 {
@@ -44,6 +50,7 @@ const ldi1 = load_constant_block.addInstance();
 | Parameter | Type | Valid Values | Default | Description |
 |-----------|------|--------------|---------|-------------|
 | constant1 | Integer | 0 to 0xFFFFFFFF | 0 | Constant value to load |
+| outputWidth | String | "auto", "1", "2", "4" | "auto" | Register bytes reserved for the output (auto sizes from the value) |
 
 ### Example Configurations
 
@@ -69,6 +76,13 @@ ldi1.constant1 = 0xDEADBEEF;     // 3735928559 decimal
 \\\`\\\`\\\`javascript
 ldi1.$name = "Bit_Mask";
 ldi1.constant1 = 0xFF00FF00;     // Alternating byte mask
+\\\`\\\`\\\`
+
+**Load a small value into its own full 32-bit register (never packed with another constant):**
+\\\`\\\`\\\`javascript
+ldi1.$name = "Coeff_0";
+ldi1.constant1 = 0x1000;
+ldi1.outputWidth = "4";          // default "auto" sizes the register from the value
 \\\`\\\`\\\`
 
 **Load zero:**
@@ -99,7 +113,9 @@ scripting.connect(ldi1, "next", next_block, "prev");
 - 2 bytes for values 256-65535
 - 4 bytes for values > 65535
 
-4. **Hexadecimal**: Values can be specified in hex (0x prefix) or decimal.
+4. **Output Width**: outputWidth = "auto" (default) sizes the register from the value as above. "1", "2" or "4" reserves exactly that many bytes, so a small constant set to "4" gets a whole 32-bit register and is never packed with another constant. A width smaller than the value needs is a SysConfig error. The instruction is still LDI for values <= 0xFFFF (it zero-extends into the full register) and LDI32 above.
+
+5. **Hexadecimal**: Values can be specified in hex (0x prefix) or decimal.
 `;
 }
 
@@ -119,6 +135,7 @@ Loads an immediate constant value into a register. This is typically the startin
 - **Constant Value**: Enter any value from 0 to 4,294,967,295 (0xFFFFFFFF)
   - Can be entered in decimal or hexadecimal format
   - Block automatically determines optimal instruction
+- **Output Width**: Auto (default), 1, 2 or 4 bytes. Auto sizes the register from the value; 4 reserves a full 32-bit register even for a small value
 
 ### Technical Details (Additional Information)
 **Generated Assembly** (auto-selected based on value size):
@@ -201,6 +218,18 @@ exports = {
 			}
 		},
 		{
+			name: "outputWidth",
+			displayName: "Output Width",
+			description: "Register bytes reserved for the output. Auto sizes from the constant value.",
+			default: "auto",
+			options: [
+				{ name: "auto", displayName: "Auto (from value)" },
+				{ name: "1", displayName: "One byte" },
+				{ name: "2", displayName: "Two bytes" },
+				{ name: "4", displayName: "Four bytes (full register)" },
+			],
+		},
+		{
 			name: "opCode",
 			default: "LDI",
 			hidden: true
@@ -211,6 +240,11 @@ exports = {
 			hidden: true,
             getValue: (inst) => {
 				let bytes = getNumOfBytes(inst["constant1"]);
+				if(inst["outputWidth"] !== "auto")
+				{
+					// explicit width; a value that does not fit is reported by validate()
+					return Math.max(bytes == 3 ? 4 : bytes, parseInt(inst["outputWidth"]));
+				}
 				if(bytes == 3)
 				{
 					//storing in 4 continous bytes to number of instructions to access

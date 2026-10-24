@@ -157,7 +157,7 @@ Blocks for GPIO, SPI, UART, and memory operations.
 
 | Block | Purpose | Cycles | Max Frequency (200MHz PRU) |
 |-------|---------|--------|---------------------------|
-| PRU GPI | Read GPIO input pins (R31) | 1 | N/A |
+| PRU GPI | Read GPIO input pins (R31) | 3 | N/A |
 | PRU GPO | Write GPIO output pins (R30) | 1 | N/A |
 | SPI Read | Read data via SPI | Variable | Up to 8.33 MHz |
 | SPI Write | Write data via SPI | Variable | Up to 25.00 MHz |
@@ -188,6 +188,20 @@ Blocks implementing ready-to-use embedded algorithms, eliminating the need to wr
 | Block | Purpose | Cycles |
 |-------|---------|--------|
 | CRC | CRC8/16/32 checksum calculation (1 byte per block, table-lookup) | 6 (CRC8), 9 (CRC16/32) |
+
+### Additional Blocks
+
+Further blocks extend these categories; each has a user guide and a design page in the
+[block reference](docs/block-reference/README.md), generated from the block metadata by `node build_block_docs.js`.
+
+| Category | Blocks |
+|----------|--------|
+| Data Handling | Hardware MAC, IQMath PID, IQMath Park/Clarke, SVPWM, SUM32, BSWAP, Stitch FIFO, BS RAM, Trigger Router |
+| Program Control | Event, Scheduler |
+| PRU I/O | PWM, Three-Phase PWM, Servo, Stepper, Multi-Axis Motion, Quadrature, Hall, Encoder Speed, Capture, Counter, SDFM, PDM, I2C, I3C SDR Initiator, MDIO Master, OneWire, CAN Classic Decoder, SENT, Manchester, DSHOT, WS2812, SerDes, Parallel Bus, SPI ADC Sequencer, Mailbox, Scratchpad, Safety Dual Monitor, XFR2PSI, XFR2TR, XFR2SPIN, Queue Empty, FDB Generic RAM |
+| Utilities | IEP Timer, Logic Analyzer, Device Model |
+| Application Specific | IPC Shared Memory, BiSS-C Initiator, EnDat Initiator, SSI Initiator, Modbus RTU Framer, IO-Link Master, Industrial Serial Gateway |
+
 
 
 ---
@@ -325,6 +339,8 @@ The PRU No-Code tool includes a simulation feature to verify your design before 
 - **Peak Cycles**: Maximum cycles in any execution path
 - **Register Usage**: Which registers are allocated to which blocks
 
+Simulation Settings can also attach a behavioural device model to a GPI pin, and the Device Model block attaches one to a block; see [Using the simulator](docs/simulation/using-the-simulator.md) and [Device bindings](docs/simulation/device-bindings.md).
+
 ---
 
 ## Views and Summaries
@@ -364,6 +380,24 @@ Pins are sorted by direction (GPO pins first, then GPI pins) and by pin number i
 - External hardware interactions are simulated with test values
 - Simulation currently does not support UART block  
 - Timing is calculated, not measured
+
+### Running the tests
+
+The Python tests use pytest and node. Tests that need a tool that is not installed are reported as skipped with the reason.
+
+```bash
+python -m pytest tests scripts/sim -q
+for t in scripts/sim/test_*.js scripts/test_*.js; do node "$t" || echo "FAIL $t"; done
+node scripts/check_syscfg_arity.js
+```
+
+Environment variables read by the tests that build and run firmware:
+
+- `SYSCFG_PATH`: SysConfig 1.28 installation (default `sysconfig_1.28.0` under `TOOLS_PATH`, as in `imports.mak.default`)
+- `CGT_TI_PRU_PATH`: TI PRU code generation tools 2.3.3 (clpru)
+- `PRU_SIMULATOR_PATH`: a checkout of [TI pru-simulator](https://github.com/TexasInstruments/pru-simulator)
+
+Tests that build through `gmake` also need an `imports.mak` at the repository root (a copy of `imports.mak.default` with your tool paths).
 
 ---
 

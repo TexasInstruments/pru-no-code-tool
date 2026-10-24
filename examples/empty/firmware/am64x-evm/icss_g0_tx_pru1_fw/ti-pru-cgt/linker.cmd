@@ -40,6 +40,8 @@ SECTIONS {
 	.text		>  TX_PRU_IMEM, PAGE 0
 	.stack		>  TX_PRU1_DMEM_1, PAGE 1
 	.bss		>  TX_PRU1_DMEM_1, PAGE 1
+	.udmem		>  TX_PRU1_DMEM_1, PAGE 1
+	.usmem		>  PRU_SHAREDMEM, PAGE 2
 	.cio		>  TX_PRU1_DMEM_1, PAGE 1
 	.data		>  TX_PRU1_DMEM_1, PAGE 1
 	.switch		>  TX_PRU1_DMEM_1, PAGE 1

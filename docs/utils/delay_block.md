@@ -11,7 +11,7 @@ Introduces a precise timing delay in PRU execution. Each delay count equals one 
 - 1–255 cycle delay per block
 - Single NOP for 1-cycle delays (no loop overhead)
 - Pass-through block — no data ports, only control flow
-- Chain with Loop block for delays beyond 255 cycles
+- Chain Delay blocks sequentially for delays beyond 255 cycles. A Delay with count greater than one emits a hardware `LOOP`, so it cannot be placed inside a Loop block.
 
 ### Configuration
 
@@ -38,35 +38,35 @@ NOP                          ; 1 cycle
 
 **Multi-cycle (delayCount > 1):**
 ```assembly
-    loop    endloop?, count - 1   ; Setup loop (2 cycles overhead)
+    loop    endloop?, count - 1   ; Setup loop (1 cycle)
     NOP
 endloop?:
 ```
 
-Total cycles = `delayCount` (the block reports `delayCount` cycles, overhead included).
+Total cycles = `delayCount` (the block takes exactly `delayCount` cycles, matching noOfCycles).
 
 ### Delays Longer Than 255 Cycles
 
-Use a **Loop block** wrapping one or more Delay blocks:
+One Delay block waits at most 255 cycles. For longer waits:
 
-| Pattern | Formula | Example at 200 MHz |
-|---------|---------|-------------------|
-| Loop(N) → Delay(255) | N × 255 cycles | Loop(40) → ~51 µs |
-| Nested Loop(A) → Loop(B) → Delay(D) | A × B × D cycles | Loop(1000) × Loop(200) × Delay(255) = 255 ms |
+- **Chain Delay blocks.** Delay(255) -> Delay(255) -> Delay(100) waits 610 cycles.
+- **Put the chain in an infinite Loop** for a periodic task. An infinite Loop compiles to a branch, not the hardware LOOP instruction, so Delay blocks of any length are legal inside it.
+- **Use a software counter loop** (an Arithmetic block that decrements a counter and a Conditional block that branches back while it is non-zero) for very long waits.
 
-**Common delay targets:**
+Do not wrap a Delay longer than one cycle in a finite Loop: both emit the PRU hardware LOOP instruction and the PRU has one hardware-loop context, so SysConfig rejects it. Delay(1) is a plain NOP and is allowed inside any Loop.
 
-| Target | Configuration |
-|--------|--------------|
-| 10 µs | Loop(40) → Delay(50) |
-| 100 µs | Loop(100) → Delay(200) |
-| 1 ms | Loop(200) → Loop(5) → Delay(200) |
-| 10 ms | Loop(1000) → Loop(10) → Delay(200) |
+**Common delay targets (200 MHz):**
+
+| Target | Cycles | Configuration |
+|--------|--------|--------------|
+| 10 µs | 2,000 | 8 chained Delay(255) blocks |
+| 100 µs | 20,000 | ~79 chained Delay blocks is impractical; use a software counter loop |
+| 1 ms and up | 200,000+ | software counter loop, or schedule from the host |
 
 ### Important Notes
 
 - Maximum per block: **255 cycles** (hardware loop instruction limit)
 - This is a **pass-through block** — no input/output data ports, only `prev` and `next`
-- Loop overhead adds 2–3 cycles per iteration — account for this in precise timing
+- Hardware LOOP executes with zero overhead per iteration; the block takes exactly `delayCount` cycles matching noOfCycles
 
 ---

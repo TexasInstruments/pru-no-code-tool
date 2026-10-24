@@ -76,6 +76,25 @@ Implements SPI (Serial Peripheral Interface) protocol to **transmit** data in bo
 
 All three pins must be unique.
 
+### CS Idle Level, Fixed Timing Overhead and Program Memory
+
+**CS is driven to its idle (HIGH) level once per entry into the generated code: at program start and at every group start.** R30 resets to 0, so without help the CS pin would be LOW until the first transaction released it, and that first transaction would have no assertion edge. The generated program therefore starts with one `set r30, r30, <CS pin>` per distinct controller-mode CS pin (the same prologue that programs CTPPR0 for c28 users, emitted after `sysconfig_generated_start:` and at every group start), so you do not need a separate PRU GPO block to idle CS. It costs one cycle per CS pin once per entry into the generated code and nothing per transaction: the fixed overhead below is unchanged. Measured on the TI pru-simulator running the real clpru ELF (16-bit packet, MODE0, CS = bit 5, no GPO block in the design): CS rises at cycle 2 (idle level), falls at cycle 4 (assertion) and rises at release. Without the prologue only the release rise was seen. Peripheral-mode blocks sample CS on R31 and never drive it. If a design shares one CS pin between several SPI blocks it is set once.
+
+**Fixed overhead.** CS Setup Time and CS Hold Time add exactly ceil(ns x MHz / 1000) PRU cycles on top of a fixed instruction overhead (one nop per cycle, no loop overhead). Measured on the TI pru-simulator with 0 ns / 0 ns (CS assertion to the first SCLK edge, last SCLK edge to CS release; identical for 8, 16 and 32 bit packets):
+
+| SPI Mode | CS assert -> first SCLK edge | last SCLK edge -> CS release |
+|----------|------------------------------|------------------------------|
+| MODE0, MODE2 | +5 | +4 |
+| MODE1, MODE3 | +2 | +7 |
+
+A configured time is therefore a minimum: the real gap is the overhead plus the converted cycles.
+
+**Limits.** CS Setup Time and CS Hold Time are each one delay site and each convert to at most **256 PRU cycles** (1 KB of program memory); more is a validation error (1300 ns at 200 MHz is 260 cycles). Data Setup Time (0-10000 ns) is counted inside the SCLK half it precedes, so it adds no cycles and no program memory; validation requires that half to cover its fixed overhead plus Data Setup Time. The SCLK high / low pulse widths are not capped but every cycle of them is also a nop.
+
+**Program memory (IRAM).** Every delay cycle is one 4-byte instruction. A controller block with both CS times at the cap (1280 ns at 200 MHz) and 100-cycle SCLK pulses links to about 2.9 KB of `.text` (2,888 bytes measured for a design of that block, a Load Constant and a PRU GPO; 2,888-2,904 across read / write / transfer and the four SPI modes, whatever the Data Setup Time); a PRU core has 12 KB, and six such blocks (17,228-17,300 bytes) overflow it (linker error #10099-D). In peripheral mode the CS Filter Cycles setting is a delay too: the glitch filter is unrolled at two sites, 8 bytes per filter cycle and block (255 cycles is about 2.1 KB; six such blocks link to 12,684 bytes and overflow). Validation warns when the estimated IRAM of all `pru_spi_*` blocks in the design exceeds 12 KB (when the peripheral CS Filter Cycles loops alone push it over, the warning says to lower CS Filter Cycles instead of quoting the controller-mode CS Setup / Hold, Data Setup and SCLK advice); the estimate is an upper bound for the SPI blocks only (other blocks of the design are not counted), so the linker stays the final check. How tight the bound is, per block: controller blocks are within 5% of the linked .text. For the peripheral modes it depends on CS Filter Cycles: at 100 or more, peripheral transfer is within 5% and peripheral read and write are the loosest at 1.07-1.08x (within 10%); at small filters the estimate is conservative, up to about 2x over, because the fixed body is rounded up while the filter contributes little (estimate / linked .text for read / write / transfer: filter 1 = 2.20x / 2.05x / 1.39x, filter 2 (the default) = 2.04x / 1.92x / 1.35x, filter 10 = 1.52x / 1.47x / 1.21x, filter 30 = 1.23x / 1.21x / 1.11x). It never under-estimates. CS Filter Cycles has a minimum of 1, so if the design still overflows with every filter at 1 the warning advises shortening the controller-mode widths instead.
+
+**Release note.** CS Setup Time and CS Hold Time were previously emitted as raw numbers of PRU cycles; they are now nanoseconds converted to cycles (rounded up). At 200 MHz the defaults of this block (10 ns setup, 10 ns hold) now emit 2 and 2 cycles instead of 10 and 10. Designs that relied on the old longer gaps must raise the times. (The repository has no changelog file; release notes for this block live here.)
+
 ### Important Notes
 
 - MODE2 and MODE3 initialize SCLK to HIGH (idle state) before asserting CS

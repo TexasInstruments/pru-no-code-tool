@@ -1,0 +1,6 @@
+/**
+ * @cliArgs --device "AM243x_ALV_beta" --package "ALV" --part "ALV" --context "icss_g0_pru0" --product "PRU_NO_CODE_TOOL@01.00.01" --product "MCU_PLUS_SDK_AM243x@11.01.00"
+ */
+const A=(n)=>scripting.addModule("/pru_blocks/pru_io_blocks/"+n).addInstance();
+// Green arm: an i2c block's own SDA GPO/GPI pair on one pin is NOT a collision.
+const i=A("i2c_block"); i.$name="I2C"; i.sdaBit="9"; i.sclBit="10";

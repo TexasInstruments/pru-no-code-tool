@@ -115,7 +115,7 @@ scripting.connect(gpi1, "next", next_block, "prev");
 
 3. **Read-Only**: R31 is a read-only register that reflects current pin states.
 
-4. **Single Cycle**: Reading takes only 1 PRU cycle.
+4. **Cycle Count**: Reading takes 3 PRU cycles.
 `;
 }
 
@@ -138,9 +138,11 @@ Reads digital input signals from PRU input pins and outputs the pin state to the
 
 ### Technical Details (Additional Information)
 **Generated Assembly**:
-- AND result, R31, (1 << pin_number)    ; Mask the specific bit (1 cycle)
+- ZERO &result, 4                       ; Clear destination register (1 cycle)
+- SET  result, result, pin_number       ; Create single-bit mask (1 cycle)
+- AND  result, R31, result              ; Mask the specific bit (1 cycle)
 
-**Performance**: 1 PRU cycle
+**Performance**: 3 PRU cycles
 
 **Register**: R31 is the PRU's input register
 - Read-only register
@@ -230,11 +232,19 @@ R31 Bit 10 - Timestamp Mode:
 `;
 }
 
+function getInstruction(inst, outputRegister) {
+	const reg = outputRegister.replace(/\.[bw]\d+$/, "");
+	const match = String(inst.constant1).match(/1\s*<<\s*(\d+)/);
+	const pin = match ? parseInt(match[1]) : 0;
+	return `zero  &${reg}, 4\n    set   ${reg}, ${reg}, ${pin}\n    and   ${reg}, R31, ${reg}`;
+}
+
 exports = {
 	displayName: "PRU GPI",
 	defaultInstanceName: `${PRU_USED}_GPI_INSTANCE_`,
 	longDescription: getLongDescription(),
 	getAIContext: getAIContext,
+	getInstruction: getInstruction,
 	uiView: "graph",
 	templates: {
 		//need to check what can be passed as argument to template file, right now no argument is required
@@ -285,22 +295,16 @@ exports = {
 			name: "noOfCycles",
 			displayName: "Number Of Cycles",
 			getValue: (inst) => {
-				return 1;
+				return 3;
 			},
-			default : 1
+			default : 3
 		},
         {
 			name: "output1Size",
-            default: 1,
+            default: 4,
 			hidden: true,
             getValue: (inst) => {
-
-				let bytes = getNumOfBytes(eval(inst["constant1"].split(",")[1].trim()));
-				if(bytes == 3)
-				{
-					return bytes + 1;
-				}
-				return bytes
+				return 4;
 			}
 		},
 	],
@@ -320,6 +324,12 @@ exports = {
 	},
 	validate,
 	moduleStatic: {
+
+        getPinUsage: function(inst) {
+            const match = String(inst.constant1).match(/1\s*<<\s*(\d+)/);
+            return match ? [{ pin: parseInt(match[1]), dir: "GPI" }] : [];
+        }
+    ,
         modules: function(inst) {
             return [{
                 name: "pru_register_allocator_validator",

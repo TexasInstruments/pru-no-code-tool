@@ -16,9 +16,12 @@ All Data Handling blocks share common characteristics:
 
 | Block | Purpose | Inputs | Output | Cycles |
 |-------|---------|--------|--------|--------|
-| Load Constant | Load immediate values | 0 | 1 | 1-2 |
-| Arithmetic | Math operations (ADD, SUB) | 2 | 1 | 1 |
-| Bitwise | Bit manipulation (AND, OR, XOR, shifts) | 1-2 | 1 | 1 |
+| [Load Constant](./data-handling/load_constant_block.md) | Load immediate values | 0 | 1 | 1-2 |
+| [Arithmetic](./data-handling/arithmetic_block.md) | Math operations (ADD, SUB) | 2 | 1 | 1 |
+| [Bitwise](./data-handling/bitwise_block.md) | Bit manipulation (AND, OR, XOR, shifts) | 1-2 | 1 | 1 |
+| [Hardware MAC](./data-handling/mac_hw_block.md) | Multiply-accumulate mathematical operations | 3 | 1 | 9 |
+| [IQMath PID](./data-handling/iqmath_pid_block.md) | Closed-loop PID control feedback compensation | 2 | 1 | 50 |
+| [IQMath Park/Clarke](./data-handling/iqmath_park_clarke_block.md) | 3-phase frame coordinate vector transformations | 4 | 2 | 97 |
 
 ---
 
@@ -33,7 +36,6 @@ The program control blocks include:
 - **If/Else Block**: Conditional branching based on value comparisons
 - **Group Block**: Organizes blocks into named, callable sections
 - **Flow Control Block**: Terminates execution (jump to end or halt)
-- **Configure Constant Table Block**: Configures PRU constant table registers
 
 ---
 
@@ -41,11 +43,10 @@ The program control blocks include:
 
 | Block | Purpose | Inputs | Outputs | Cycles |
 |-------|---------|--------|---------|--------|
-| Loop | Repeat blocks N times or infinitely | 0 | 0 | 2-3 |
-| If/Else | Conditional branching | 2 | 0 | 1 |
-| Group | Code organization container | 0 | 0 | 0 |
-| Flow Control | End execution or halt PRU | 0 | 0 | 1 |
-| Configure Constant Table | Setup constant table pointers | 0 | 0 | 2 |
+| [Loop](./program-control/loop_block.md) | Repeat blocks N times or infinitely | 0 | 0 | 2-3 |
+| [If/Else](./program-control/conditional_block.md) | Conditional branching | 2 | 0 | 1 |
+| [Group](./program-control/group_block.md) | Code organization container | 0 | 0 | 0 |
+| [Flow Control](./program-control/flow_control_block.md) | End execution or halt PRU | 0 | 0 | 1 |
 
 ---
 
@@ -67,15 +68,15 @@ The blocks in this category enable:
 
 | Block | Purpose | Inputs | Outputs | Cycles |
 |-------|---------|--------|---------|--------|
-| PRU GPI | Read digital input pin | 0 | 1 | 1 |
-| PRU GPO | Set/Clear digital output pin | 0 | 0 | 1 |
-| SPI Read | Receive data via SPI | 0 | 1 | Variable |
-| SPI Write | Transmit data via SPI | 1 | 0 | Variable |
-| SPI Transfer | Full-duplex SPI communication | 1 | 1 | Variable |
-| UART TX | Transmit UART frame | 1 | 0 | ~50-100 |
-| UART RX | Receive UART frame | 0 | 1 | ~50-100 |
-| PRU LBCO | Load data from memory | 0-2 | 1 | 1 (+memory) |
-| PRU SBCO | Store data to memory | 1-3 | 0 | 1 (+memory) |
+| [PRU GPI](./input-output/pru_gpi_block.md) | Read digital input pin | 0 | 1 | 3 |
+| [PRU GPO](./input-output/pru_gpo_block.md) | Set/Clear digital output pin | 0 | 0 | 1 |
+| [SPI Read](./input-output/serial-protocol-emulation/pru_spi_read_block.md) | Receive data via SPI | 0 | 1 | Variable |
+| [SPI Write](./input-output/serial-protocol-emulation/pru_spi_write_block.md) | Transmit data via SPI | 1 | 0 | Variable |
+| [SPI Transfer](./input-output/serial-protocol-emulation/pru_spi_transfer_block.md) | Full-duplex SPI communication | 1 | 1 | Variable |
+| [UART TX](./input-output/serial-protocol-emulation/uart_tx_block.md) | Transmit UART frame | 1 | 0 | ~50-100 |
+| [UART RX](./input-output/serial-protocol-emulation/uart_rx_block.md) | Receive UART frame | 0 | 1 | ~50-100 |
+| [SDFM](./input-output/sdfm_block.md) | Interface with Sigma-Delta Filter Module | 0 | 1 | Variable |
+| [BiSS-C Initiator](./input-output/biss_c_initiator_block.md) | Shift a BiSS-C encoder frame into a register | 0 | 1 | Variable |
 
 ---
 
@@ -97,10 +98,10 @@ The utility blocks include:
 
 | Block | Purpose | Inputs | Output | Cycles |
 |-------|---------|--------|--------|--------|
-| Delay | Timing delays | 0 | 0 | 1-255 |
-| Lookup Table | Define data tables in DMEM | 0 | 0 | 0 (data only) |
-| Access Lookup Table | Read from lookup tables | 1 (index) | 1 (data) | 5 |
-| Label | Visual documentation | 0 | 0 | 0 |
+| [Delay](./utils/delay_block.md) | Timing delays | 0 | 0 | 1-255 |
+| [Lookup Table](./utils/look_up_table_block.md) | Define data tables in DMEM | 0 | 0 | 0 (data only) |
+| [Access Lookup Table](./utils/access_look_up_table_block.md) | Read from lookup tables | 1 (index) | 1 (data) | 5 |
+| [Label](./utils/label_block.md) | Visual documentation | 0 | 0 | 0 |
 
 ---
 
@@ -112,6 +113,7 @@ Application Specific blocks provide ready-made implementations of common algorit
 
 Currently available:
 - **CRC Block**: Table-driven Cyclic Redundancy Check for error detection
+- **IPC Shared Memory Block**: Store a value in a variable the host or another core can read
 
 ---
 
@@ -119,6 +121,17 @@ Currently available:
 
 | Block | Purpose | Inputs | Output | Cycles |
 |-------|---------|--------|--------|--------|
-| CRC | Cyclic Redundancy Check (CRC8/16/32) | 2 (init, data) | 1 (result) | 6–9 |
+| [CRC](./application-specific/crc_block.md) | Cyclic Redundancy Check (CRC8/16/32) | 2 (init, data) | 1 (result) | 6–9 |
+| [IPC Shared Memory](./application-specific/ipc_shared_mem_block.md) | Store a value in a variable the host can read | 1 | 0 | 4 |
 
 ---
+
+# Simulation and Testing
+
+## Overview
+
+The PRU No-Code tool includes a simulator environment that allows verifying and debugging code without physical hardware. The in-tool simulator counts instruction cycles but is not cycle-accurate; TI pru-simulator (`gmake sim`) runs the generated firmware.
+
+The simulation guides include:
+- [Using the Simulator](./simulation/using-the-simulator.md): Detailed usage guide for GUI and CLI simulator environments.
+- [Simulation Settings](./simulation/simulation_settings.md): Reference guide for setting up and configuring simulation runs.

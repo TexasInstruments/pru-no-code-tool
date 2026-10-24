@@ -1,0 +1,7 @@
+/**
+ * @cliArgs --device "AM243x_ALV_beta" --package "ALV" --part "ALV" --context "icss_g0_pru0" --product "PRU_NO_CODE_TOOL@01.00.01"
+ */
+// Two blocks that run one after another (set then clear one pin) may share a GPO index.
+const A=(n)=>scripting.addModule("/pru_blocks/pru_io_blocks/"+n).addInstance();
+const g=A("pru_gpo_block"); g.$name="SET_PIN"; g.constant1="R30, 9"; g.opCode="SET";
+const h=A("pru_gpo_block"); h.$name="CLR_PIN"; h.constant1="R30, 9"; h.opCode="CLR";

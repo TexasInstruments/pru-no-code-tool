@@ -32,6 +32,20 @@
 ;* MAIN *
 ;********
 
+; Registers this file reads after the generated code. The register allocator chooses them, so they are
+; named once here. Only a block whose output no other block consumes keeps its register to the end (a
+; consumed value is released and its register reused), which is why the pru1 design ends with the
+; "Received_Frame" block.
+    .if	$isdefed("PRU0")
+; pru0: Memory_Access_3 loads the TX frame {data byte, CRC} from buffer; the UART TX block sends it
+    .asg    R0.b0, TX_DATA_REG   ; data byte of the frame that was sent (0xAA)
+    .elseif $isdefed("PRU1")
+; pru1: CRC_0 = CRC computed over the received data byte; Received_Frame = {received data byte, received CRC}
+    .asg    R0.b2, CRC_CALC_REG  ; CRC computed by CRC_0
+    .asg    R0.b0, RX_DATA_REG   ; received data byte
+    .asg    R0.b1, CRC_RX_REG    ; received CRC
+    .endif
+
 main:
     .if	$isdefed("PRU0")
      zero  &r0, 120 ; Clear the register space
@@ -43,7 +57,7 @@ sysconfig_generated_end:
     LDI32  R2, 0x48010000
     .endif
     ; Store TX data sent at SMEM[4] using SBBO
-    SBBO   &R0.b1, R2, 4, 1     ; Store R0.b1 at [smem + 0]
+    SBBO   &TX_DATA_REG, R2, 4, 1
     halt
     .elseif	$isdefed("PRU1")
     zero   &r0, 120 ; Clear the register space
@@ -51,7 +65,7 @@ sysconfig_generated_end:
 
 sysconfig_generated_end:
     ; Store CRC values to SMEM using absolute address 0x30010000
-    ; R0.b0 = RX calculated CRC, R0.b1 = TX received CRC
+    ; CRC_CALC_REG = CRC computed from the received data, CRC_RX_REG = CRC received with it
 
     ; Load SMEM base address into R2
     .if	$isdefed("SOC_AM243X")
@@ -61,15 +75,16 @@ sysconfig_generated_end:
     .endif
 
     ; Store RX calculated CRC at SMEM[0] using SBBO
-    SBBO   &R1.b1, R2, 0, 1     ; Store R0.b0 at [smem + 0]
+    SBBO   &CRC_CALC_REG, R2, 0, 1
 
     ; Store TX received CRC at SMEM[1] using SBBO
-    SBBO   &R0.b1, R2, 1, 1     ; Store R0.b1 at [smem + 1]
+    SBBO   &CRC_RX_REG, R2, 1, 1
 
-    SBBO   &R0.b0, R2, 3, 1
+    ; Store the received data byte at SMEM[3]
+    SBBO   &RX_DATA_REG, R2, 3, 1
 
     ; Compare the two CRC values
-    QBEQ   crc_match, R0.b1, R1.b1
+    QBEQ   crc_match, CRC_RX_REG, CRC_CALC_REG
 
     ; CRC mismatch - store 0xFF at SMEM[2]
     LDI    R3.b0, 0xFF
