@@ -89,8 +89,23 @@ function getMacro(pruInstructionMacro, opCode) {
 `;
     }
     if (macroName && macroName.trim().startsWith("m_lookup_table")) {
+        // the index counts entries, the LBBO offset counts bytes. Entries of
+        // 2/4 bytes need the index scaled (<< 1 / << 2) before it is used, and the
+        // scaled offset (up to 4 * (tableSize - 1)) does not fit an LBBO register
+        // offset, so it is added into the base and the LBBO offset is 0. byteSize is
+        // a literal 1, 2 or 4 at expansion, so the .if picks the form at assembly time.
         macroBody += `    LDI32   TEMP_REG1, ${lutAddress}
-    LBBO    &${result}, TEMP_REG1, ${index}, ${byteSize}`;
+    .if ${byteSize} == 1
+    LBBO    &${result}, TEMP_REG1, ${index}, ${byteSize}
+    .else
+    .if ${byteSize} == 2
+    LSL     TEMP_REG2, ${index}, 1
+    .else
+    LSL     TEMP_REG2, ${index}, 2
+    .endif
+    ADD     TEMP_REG1, TEMP_REG1, TEMP_REG2
+    LBBO    &${result}, TEMP_REG1, 0, ${byteSize}
+    .endif`;
     }
 
     if (pruInstructionMacro == "") {
@@ -160,7 +175,7 @@ scripting.connect(access_lut1, "next", next_block, "prev");
 
 4. **Bounds Checking**: Validation warns if constant index is out of bounds. Runtime bounds checking is not performed.
 
-5. **Performance**: 5 PRU cycles total (2 for LDI32 + 3 for LBBO).
+5. **Performance**: byte table: 5 PRU cycles (2 for LDI32 + 3 for LBBO). ushort/uint table: 7 PRU cycles (2 LDI32 + 1 LSL index scale + 1 ADD + 3 LBBO).
 `;
 }
 
@@ -185,10 +200,15 @@ Reads data from a lookup table stored in PRU Data Memory (DMEM) using an index v
 ### Technical Details (Additional Information)
 **Generated Assembly**:
 - LDI32   TEMP_REG1, \`LUT_BASE_ADDRESS\`    ; Load table base address (2 cycles)
-- LBBO    &result, TEMP_REG1, index, size  ; Load data from PRU DRAM (3 cycles for ≤4 bytes)
+- byte table: LBBO &result, TEMP_REG1, index, 1  ; Load data from PRU DRAM (3 cycles)
+- ushort/uint table: the index counts entries, so it is scaled to a byte offset first:
+  LSL TEMP_REG2, index, 1 (ushort) or 2 (uint) ; 1 cycle
+  ADD TEMP_REG1, TEMP_REG1, TEMP_REG2          ; 1 cycle
+  LBBO &result, TEMP_REG1, 0, 2 or 4           ; 3 cycles
 
-**Performance**: 5 PRU cycles total (assuming word-aligned access to PRU DRAM)
-- LDI32: 2 cycles
+**Performance** (assuming word-aligned access to PRU DRAM)
+- byte table: 5 PRU cycles (LDI32 2 + LBBO 3)
+- ushort/uint table: 7 PRU cycles (LDI32 2 + LSL 1 + ADD 1 + LBBO 3)
 - LBBO: 3 cycles (2 + N where N=1 for reading ≤4 bytes)
 
 Note: Add +1 cycle if index results in non-word-aligned address
@@ -314,8 +334,14 @@ exports = {
                 // LDI32 takes 2 cycles (loads 32-bit value as two 16-bit moves)
                 // LBBO from PRU DRAM takes 2 + N cycles where N is number of 4-byte words
                 // For 1, 2, or 4 bytes (all ≤4 bytes): N = 1, so LBBO takes 2 + 1 = 3 cycles
-                // Total: 2 (LDI32) + 3 (LBBO) = 5 cycles
+                // Total: 2 (LDI32) + 3 (LBBO) = 5 cycles for a byte table
+                // ushort/uint tables also scale the index (LSL, 1 cycle) and add it
+                // into the base (ADD, 1 cycle) before the LBBO: 2 + 1 + 1 + 3 = 7 cycles.
                 // Note: This assumes word-aligned access. Add +1 if non-aligned.
+                const lut = getReferencedLUT(inst);
+                if (lut && (lut["dataType"] == "ushort" || lut["dataType"] == "uint")) {
+                    return 7;
+                }
                 return 5;
             }
         }

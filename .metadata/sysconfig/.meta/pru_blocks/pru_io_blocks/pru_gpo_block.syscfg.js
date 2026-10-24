@@ -364,6 +364,12 @@ exports = {
 	},
 	validate,
 	moduleStatic: {
+
+        getPinUsage: function(inst) {
+            const match = String(inst.constant1).match(/R30,\s*(\d+)/);
+            return match ? [{ pin: parseInt(match[1]), dir: "GPO" }] : [];
+        }
+    ,
         modules: function(inst) {
             return [{
                 name: "pru_register_allocator_validator",

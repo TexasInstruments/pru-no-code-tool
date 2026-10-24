@@ -1,4 +1,11 @@
 function validate(inst, report) {
+	// the "<groupName>_start" entry label is derived from groupName; only the derived form is checked (a reserved base such as c0 still assembles as c0_start — checked with clpru 2.3.3).
+	if (typeof system !== "undefined" && system.getScript) {
+		var reservedNames = system.getScript("/pru_blocks/common/pru_reserved_names.js");
+		if (reservedNames && typeof reservedNames.validateDerivedSymbol === "function") {
+			reservedNames.validateDerivedSymbol(inst, report, "groupName", ["_start"], "The group entry label '<name>_start' is derived from this name.");
+		}
+	}
 	// Validate that group name is non-empty
 	if (!inst.groupName || inst.groupName.trim() === "") {
 		report.logError("Group name cannot be empty", inst);

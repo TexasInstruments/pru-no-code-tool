@@ -1,4 +1,11 @@
 function validate(inst, report) {
+	// "<name>_TRUE"/"<name>_FALSE" branch labels are derived from $name; only the derived forms are checked (a reserved base such as c0 still assembles as c0_TRUE — checked with clpru 2.3.3).
+	if (typeof system !== "undefined" && system.getScript) {
+		var reservedNames = system.getScript("/pru_blocks/common/pru_reserved_names.js");
+		if (reservedNames && typeof reservedNames.validateDerivedSymbol === "function") {
+			reservedNames.validateDerivedSymbol(inst, report, "$name", ["_TRUE", "_FALSE"], "This block emits '<name>_TRUE' and '<name>_FALSE' branch labels derived from the instance name.");
+		}
+	}
 	for(let iterator = 1; iterator <= inst["numOfInputPorts"]; iterator++)
 	{
 		if(inst["input"+iterator.toString()].length == 0)
@@ -9,12 +16,12 @@ function validate(inst, report) {
 	//verifying if true port is connected true/false port(conditional input) are not
 	if((inst["T"].length == 0))
 	{
-		report.logWarning("t_next port is not connected",inst);
+		report.logError("t_next port is not connected: the generated code branches to <name>_TRUE, which would be an undefined symbol",inst);
 	}
 	//verifying if false port is connected true/false port(conditional input) are not
 	if((inst["F"].length == 0))
 	{
-		report.logWarning("f_next port is not connected",inst);
+		report.logError("f_next port is not connected: the generated code falls through to <name>_FALSE, which would be an undefined symbol",inst);
 	}
 }
 
@@ -165,7 +172,7 @@ Implements conditional logic (IF/ELSE statements) to control program flow based 
 
 ### Usage Notes
 - Both input ports must be connected for conditional operation
-- Both t_next and f_next ports should be connected to avoid warnings
+- Both t_next and f_next ports must be connected: an unconnected branch is a validation error (it would otherwise assemble to an undefined cmp_TRUE/cmp_FALSE label)
 - Comparisons are unsigned - values treated as positive integers
 - The conditional check happens instantly (1 cycle)
 - Code on both branches is generated, only one path executes at runtime

@@ -1,0 +1,27 @@
+%%{
+/*
+ * pru_device_bindings.json - the device-binding manifest.
+ *
+ * Emitted next to pru_syscfg.inc so the build, not the GUI, runs the oracle.
+ * The Python device models on TI pru-simulator are the
+ * authority. This file is how the user's GUI selection reaches them without
+ * the user naming a path or invoking Python.
+ *
+ * Always emitted, even with no devices attached. An absent file and an empty
+ * bindings list mean different things - "generation did not run" versus "the
+ * user attached nothing" - and the consumer fails closed on the first.
+ */
+%%}
+% const sm = system.modules["/pru_blocks/common/pru_blocks_static_module"];
+% let manifest = { version: 1, pruClkFreqMhz: null, cyclesToSimulate: null, bindings: [] };
+% if (sm && sm.$static && typeof sm.buildDeviceBindingsWithModels === "function") {
+%     manifest = sm.buildDeviceBindingsWithModels(sm.$static, system.modules);
+%     // Same reader/result-register record as the asm-embedded copy.
+%     if (typeof sm.resolveDeviceReaders === "function") {
+%         const alloc = system.getScript("/pru_blocks/common/register_allocation/pru_register_allocator.js");
+%         const summary = alloc.getPruRegisterAllocationSummary();
+%         const order = ((summary && summary.pruInstructionInstances) || []).map(i => i && i.$name);
+%         sm.resolveDeviceReaders(manifest, system.modules, { registerOf: alloc.getBlockRegisterAllocation, order: order });
+%     }
+% }
+`JSON.stringify(manifest, null, 2)`

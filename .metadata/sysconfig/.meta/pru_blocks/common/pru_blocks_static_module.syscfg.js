@@ -2,7 +2,20 @@ const pruRegisterAllocator = system.getScript("/pru_blocks/common/register_alloc
 const pruDMEM0 = system.getScript("/pru_blocks/common/simulation/pru_dmem0.js");
 const pruSMEM = system.getScript("/pru_blocks/common/simulation/pru_smem.js");
 const pruSimulator =  system.getScript("/pru_blocks/common/simulation/pru_core.js");
-const simulationData = {cycleCount : [], r30Bits : [], r31Bits : []};
+const deviceBusScript = system.getScript("/pru_blocks/common/simulation/device_bus.js");
+const deviceModelsScript = system.getScript("/pru_blocks/common/simulation/device_models.js");
+// Kinds, typed fields and manifest conversion of the Device Model block
+const deviceModelTable = system.getScript("/pru_blocks/common/device_model_table.js");
+// Launcher glue for the "Run on TI pru-simulator" button
+const tiRun = system.getScript("/pru_blocks/common/pru_ti_run.js");
+// Single-source device capability table (TRM SPRUIM2J §6.4.1.1 / SPRUJB6 §7.3.1.1)
+let pruDeviceCaps = null;
+try {
+    pruDeviceCaps = system.getScript("/pru_blocks/common/pru_device_caps.js");
+} catch (e) {
+    try { pruDeviceCaps = system.getScript("/pru_blocks/common/pru_device_caps"); } catch (e2) { /* capsule unavailable in test stub */ }
+}
+const simulationData = {cycleCount : [], r30Bits : [], r31Bits : [], deviceResults : []};
 
 // ============================================================================
 // R31 Simulation Input Functions
@@ -144,6 +157,132 @@ function validatePatternInput(inst, report, pinNum) {
 }
 
 /**
+ * Helper function to validate device-mode input for a specific GPI pin.
+ *
+ * Device mode is the one input mode where the user is not authoring the
+ * waveform, so the failure it must guard against is different: a device
+ * configured onto the wrong pins, or with a parameter the model will silently
+ * drop. Both produce a simulation that runs happily and proves nothing, which
+ * is exactly the outcome attaching a real model is supposed to prevent.
+ */
+function validateDeviceInput(inst, report, pinNum, pins) {
+    const kindField = `gpi${pinNum}_deviceKind`;
+    const clockField = `gpi${pinNum}_deviceClockPin`;
+    const indexField = `gpi${pinNum}_deviceIndexPin`;
+    const paramsField = `gpi${pinNum}_deviceParams`;
+
+    // `pins` carries the effective companion pins when they differ from the
+    // fields; errors are still logged against `inst`, because report.logError
+    // only accepts the instance SysConfig passed to validate().
+    const clockPin = pins ? pins.clockPin : inst[clockField];
+    const indexPin = pins ? pins.indexPin : inst[indexField];
+
+    for (const [field, value, label] of [[clockField, clockPin, "Clock/B"],
+                                         [indexField, indexPin, "Index/Z"]]) {
+        if (value !== -1 && (!Number.isInteger(value) || value < 0 || value > 19)) {
+            report.logError(`GPI${pinNum} Device ${label} Pin must be 0-19, or -1 if unused`, inst, field);
+            return false;
+        }
+        if (value === pinNum) {
+            report.logError(`GPI${pinNum} Device ${label} Pin cannot be the same pin as the device's primary pin (${pinNum})`, inst, field);
+            return false;
+        }
+    }
+
+    if (clockPin === -1 && indexPin !== -1) {
+        report.logError(`GPI${pinNum} Device Index/Z Pin is set but Clock/B Pin is not. A device cannot have a third pin without a second.`, inst, indexField);
+        return false;
+    }
+
+    if (clockPin !== -1 && clockPin === indexPin) {
+        report.logError(`GPI${pinNum} Device Clock/B and Index/Z cannot be the same pin (${clockPin})`, inst, indexField);
+        return false;
+    }
+
+    // Devices that cannot work on a single pin. Caught here rather than at run
+    // time, because a clocked slave with no clock produces an idle trace that
+    // looks like a firmware that never ran.
+    const MULTI_PIN = ["ssi", "bissc", "bissline", "endat", "tca9538", "sigma_delta"];
+    if (MULTI_PIN.indexOf(inst[kindField]) !== -1 && clockPin === -1) {
+        report.logError(`Device "${inst[kindField]}" is a clocked device and needs a Clock pin. Set GPI${pinNum} Device Clock/B Pin.`, inst, clockField);
+        return false;
+    }
+
+    let params;
+    try {
+        params = JSON.parse(inst[paramsField]);
+    } catch(e) {
+        report.logError(`Invalid GPI${pinNum} Device Parameters. Use JSON object syntax like {"bits": 13}`, inst, paramsField);
+        return false;
+    }
+
+    if (params === null || typeof params !== "object" || Array.isArray(params)) {
+        report.logError(`GPI${pinNum} Device Parameters must be a JSON object. Example: {"bits": 13}`, inst, paramsField);
+        return false;
+    }
+
+    // Pin assignments belong in the pin fields above. Accepting them here too
+    // would give two sources of truth for the same fact, and they would drift.
+    for (const reserved of ["clk_pin", "data_pin", "a_pin", "b_pin", "z_pin", "pin"]) {
+        if (Object.prototype.hasOwnProperty.call(params, reserved)) {
+            report.logError(`GPI${pinNum} Device Parameters must not set "${reserved}" - pins come from the pin fields above`, inst, paramsField);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Default a device binding's companion pins from the bound block's own pin
+ * configuration.
+ *
+ * The per-pin idiom makes the user name companions by hand, but the design
+ * already says where the device lives: an SSI initiator block carries clkPin
+ * and dataPin, a quadrature block carries aBit/bBit/zBit. When the block is
+ * present and its data/A pin is the binding's primary pin, the companions
+ * default from the block. Anything the user set explicitly always wins -
+ * a default that overrode an explicit choice would be a second source of
+ * truth.
+ *
+ * Returns {clockPin, indexPin}: the EFFECTIVE companion pins for pinNum.
+ */
+function devicePinDefaults(inst, pinNum, kind) {
+    let clockPin = inst[`gpi${pinNum}_deviceClockPin`];
+    let indexPin = inst[`gpi${pinNum}_deviceIndexPin`];
+
+    if (typeof system === "undefined" || !system.modules) {
+        return { clockPin, indexPin };
+    }
+
+    const firstPinOf = (moduleName, pinFields, matchField) => {
+        const mod = system.modules[moduleName];
+        if (!mod || !mod.$instances) return null;
+        for (const blockInst of mod.$instances) {
+            if (Number(blockInst[matchField]) === pinNum) {
+                return pinFields.map(f => Number(blockInst[f]));
+            }
+        }
+        return null;
+    };
+
+    // Registered companion-pin sources (device_model_table.js COMPANION_PIN_BLOCKS).
+    for (const entry of deviceModelTable.COMPANION_PIN_BLOCKS[kind] || []) {
+        const pins = firstPinOf(entry.module, [entry.clockField, entry.indexField], entry.matchField);
+        if (!pins) continue;
+        if (entry.clockField && clockPin === -1 && Number.isInteger(pins[0]) && pins[0] >= 0) {
+            clockPin = pins[0];
+        }
+        if (entry.indexField && indexPin === -1 && Number.isInteger(pins[1]) && pins[1] >= 0) {
+            indexPin = pins[1];
+        }
+        break;
+    }
+
+    return { clockPin, indexPin };
+}
+
+/**
  * Validate R31 simulation input configuration
  */
 function validateR31SimulationInput(inst, report) {
@@ -164,9 +303,210 @@ function validateR31SimulationInput(inst, report) {
             if (!validatePatternInput(inst, report, pinNum)) {
                 return false;
             }
+        } else if (inputMode === "device") {
+            // Validate against the EFFECTIVE pins (user fields, defaulted
+            // from the bound block's own pin config where left unset), so a
+            // clocked device whose clock comes from the block is not refused
+            // for a field the design already answers.
+            const kind = inst[`gpi${pinNum}_deviceKind`];
+            const defaults = devicePinDefaults(inst, pinNum, kind);
+            if (!validateDeviceInput(inst, report, pinNum, defaults)) {
+                return false;
+            }
         }
     }
     return true;
+}
+
+/**
+ * Collect every device-mode binding from the static module config.
+ *
+ * Returns { bindings, errors }. Each binding is { pinNum, kind, clockPin,
+ * indexPin, params } with companions already defaulted from the bound
+ * block's pin config (devicePinDefaults). Each error is { message, pinNum,
+ * field } - a binding that cannot be constructed is a CONFIG error, never a
+ * silently skipped device: an attached device that quietly did nothing
+ * would produce a run that proves nothing while looking like a pass.
+ */
+function collectDeviceBindings(inst) {
+    const bindings = [];
+    const errors = [];
+    const selectedPins = inst.signalsToDisplayR31 || [];
+
+    for (const pinNumStr of selectedPins) {
+        const pinNum = parseInt(pinNumStr);
+        if (inst[`gpi${pinNum}_inputMode`] !== "device") {
+            continue;
+        }
+
+        const kindField = `gpi${pinNum}_deviceKind`;
+        const paramsField = `gpi${pinNum}_deviceParams`;
+        const kind = inst[kindField];
+        const defaults = devicePinDefaults(inst, pinNum, kind);
+
+        let params;
+        try {
+            params = JSON.parse(inst[paramsField]);
+        } catch (e) {
+            // Already refused by validateDeviceInput; do not double-report.
+            continue;
+        }
+        if (params === null || typeof params !== "object" || Array.isArray(params)) {
+            continue;
+        }
+
+        try {
+            const device = deviceModelsScript.createDeviceModel(kind, {
+                primary: pinNum,
+                clock: defaults.clockPin,
+                index: defaults.indexPin
+            }, params);
+            bindings.push({
+                pinNum,
+                kind,
+                clockPin: defaults.clockPin,
+                indexPin: defaults.indexPin,
+                params,
+                device
+            });
+        } catch (e) {
+            // Factory refusals (unknown kind, kind not yet ported to the
+            // in-tool simulator, unknown or reserved parameter keys,
+            // out-of-range constructor values) are config errors. The field
+            // is named so the error lands on the control that caused it.
+            const isKindProblem = /unknown device kind|not available in the in-tool/.test(e.message);
+            errors.push({
+                message: `GPI${pinNum} attached device: ${e.message}`,
+                pinNum,
+                field: isKindProblem ? kindField : paramsField
+            });
+        }
+    }
+
+    return { bindings, errors };
+}
+
+/**
+ * Measure the clock the firmware actually produced, from the R30 trace.
+ *
+ * Returns { observedMinPeriod, observedMinHigh, observedMinLow } in cycles,
+ * or nulls when the clock never toggled. This is a MEASUREMENT on the
+ * waveform, not a restatement of the block's configured timing - the two
+ * differ exactly when the firmware is wrong, which is when the number
+ * matters. (A margin read from the config instead of the trace would be a
+ * formula standing in for a measurement.)
+ */
+function measureClockWaveform(r30ValueHistory, clkPin) {
+    const bit = 1 << clkPin;
+    let prev = null;
+    let lastChange = null;
+    const periods = [];
+    const pulses = [];
+    let lastFall = null;
+
+    for (let cycle = 1; cycle < r30ValueHistory.length; cycle++) {
+        const level = (r30ValueHistory[cycle] & bit) ? 1 : 0;
+        if (prev === null) {
+            prev = level;
+            lastChange = 1;
+            if (level === 0) lastFall = 1;
+            continue;
+        }
+        if (level !== prev) {
+            pulses.push(cycle - lastChange);
+            if (level === 0) {           // falling edge
+                if (lastFall !== null) {
+                    periods.push(cycle - lastFall);
+                }
+                lastFall = cycle;
+            }
+            lastChange = cycle;
+            prev = level;
+        }
+    }
+
+    const min = (arr) => arr.length ? Math.min.apply(null, arr) : null;
+    return {
+        observedMinPeriod: min(periods),
+        observedMinPulse: min(pulses),
+        edges: periods.length + 1
+    };
+}
+
+/**
+ * Build the per-device run result: protocol decode, faults, verdict, margin.
+ *
+ * Verdict rules are fail-closed:
+ *   PASS  the device observed no protocol violation AND at least one
+ *         protocol event was decoded. An attached device that never spoke
+ *         proves nothing - that run is a FAIL, not a pass.
+ *   FAIL  any fault, or silence.
+ *
+ * The margin is the measured slack on the device's tightest timing limit:
+ * for a clocked slave, the observed minimum clock period minus the model's
+ * minimum. Reported in cycles, measured from the R30 trace.
+ */
+function buildDeviceRunResults(bus, bindings, r30ValueHistory, pruState) {
+    const results = [];
+    const skippedMacros = (pruState && pruState.skippedMacroCount > 0 && pruState.skippedMacros && pruState.skippedMacros.length > 0)
+        ? pruState.skippedMacros
+        : [];
+    for (const binding of bindings) {
+        const device = binding.device;
+        const events = device.events ? device.events() : [];
+        const faults = device.faults ? device.faults() : [];
+
+        let margin = null;
+        if (binding.clockPin !== -1 && device.minClkPeriodCycles !== undefined) {
+            const measured = measureClockWaveform(r30ValueHistory, binding.clockPin);
+            if (measured.observedMinPeriod !== null) {
+                margin = {
+                    observedMinPeriodCycles: measured.observedMinPeriod,
+                    requiredMinPeriodCycles: device.minClkPeriodCycles,
+                    slackCycles: measured.observedMinPeriod - device.minClkPeriodCycles
+                };
+            }
+        }
+
+        const verdict = (faults.length === 0 && events.length > 0) ? "PASS" : "FAIL";
+        let summary;
+        if (verdict === "PASS") {
+            summary = `PASS - ${events.length} protocol event(s) decoded` +
+                (margin ? `, clock margin ${margin.slackCycles} cycle(s) ` +
+                 `(measured min period ${margin.observedMinPeriodCycles}, ` +
+                 `device limit ${margin.requiredMinPeriodCycles})` : "");
+        } else {
+            const reasons = [];
+            if (events.length === 0) {
+                // When the JS preview skipped one or more macro calls, explain
+                // that macro blocks cannot be executed in the preview instead of falsely
+                // claiming that the device was silent.
+                if (skippedMacros.length > 0) {
+                    reasons.push(`the GUI preview cannot execute macro blocks (${skippedMacros.join(", ")}); ` +
+                                 `use Run on TI pru-simulator / gmake sim`);
+                } else {
+                    reasons.push("no protocol activity decoded - the device never spoke, " +
+                                 "so this run proves nothing");
+                }
+            }
+            if (faults.length > 0) {
+                reasons.push(`${faults.length} protocol violation(s), first: ${faults[0]}`);
+            }
+            summary = `FAIL - ${reasons.join("; ")}`;
+        }
+
+        results.push({
+            device: device.name,
+            kind: binding.kind,
+            pins: { primary: binding.pinNum, clock: binding.clockPin, index: binding.indexPin },
+            decode: events,
+            faults,
+            verdict,
+            margin,
+            summary
+        });
+    }
+    return results;
 }
 
 /**
@@ -176,6 +516,16 @@ function generatePinHistory(inst, pinNum) {
     const inputModeField = `gpi${pinNum}_inputMode`;
     const inputMode = inst[inputModeField];
     const pinHistory = {};
+
+    // Device mode drives this pin from a behavioural model at run time, so it
+    // has no statically authored history. Returning {} explicitly matters: the
+    // fall-through below is TIMESTAMP mode, and a device pin landing there
+    // reads empty inputCycles/inputValues and yields a flat idle pin - which
+    // looks exactly like a firmware that never ran. Fail visibly as nothing
+    // rather than invisibly as zero.
+    if (inputMode === "device") {
+        return {};
+    }
 
     if (inputMode === "pattern") {
         // Pattern mode
@@ -262,6 +612,219 @@ function generatePinHistory(inst, pinNum) {
 }
 
 /**
+ * Build the device-binding manifest for the generated output.
+ *
+ * WHY THIS IS A FILE AND NOT A GUI FEATURE
+ * The Python device models on TI pru-simulator are the reference; the SysConfig GUI can only execute JavaScript and must never
+ * become the authority. So the binding the user configures here is EMITTED,
+ * and the build runs the real model against it. This function produces that
+ * emission and nothing else - it does not simulate.
+ *
+ * The pin fields in the GUI are generic on purpose (primary / clock-B /
+ * index-Z) because one selector has to cover eight different devices. The
+ * translation from those generic names to each model's own argument names is
+ * deliberately NOT done here: it lives in scripts/sim/device_bindings.py,
+ * next to the models it must agree with, so a model that renames a pin breaks
+ * a Python test rather than silently producing an idle trace. What is emitted
+ * here is the user's intent in the GUI's own vocabulary.
+ *
+ * Pure: takes the static instance, returns an object. No I/O, no globals, so
+ * it can be tested outside the SysConfig runtime - which matters, because
+ * SysConfig cannot be loaded outside its own runtime.
+ */
+function buildDeviceBindings(inst) {
+    const selectedPins = inst.signalsToDisplayR31 || [];
+    const bindings = [];
+
+    for (const pinNumStr of selectedPins) {
+        const pinNum = parseInt(pinNumStr);
+        if (inst[`gpi${pinNum}_inputMode`] !== "device") {
+            continue;
+        }
+
+        // Validation has already run by the time templates are expanded, so a
+        // malformed params string cannot reach here through the GUI. Guard
+        // anyway and emit null rather than crashing the whole generation: a
+        // template that throws takes every other generated file down with it.
+        let params = null;
+        try {
+            params = JSON.parse(inst[`gpi${pinNum}_deviceParams`]);
+        } catch (e) {
+            params = null;
+        }
+
+        const clockPin = inst[`gpi${pinNum}_deviceClockPin`];
+        const indexPin = inst[`gpi${pinNum}_deviceIndexPin`];
+
+        bindings.push({
+            primaryPin: pinNum,
+            kind: inst[`gpi${pinNum}_deviceKind`],
+            // -1 is the GUI's "unused"; null carries that across JSON without
+            // the consumer having to know the sentinel.
+            clockPin: (clockPin === -1 || clockPin === undefined) ? null : clockPin,
+            indexPin: (indexPin === -1 || indexPin === undefined) ? null : indexPin,
+            params: (params === null || typeof params !== "object" || Array.isArray(params)) ? {} : params
+        });
+    }
+
+    // Sorted so the manifest is stable across GUI selection order. An emitted
+    // file that reorders itself between runs shows up as a spurious diff.
+    bindings.sort(function (a, b) { return a.primaryPin - b.primaryPin; });
+
+    return {
+        // Bumped when the SHAPE changes, so the Python consumer can refuse a
+        // manifest it does not understand instead of half-reading it.
+        version: 1,
+        pruClkFreqMhz: inst.pruClkFreq,
+        cyclesToSimulate: inst.pruCyclesToSimulate,
+        bindings: bindings
+    };
+}
+
+/**
+ * The pins every GPI device binding occupies, for the Device Model block's
+ * conflict check. Returns [{pinNum, kind, pins: [{pin, label}]}].
+ * Uses the EFFECTIVE companion pins (devicePinDefaults), the same pins the
+ * device would really be wired to, not just the raw fields.
+ * BuildDeviceBindings emits the RAW fields (an unset companion pin is null in the
+ * manifest); this check claims the effective pin on purpose - the device is wired there either
+ * way, so a Device Model on that pin is a real short even though the manifest omits it.
+ */
+function collectGpiDeviceClaims(inst) {
+    const claims = [];
+    for (const pinNumStr of inst.signalsToDisplayR31 || []) {
+        const pinNum = parseInt(pinNumStr);
+        if (inst[`gpi${pinNum}_inputMode`] !== "device") {
+            continue;
+        }
+        const kind = inst[`gpi${pinNum}_deviceKind`];
+        const eff = devicePinDefaults(inst, pinNum, kind);
+        const pins = [{ pin: pinNum, label: "primary pin" }];
+        if (eff.clockPin !== -1 && eff.clockPin !== undefined) pins.push({ pin: eff.clockPin, label: "Clock/B pin" });
+        if (eff.indexPin !== -1 && eff.indexPin !== undefined) pins.push({ pin: eff.indexPin, label: "Index/Z pin" });
+        claims.push({ pinNum, kind, pins });
+    }
+    return claims;
+}
+
+/**
+ * The device-binding manifest from BOTH sources: the GPI device
+ * fields (buildDeviceBindings, unchanged) plus every Device Model block
+ * instance. Same shape either way, so the consumer cannot tell them apart.
+ * With no Device Model instance this returns exactly buildDeviceBindings(inst).
+ */
+function buildDeviceBindingsWithModels(inst, modules) {
+    const manifest = buildDeviceBindings(inst);
+    const dm = modules ? modules["/pru_blocks/utils/device_model_block"] : null;
+    let added = false;
+    for (const mi of (dm && dm.$instances) || []) {
+        if (!deviceModelTable.KINDS[mi.deviceKind]) {
+            continue;
+        }
+        manifest.bindings.push(deviceModelTable.toBinding(mi));
+        added = true;
+    }
+    if (added) {
+        manifest.bindings.sort(function (a, b) { return a.primaryPin - b.primaryPin; });
+    }
+    return manifest;
+}
+
+/**
+ * Record, on each binding, which block reads the bound device and which
+ * register the allocator gave that block's result.
+ *
+ * WHY: `gmake sim` compares the firmware's decoded value with the device
+ * model. The register holding that value is not a property of the block - the
+ * allocator chooses it per design (a value live across the read pushes a BiSS
+ * read from R0 to R1). A checker that assumed a fixed register reported a
+ * false FAIL on correct GUI firmware. The allocator's own answer is the only
+ * source of truth, so it is emitted here, next to the binding it belongs to.
+ *
+ * A reader is an instance of a block known to decode the device kind whose
+ * DATA pin is the binding's primary (device-driven) pin. For each reader:
+ *   resultRegister  the allocator's notation for output1 ("R1", "R0.w0"),
+ *                   or null if the block got no output register
+ *   laterWriters    blocks emitted AFTER the reader whose allocated register
+ *                   overlaps it; the value left at HALT is then not the read
+ *
+ * Kinds absent from the table get no `readers` key: the runner has no
+ * decoder for them and says NOT CHECKED. A kind in the table with no matching
+ * block gets `readers: []`, which the runner reports instead of guessing.
+ *
+ * Pure: the module map and the allocator are passed in, so the function can be
+ * evaluated outside the SysConfig runtime (by node tests).
+ *
+ * @param manifest   buildDeviceBindings() output; annotated in place and returned
+ * @param modules    system.modules
+ * @param allocation { registerOf(name) -> allocator notation or "-",
+ *                     order: instance names in emitted-instruction order }
+ */
+function resolveDeviceReaders(manifest, modules, allocation) {
+    const READER_BLOCKS = deviceModelTable.READER_BLOCKS;
+    // Byte ranges [start, end) a notation such as "R1", "R0.b2", "R3.w1" covers.
+    function byteRanges(notation) {
+        const ranges = [];
+        const re = /R(\d+)(?:\.(b|w)(\d))?/g;
+        let m;
+        while ((m = re.exec(String(notation))) !== null) {
+            const base = Number(m[1]) * 4;
+            if (m[2] === "b") {
+                ranges.push([base + Number(m[3]), base + Number(m[3]) + 1]);
+            } else if (m[2] === "w") {
+                ranges.push([base + Number(m[3]), base + Number(m[3]) + 2]);
+            } else {
+                ranges.push([base, base + 4]);
+            }
+        }
+        return ranges;
+    }
+    function overlaps(a, b) {
+        return a.some(function (x) {
+            return b.some(function (y) { return x[0] < y[1] && y[0] < x[1]; });
+        });
+    }
+
+    const order = (allocation && allocation.order) || [];
+    for (const binding of manifest.bindings || []) {
+        const table = READER_BLOCKS[binding.kind];
+        if (!table) {
+            continue;
+        }
+        const readers = [];
+        for (const entry of table) {
+            const mod = modules ? modules[entry.module] : null;
+            for (const inst of (mod && mod.$instances) || []) {
+                if (Number(inst[entry.dataPinField]) !== binding.primaryPin) {
+                    continue;
+                }
+                const notation = allocation.registerOf(inst.$name);
+                const own = (notation && notation !== "-") ? notation.split(",")[0].trim() : null;
+                const laterWriters = [];
+                const at = order.lastIndexOf(inst.$name);
+                if (own && at !== -1) {
+                    const mine = byteRanges(own);
+                    for (const other of order.slice(at + 1)) {
+                        if (other === inst.$name || laterWriters.indexOf(other) !== -1) {
+                            continue;
+                        }
+                        const theirs = allocation.registerOf(other);
+                        if (theirs && theirs !== "-" && overlaps(mine, byteRanges(theirs))) {
+                            laterWriters.push(other);
+                        }
+                    }
+                }
+                readers.push({ block: inst.$name, module: entry.module,
+                               resultRegister: own, laterWriters: laterWriters });
+            }
+        }
+        readers.sort(function (a, b) { return a.block < b.block ? -1 : a.block > b.block ? 1 : 0; });
+        binding.readers = readers;
+    }
+    return manifest;
+}
+
+/**
  * Main function to generate R31 history by combining all enabled GPI pins
  */
 function generateR31HistoryFromStaticModule(inst) {
@@ -315,6 +878,7 @@ function onSignalsToDisplayR31Change(inst, ui) {
         const inputMode = inst[`gpi${pinNum}_inputMode`];
         const isTimestamp = (inputMode === "timestamp");
         const isPattern = (inputMode === "pattern");
+        const isDevice = (inputMode === "device");
 
         // Show/hide separator
         if (ui[`gpi${pinNum}_separator`]) {
@@ -347,6 +911,20 @@ function onSignalsToDisplayR31Change(inst, ui) {
         if (ui[`gpi${pinNum}_patternRepeatCount`]) {
             ui[`gpi${pinNum}_patternRepeatCount`].hidden = !(isSelected && isPattern);
         }
+
+        // Show/hide device fields
+        if (ui[`gpi${pinNum}_deviceKind`]) {
+            ui[`gpi${pinNum}_deviceKind`].hidden = !(isSelected && isDevice);
+        }
+        if (ui[`gpi${pinNum}_deviceClockPin`]) {
+            ui[`gpi${pinNum}_deviceClockPin`].hidden = !(isSelected && isDevice);
+        }
+        if (ui[`gpi${pinNum}_deviceIndexPin`]) {
+            ui[`gpi${pinNum}_deviceIndexPin`].hidden = !(isSelected && isDevice);
+        }
+        if (ui[`gpi${pinNum}_deviceParams`]) {
+            ui[`gpi${pinNum}_deviceParams`].hidden = !(isSelected && isDevice);
+        }
     }
 }
 
@@ -360,6 +938,7 @@ function createInputModeOnChange(pinNum) {
         const inputMode = inst[`gpi${pinNum}_inputMode`];
         const isTimestamp = (inputMode === "timestamp");
         const isPattern = (inputMode === "pattern");
+        const isDevice = (inputMode === "device");
 
         // Show/hide timestamp fields
         if (ui[`gpi${pinNum}_inputCycles`]) {
@@ -381,6 +960,20 @@ function createInputModeOnChange(pinNum) {
         }
         if (ui[`gpi${pinNum}_patternRepeatCount`]) {
             ui[`gpi${pinNum}_patternRepeatCount`].hidden = !(isSelected && isPattern);
+        }
+
+        // Show/hide device fields
+        if (ui[`gpi${pinNum}_deviceKind`]) {
+            ui[`gpi${pinNum}_deviceKind`].hidden = !(isSelected && isDevice);
+        }
+        if (ui[`gpi${pinNum}_deviceClockPin`]) {
+            ui[`gpi${pinNum}_deviceClockPin`].hidden = !(isSelected && isDevice);
+        }
+        if (ui[`gpi${pinNum}_deviceIndexPin`]) {
+            ui[`gpi${pinNum}_deviceIndexPin`].hidden = !(isSelected && isDevice);
+        }
+        if (ui[`gpi${pinNum}_deviceParams`]) {
+            ui[`gpi${pinNum}_deviceParams`].hidden = !(isSelected && isDevice);
         }
     };
 }
@@ -412,9 +1005,82 @@ function generateR31SimulationInputConfigs() {
             hidden: true,
             options: [
                 { name: "timestamp", displayName: "Timestamp Mode" },
-                { name: "pattern", displayName: "Pattern Mode" }
+                { name: "pattern", displayName: "Pattern Mode" },
+                { name: "device", displayName: "Attached Device Model" }
             ],
             onChange: createInputModeOnChange(pinNum)
+        });
+
+        // Device mode fields.
+        //
+        // Timestamp and Pattern mode both make the user hand-author the
+        // waveform they expect a device to produce - which means the test
+        // encodes what they BELIEVE the device does. If that belief is wrong,
+        // the firmware passes against a fiction. Device mode replaces the
+        // hand-authored bits with a behavioural model that also REJECTS
+        // illegal traffic, so a wrong firmware fails instead of being
+        // faithfully replayed against.
+        configs.push({
+            name: `gpi${pinNum}_deviceKind`,
+            displayName: `GPI${pinNum} Device`,
+            description: "Behavioural device model driving this pin",
+            longDescription: `Attaches a simulated device to GPI${pinNum}. Unlike ` +
+                `Timestamp and Pattern mode, the waveform is produced by a model ` +
+                `of the real part rather than transcribed by hand, and the model ` +
+                `reports protocol violations it observes.`,
+            default: "quadrature",
+            hidden: true,
+            options: [
+                { name: "quadrature", displayName: "Quadrature encoder (A/B/Z)" },
+                { name: "ssi", displayName: "SSI absolute encoder" },
+                { name: "bissc", displayName: "BiSS-C absolute encoder" },
+                { name: "bissline", displayName: "BiSS Line absolute encoder" },
+                { name: "endat", displayName: "EnDat 2.2 absolute encoder" },
+                { name: "tca9538", displayName: "TCA9538 I2C IO expander" },
+                { name: "uart", displayName: "UART transmitter" },
+                { name: "sigma_delta", displayName: "Sigma-delta modulator" },
+                { name: "spi_adc", displayName: "SPI ADC (ADS8688-class SPI mode 0)" },
+                { name: "step_dir", displayName: "STEP/DIR stepper driver" },
+                { name: "ws2812", displayName: "WS2812 addressable LED string" },
+                { name: "mdio_phy", displayName: "MDIO Clause 22 PHY" }
+            ]
+        });
+
+        // A device spans more than one pin, and SysConfig's per-pin config
+        // cannot express that on its own. The pin selected above is the
+        // device's PRIMARY pin (data/A); the companions are named here.
+        //
+        // This is deliberately the minimal shape that fits the existing
+        // per-pin idiom. The fuller SysConfig answer is an instance-array
+        // module, one instance per attached device, which is how TI models
+        // multi-pin peripherals elsewhere. That is a larger change to the
+        // static module's data flow and is not made here.
+        configs.push({
+            name: `gpi${pinNum}_deviceClockPin`,
+            displayName: `GPI${pinNum} Device Clock/B Pin`,
+            description: "Second pin: clock for clocked devices, B channel for quadrature. -1 if unused.",
+            default: -1,
+            hidden: true
+        });
+
+        configs.push({
+            name: `gpi${pinNum}_deviceIndexPin`,
+            displayName: `GPI${pinNum} Device Index/Z Pin`,
+            description: "Third pin: index/Z for incremental encoders. -1 if unused.",
+            default: -1,
+            hidden: true
+        });
+
+        configs.push({
+            name: `gpi${pinNum}_deviceParams`,
+            displayName: `GPI${pinNum} Device Parameters`,
+            description: 'JSON passed to the model constructor. Example: {"bits": 13, "position": 1024}',
+            longDescription: "Model-specific configuration. Left empty, the model's " +
+                "own defaults apply. Unknown keys are reported rather than ignored, " +
+                "because a silently dropped parameter produces a model that is not " +
+                "the one the user asked for.",
+            default: "{}",
+            hidden: true
         });
 
         // Timestamp mode fields
@@ -553,9 +1219,19 @@ function expandMacros(pruInstructionsWithMacros, pruInstructionsLabelWithMacros)
             macroCount++;
         }
         else {
-            // No macro definition, use instruction as is
-            pruInstructions.push(pruInstructionsWithMacros[i]);
-            pruInstructionsLabels.push(pruInstructionsLabelWithMacros[i]);
+            // No macro definition, use instruction as is (expanding multi-line instructions if present)
+            if (typeof pruInstructionsWithMacros[i] === "string" && pruInstructionsWithMacros[i].includes("\n")) {
+                let lines = pruInstructionsWithMacros[i].split("\n").map(l => l.trim()).filter(l => l && !l.startsWith(";"));
+                pruInstructions.push(0);
+                pruInstructionsLabels.push(pruInstructionsLabelWithMacros[i]);
+                for (let line of lines) {
+                    pruInstructions.push(line);
+                    pruInstructionsLabels.push(0);
+                }
+            } else {
+                pruInstructions.push(pruInstructionsWithMacros[i]);
+                pruInstructionsLabels.push(pruInstructionsLabelWithMacros[i]);
+            }
         }
     }
 
@@ -574,10 +1250,12 @@ function replaceTemporaryRegisters(instructions) {
             return instruction;
         }
         
-        // Replace TEMP_REG1 with R28 and TEMP_REG2 with R29
+        // Replace TEMP_REG1 with R28, TEMP_REG2 with R29, TEMP_REG3 with R26, TEMP_REG4 with R27
         return instruction
             .replace(/TEMP_REG1(\.\w+)?/g, 'R28$1')
-            .replace(/TEMP_REG2(\.\w+)?/g, 'R29$1');
+            .replace(/TEMP_REG2(\.\w+)?/g, 'R29$1')
+            .replace(/TEMP_REG3(\.\w+)?/g, 'R26$1')
+            .replace(/TEMP_REG4(\.\w+)?/g, 'R27$1');
     });
 }
 
@@ -681,7 +1359,7 @@ function getDataSectionContents()
  */
 function getUsectLinkerDirectives()
 {
-    let usectDirectives = [];
+    let usectDirectives = new Set();
     let systemModules = system.modules;
 
     // Look for Memory Reserve module
@@ -691,20 +1369,20 @@ function getUsectLinkerDirectives()
             if (instance["labelName"] && instance["labelName"] !== "") {
                 // Call the module's getUsectDirective function if available
                 if (typeof memReserveModule.getUsectDirective === 'function') {
-                    usectDirectives.push(memReserveModule.getUsectDirective(instance));
+                    usectDirectives.add(memReserveModule.getUsectDirective(instance));
                 } else {
                     // Fallback: construct directive directly (always 4-byte aligned)
                     const labelName = instance.labelName;
                     const sizeInBytes = instance.sizeInBytes;
                     const sectionName = instance.sectionName ;
 
-                    usectDirectives.push(`${labelName}\t.usect "${sectionName}", ${sizeInBytes}, 1`);
+                    usectDirectives.add(`${labelName}\t.usect "${sectionName}", ${sizeInBytes}, 1`);
                 }
             }
         }
     }
 
-    return usectDirectives;
+    return Array.from(usectDirectives);
 }
 
 /**
@@ -741,6 +1419,126 @@ function getInitSectDirectives() {
     }
 
     return assembly;
+}
+
+// ============================================================================
+// constant-table pointer c28 (PRU shared RAM)
+// ============================================================================
+// c28 is only partially fixed: TRM SPRUIM2J Table 6-65 (PRU_ICSSG)
+// gives c28 = 00nn_nn00h with nnnn = CTPPR0.C28_POINTER[15:0]. CTPPR0 sits at
+// offset 28h of the core's own PRU_CTRL block and resets to 0
+// (SPRUIM2J 14.3.6.1.1), so until firmware writes it every LBCO/SBCO through
+// c28 hits local 0x00000000 -- the core's own data RAM -- not shared RAM.
+// The design-wide fix lives here, once, rather than in each block: one write
+// at every entry point into the generated code serves all c28 users and costs
+// the per-call blocks that use c28 nothing.
+
+// PRU_CTRL base of each SysConfig core context (core-local addresses).
+// SPRUIM2J Table 6-65 entry 11 and the CTPPR0 instance table; SPRUJB6 confirms only the c28 pointer formula and the local control bases;
+// the AM261x CTPPR0 offset 0x28 / reset 0 is INFERRED from the shared PRU-ICSS IP, not
+// documented in SPRUJB6.
+const PRU_CTRL_BASE_BY_CORE = [
+    [/tx_pru(\d)$/,  n => 0x25000 + 0x800 * n],
+    [/rtu_pru(\d)$/, n => 0x23000 + 0x800 * n],
+    [/pru(\d)$/,     n => 0x22000 + 0x2000 * n],
+];
+const PRU_CTRL_CTPPR0 = 0x28;
+const SHARED_RAM_LOCAL = 0x00010000;           // PRU-local view of shared RAM
+
+function pruCtrlBase(coreName) {
+    for (const [re, base] of PRU_CTRL_BASE_BY_CORE) {
+        const m = (coreName || "").match(re);
+        if (m) return base(parseInt(m[1]));
+    }
+    return null;
+}
+
+/** True when any instantiated block's macro addresses memory through c28. */
+function designUsesC28(modules) {
+    for (const moduleName in modules) {
+        const module = modules[moduleName];
+        if (!module || typeof module.getMacro !== "function" || !module.$instances) continue;
+        for (const inst of module.$instances) {
+            if (!inst || !inst.opCode) continue;
+            if (/\bc28\b/i.test(module.getMacro("", inst.opCode))) return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Assembly that programs CTPPR0 so c28 = shared RAM (0x00010000). Empty when
+ * no block in the design uses c28. Clobbers TEMP_REG1/TEMP_REG2 only.
+ * C29_POINTER is written 0, its reset value; nothing in the library uses c29.
+ */
+function getCtppr0Setup(coreName, modules) {
+    if (!designUsesC28(modules || system.modules)) return "";
+    if (coreName === undefined) coreName = system.getScript("/common").getSelfSysCfgCoreName();
+    const base = pruCtrlBase(coreName);
+    if (base === null) {
+        throw new Error(`No PRU_CTRL base known for core context '${coreName}'; ` +
+                        "cannot program CTPPR0 for c28");
+    }
+    const ptr = SHARED_RAM_LOCAL >> 8;
+    const hex = v => "0x" + v.toString(16).toUpperCase();
+    return [
+        `    ; c28 = CTPPR0.C28_POINTER << 8 and CTPPR0 resets to 0 (TRM SPRUIM2J`,
+        `    ; Table 6-65, 14.3.6.1.1). Point c28 at shared RAM ${hex(SHARED_RAM_LOCAL)} for ${coreName}.`,
+        `    ldi     TEMP_REG1, ${hex(ptr)}`,
+        `    ldi32   TEMP_REG2, ${hex(base + PRU_CTRL_CTPPR0)}`,
+        `    sbbo    &TEMP_REG1, TEMP_REG2, 0, 4`,
+    ].join("\n");
+}
+
+// the pru_spi_* blocks' controller mode asserts CS with `clr r30, r30, <cs>` and releases it with `set`, but R30 resets to 0, so
+// with nothing driving the pin high first the first transaction has no assertion edge. The prologue drives each distinct controller CS
+// pin to its idle (inactive, high) level once; a peripheral block samples CS on R31 and must not drive it.
+const SPI_MODULE_PATHS = [
+    "/pru_blocks/pru_io_blocks/pru_spi_read",
+    "/pru_blocks/pru_io_blocks/pru_spi_write",
+    "/pru_blocks/pru_io_blocks/pru_spi_transfer",
+];
+
+/** Sorted distinct CS pin numbers (R30 bits) of every controller-mode pru_spi_* instance. */
+function spiControllerCsPins(modules) {
+    const pins = new Set();
+    for (const path of SPI_MODULE_PATHS) {
+        const module = (modules || system.modules)[path];
+        if (!module || !module.$instances) continue;
+        for (const inst of module.$instances) {
+            if (inst && inst["Device Mode"] !== "peripheral") pins.add(Number(inst["CS Signal"]));
+        }
+    }
+    return Array.from(pins).filter(n => Number.isInteger(n) && n >= 0).sort((a, b) => a - b);
+}
+
+function getSpiCsIdleSetup(modules) {
+    const pins = spiControllerCsPins(modules);
+    if (pins.length === 0) return "";
+    return [`    ; drive each SPI controller CS pin to its idle (high) level once; R30 resets to 0, which would hide the first assertion edge.`]
+        .concat(pins.map(n => `    set     r30, r30, ${n}`)).join("\n");
+}
+
+/**
+ * Everything emitted by pru_syscfg.asm.xdt right after sysconfig_generated_start and every group start label: the CTPPR0
+ * write (only when a block uses c28) and the CS idle level of the SPI controller blocks. Empty when neither applies.
+ */
+function getConstantTableSetup(coreName, modules) {
+    return [getCtppr0Setup(coreName, modules), getSpiCsIdleSetup(modules)].filter(Boolean).join("\n");
+}
+
+// Instructions the CTPPR0 write costs at each entry (ldi + ldi32 (2) + sbbo). Counted
+// as 4 cycles; a store to the PRU_CTRL peripheral may stall longer on silicon.
+const CTPPR0_SETUP_CYCLES = 4;
+
+/** Cycles of the SPI CS idle part of the prologue: one `set r30` per distinct controller CS pin. */
+function getSpiCsIdleSetupCycles(modules) {
+    return spiControllerCsPins(modules).length;
+}
+
+/** Cycles getConstantTableSetup() adds to every entry into generated code: CTPPR0 write (c28 users) + one `set r30` per SPI CS pin. */
+function getConstantTableSetupCycles(modules) {
+    return (designUsesC28(modules || system.modules) ? CTPPR0_SETUP_CYCLES : 0) + getSpiCsIdleSetupCycles(modules);
 }
 
 function prepareR30DataForPlotting(r30ValueHistory) {
@@ -817,6 +1615,617 @@ function collectR31History() {
         return generateR31HistoryFromStaticModule(staticModule.$static);
     }
     return {};
+}
+
+/**
+ * register-pool exhaustion is an error naming the block and the budget; the instruction would otherwise be missing from the asm.
+ * Runs BEFORE the generic "-1" gate in the validate pass so loop-counter and group-return failures (which leave "-1" in the
+ * instructions) are named too. Returns the number of recorded failures reported.
+ */
+function reportRegisterExhaustion(inst, report) {
+    for (const f of pruRegisterAllocator.getAllocationFailures()) {
+        let failedInst = null;
+        for (let moduleName in system.modules) {
+            const mod = system.modules[moduleName];
+            if (mod && mod.$instances) failedInst = mod.$instances.find(i => i.$name === f.block) || failedInst;
+        }
+        const message = f.contractFailure
+            ? "Accumulator binding error: block '" + f.block + "' cannot honor " + f.what + "."
+            : "Out of registers: block '" + f.block + "' needs " + f.bytes + " byte(s) for " + f.what +
+            " but only " + f.freeBytes + " of the " + f.budgetBytes + " allocatable bytes (R0-R" + (f.budgetRegisters - 1) +
+            ", " + f.budgetRegisters + " registers; R28/R29 are reserved) are free, so its instruction cannot be generated. " +
+            (f.pinnedBytes > 0 ? f.pinnedBytes + " byte(s) of the pool are pinned by registers typed into block fields (" +
+                f.pinnedBy.join(", ") + ") and are not available to the allocator. " : "") +
+            "Reduce the number of values alive at once, or store intermediate results to memory.";
+        report.logError(message, failedInst || inst);
+    }
+    return pruRegisterAllocator.getAllocationFailures().length;
+}
+
+/**
+ * registers typed into block fields. Reports (a) a typed value that is not a usable register window (ERROR),
+ * (b) two fields that name overlapping registers - an ERROR when the user typed at least one of them, a WARNING when both
+ * still hold their default value (a saved design with two blocks left on defaults used to generate; it must not suddenly fail),
+ * (c) a hand-off reader that runs before its writer outside any common loop (WARNING). Returns the number of ERRORS.
+ */
+function reportPinnedRegisterConflicts(inst, report) {
+    const regName = (p) => p.token + " (" + p.bytes + " byte" + (p.bytes === 1 ? "" : "s") + ")";
+    const instanceNamed = (name) => {
+        let target = null;
+        for (let moduleName in system.modules) {
+            const mod = system.modules[moduleName];
+            if (mod && mod.$instances) target = mod.$instances.find(i => i.$name === name) || target;
+        }
+        return target || inst;
+    };
+    let errors = 0;
+    for (const p of pruRegisterAllocator.getPinnedRegisterProblems()) {
+        report.logError("Invalid register: " + p.block + "." + p.field + " = '" + p.token + "' " + p.why + ".", instanceNamed(p.block));
+        errors++;
+    }
+    for (const c of pruRegisterAllocator.getPinnedRegisterConflicts()) {
+        const text = "Register conflict: " + c.second.block + "." + c.second.field + " = " + regName(c.second) +
+            " overlaps " + c.first.block + "." + c.first.field + " = " + regName(c.first) +
+            ". Both blocks use these registers directly, so one result would overwrite the other. Give each block its own registers";
+        if (c.harmful) {
+            report.logError(text + ": " + c.first.block + " runs first and " + c.second.block + " overwrites " + regName(c.first) +
+                " before any block reads it, so " + c.first.block + "'s value is lost (" + (c.first.atDefault && c.second.atDefault ? "both fields are still at their default value; " : "") +
+                "type a different register into " + c.second.block + "." + c.second.field + " or " + c.first.block + "." + c.first.field + ").", instanceNamed(c.second.block));
+            errors++;
+        } else if (c.first.atDefault && c.second.atDefault) {
+            const free = pruRegisterAllocator.suggestFreeRegister(c.second.bytes);
+            report.logWarning(text + " (both fields are still at their default value: type a different register into " + c.second.block + "." +
+                c.second.field + " or " + c.first.block + "." + c.first.field + (free ? " - " + free + " is not used by any block" : "") +
+                " - to remove this warning).", instanceNamed(c.second.block));
+        } else {
+            report.logError(text + ".", instanceNamed(c.second.block));
+            errors++;
+        }
+    }
+    for (const o of pruRegisterAllocator.getPinnedHandOffOrderWarnings()) {
+        report.logWarning("Register hand-off order: " + o.reader.block + "." + o.reader.field + " = " + o.reader.token + " uses the register that " +
+            o.writer.block + "." + o.writer.field + " = " + o.writer.token + " fills, but " + o.reader.block + " runs BEFORE " + o.writer.block +
+            " and no loop contains both, so it reads the register before the value arrives. Connect " + o.writer.block + " first, or put both in one loop (inside one loop the reader sees the previous iteration's value: the first iteration reads the uninitialised register and the last value is never read).",
+            instanceNamed(o.reader.block));
+    }
+    return errors;
+}
+
+/**
+ * Validate PRU instructions for undefined symbols, arity mismatches, and unconnected ports.
+ * Runs right after register allocation.
+ */
+function validatePruInstructions(inst, report) {
+    let definedSymbols = new Set();
+    let usects = getUsectLinkerDirectives();
+    usects.forEach(u => {
+        let parts = u.split('\t');
+        if (parts.length > 0) definedSymbols.add(parts[0].trim());
+    });
+
+    let dataSects = getDataSectionContents();
+    dataSects.forEach(d => {
+        if (d.symbolName) definedSymbols.add(d.symbolName.trim());
+    });
+
+    let pruInstructionsWithMacros = pruRegisterAllocator.getPruRegisterAllocationSummary().pruInstructions;
+    let pruInstructionModules = pruRegisterAllocator.getPruRegisterAllocationSummary().pruInstructionModules;
+    let pruInstructionInstances = pruRegisterAllocator.getPruRegisterAllocationSummary().pruInstructionInstances;
+
+    // 1. Scan all blocks for graph connection issues and symbol usages
+    for (let moduleName in system.modules) {
+        let mod = system.modules[moduleName];
+        if (!mod || !mod.$instances) continue;
+        for (let b_inst of mod.$instances) {
+            // A. Undefined symbol checks
+            if (b_inst.symbolName && !definedSymbols.has(b_inst.symbolName)) {
+                report.logError("Undefined memory symbol referenced: " + b_inst.symbolName, b_inst, "symbolName");
+            }
+            if (b_inst.variableName && !definedSymbols.has(b_inst.variableName)) {
+                report.logError("Undefined shared-memory variable referenced: " + b_inst.variableName, b_inst, "variableName");
+            }
+
+            // B. Required ports unconnected
+            if (b_inst.numOfInputPorts > 0) {
+                for (let i = 1; i <= b_inst.numOfInputPorts; i++) {
+                    let portName = "input" + i;
+                    if (!b_inst[portName] || b_inst[portName].length === 0 || !b_inst[portName][0].inst) {
+                        report.logError("Required graph input port '" + portName + "' is unconnected", b_inst);
+                    }
+                }
+            }
+
+            // C. Invalid graph link targets
+            if (b_inst.numOfInputPorts > 0) {
+                for (let i = 1; i <= b_inst.numOfInputPorts; i++) {
+                    let portName = "input" + i;
+                    if (b_inst[portName] && b_inst[portName].length > 0 && b_inst[portName][0].inst) {
+                        let sourceInst = b_inst[portName][0].inst;
+                        if (sourceInst.numOfOutputPorts === 0 || sourceInst.numOfOutputPorts === undefined) {
+                            report.logError("Invalid connection: source block '" + sourceInst.$name + "' does not produce an output for '" + portName + "'", b_inst);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 1b. A consumer wired to an output port that owns no register is refused; the allocator never reroutes it to output1
+    for (const c of pruRegisterAllocator.getUnroutedConnections()) {
+        let consumerInst = null;
+        for (let moduleName in system.modules) {
+            const mod = system.modules[moduleName];
+            if (mod && mod.$instances) consumerInst = mod.$instances.find(i => i.$name === c.consumer) || consumerInst;
+        }
+        report.logError("Invalid connection: block '" + c.source + "' port '" + c.sourcePort + "' has no register of its own, so '" +
+            c.consumer + "." + c.inputPort + "' cannot read it (the block's macro writes only output1 here)", consumerInst || inst);
+    }
+
+    // 1c. Loop contents consumed outside loop/group
+    for (const v of pruRegisterAllocator.getLoopBoundaryViolations()) {
+        let consumerInst = null;
+        let loopInst = null;
+        for (let moduleName in system.modules) {
+            const mod = system.modules[moduleName];
+            if (mod && mod.$instances) {
+                if (v.consumer !== "generator") {
+                    consumerInst = consumerInst || mod.$instances.find(i => i.$name === v.consumer);
+                }
+                loopInst = loopInst || mod.$instances.find(i => i.$name === v.container);
+            }
+        }
+        if (v.consumer === "generator") {
+            report.logError("Invalid container contents: group '" + v.producer + "' cannot be placed inside container '" +
+                v.container + "'. Group blocks cannot be nested inside loops or other groups.", loopInst || inst);
+        } else {
+            // a loop may explicitly export a block's final-iteration output (loop_block.exportedBlocks).
+            // A consumer outside such a loop reading an exported block is the supported post-loop store, not a
+            // boundary violation. Anything not exported is still rejected below.
+            const isDownstream = (start, target) => {
+                const seen = new Set();
+                const walk = (node) => {
+                    if (!node || seen.has(node)) return false;
+                    seen.add(node);
+                    if (node.$name === target) return true;
+                    return [].concat(node.next || [], node.T || [], node.F || []).some(c => walk(c && c.inst));
+                };
+                return walk(start);
+            };
+            if (loopInst && Array.isArray(loopInst.exportedBlocks) && loopInst.exportedBlocks.includes(v.producer) &&
+                isDownstream(loopInst, v.consumer)) {
+                continue;
+            }
+            if (loopInst && Array.isArray(loopInst.exportedBlocks) && loopInst.exportedBlocks.includes(v.producer)) {
+                report.logError("Invalid exported result: consumer '" + v.consumer + "' reads exported block '" +
+                    v.producer + "' before or outside the downstream control flow of loop '" + v.container +
+                    "'. Exported blocks may only be consumed downstream of their loop.", consumerInst || inst);
+                continue;
+            }
+            report.logError("Invalid connection: consumer '" + v.consumer + "' is outside container '" + v.container +
+                "' but attempts to read '" + v.producer + "' which is inside it (via port '" + v.port + "'). Container contents cannot be consumed from the outside.", consumerInst || inst);
+            if (loopInst) {
+                report.logError("Invalid container: contains '" + v.producer + "' which is consumed from the outside by '" +
+                    v.consumer + "'. Container contents cannot be consumed from the outside.", loopInst);
+            }
+        }
+    }
+
+    // 2. Macro arity mismatch
+    for (let i = 0; i < pruInstructionsWithMacros.length; i++) {
+        let call = pruInstructionsWithMacros[i];
+        let moduleName = pruInstructionModules[i];
+        let b_inst = pruInstructionInstances[i];
+
+        if (!call || call === 0 || call === "0" || !moduleName || !b_inst) continue;
+        let mod = system.modules[moduleName];
+
+        if (mod && typeof mod.getMacro === 'function') {
+            let callArgsStr = call.substring(call.indexOf(' ') + 1).trim();
+            let callArgs = callArgsStr ? callArgsStr.split(',').map(s=>s.trim()).filter(s=>s!=="") : [];
+            let callArity = callArgs.length;
+
+            if (callArgs.some(arg => arg === "undefined")) {
+                report.logError("Macro call contains 'undefined' argument. Call: " + call, b_inst);
+            }
+
+
+            // The arity check needs the macro DEFINITION, not the inline expansion.
+            // Blocks switch on an empty first argument to emit the `.macro` line
+            // (see uart_tx getMacroSingleShot, uart_rx getMacro), so calling with
+            // the call string returns a body that has no signature in it at all.
+            let opCode = call.trim().split(/\s+/)[0];
+            let defBody = mod.getMacro("", opCode);
+            // Definition bodies may be preceded by guarded .set/.asg prologues
+            // (uart_rx prepends the ICSS_CFG block), so find the signature line
+            // rather than assuming it is line 1.
+            let defLine = defBody ? (defBody.split('\n').find(l => l.includes('.macro')) || "") : "";
+
+            if (defLine) {
+                let defArgsStr = defLine.substring(defLine.indexOf('.macro') + 6).trim();
+                let defArgs = defArgsStr ? defArgsStr.split(',').map(s=>s.trim()).filter(s=>s!=="") : [];
+                let defArity = defArgs.length;
+
+                if (callArity !== defArity) {
+                    report.logError("Macro arity mismatch: generated call has " + callArity + " args but definition expects " + defArity + ". Call: " + call, b_inst);
+                }
+            }
+        }
+    }
+}
+
+/**
+ * GUI pin warnings: shared GPO/GPI physical pads, duplicate GPO drivers,
+ * malformed getPinUsage results, and unavailable device/core pad data.
+ *
+ * A two-way (bidirectional) pad shared by blocks of DIFFERENT modules (e.g. two blocks of different
+ * modules reading and driving the same two-way pad) makes the generated firmware contend on that pad.
+ * This validator emits a report.logWarning (not logError, so code generation still succeeds) so the
+ * user sees the conflict in the SysConfig GUI.
+ *
+ * Rules and exemptions:
+ *   - claims come from each block's moduleStatic pin usage query (inst);
+ *   - exempt (no warning):
+ *       (a) the same instance's own open-drain pair;
+ *       (b) different instances of the SAME block module that classify SEQUENTIAL (sourced from
+ *           the generated common/block_control_flow_data.js table).
+ *   - only pads that are actually shared between GPO and GPI on the device count (derived from
+ *     SysConfig device data).
+ *
+ * Warning text names both blocks (instance names) and the pad.
+ * Device scope: the design's own device and PRU core (system.deviceData and the core name).
+ */
+// SysConfig core name -> pad signal prefix:
+// icss_g<N>_[rtu_|tx_]pru<K> -> PRG<N>_PRU<K> (ICSSG), icss_m<N>_pru<K> -> PR<N>_PRU<K> (ICSSM).
+function padPrefixForCore(coreName) {
+    const m = /^icss_([gm])(\d)(?:_(?:rtu|tx))?_pru(\d)$/.exec(coreName || '');
+    return m ? (m[1] === 'g' ? 'PRG' : 'PR') + m[2] + '_PRU' + m[3] : null;
+}
+
+function getDevicePadSharing(deviceData, coreName) {
+    if (!deviceData) return null;
+    const prefix = padPrefixForCore(coreName);
+    if (!prefix) return null;
+    const sharedIndices = new Set();
+
+    // 1. SysConfig runtime interface pins (ICSSG devices)
+    const ifaceName = /^PRG(\d)_/.test(prefix) ? 'PRU_ICSSG' + prefix[3] + '_PRU' : null;
+    if (ifaceName && deviceData.interfaces && deviceData.interfaces[ifaceName] && deviceData.interfaces[ifaceName].interfacePins) {
+        const ifacePins = deviceData.interfaces[ifaceName].interfacePins;
+        for (let i = 0; i < 20; i++) {
+            const gpoName = `${prefix}_GPO${i}`;
+            const gpiName = `${prefix}_GPI${i}`;
+            const gpoPin = ifacePins[`GPO${i}`];
+            if (!gpoPin || !gpoPin.pinMappings) continue;
+            for (const pm of gpoPin.pinMappings) {
+                if (pm.name !== gpoName) continue;
+                for (const dp of (pm.pinMappings || [])) {
+                    if (dp && dp.mux && Array.isArray(dp.mux.muxSetting)) {
+                        const signals = dp.mux.muxSetting.map(s => s.peripheralPin && s.peripheralPin.name);
+                        if (signals.includes(gpoName) && signals.includes(gpiName)) {
+                            sharedIndices.add(i);
+                        }
+                    }
+                }
+            }
+        }
+        return sharedIndices;
+    }
+
+    // 1b. SysConfig runtime interface pins (ICSSM devices): interface PRU-ICSS<N> holds one two-way
+    // PR<N>_PRU<K>_GPIO<i> interface pin per pad that exists; GPO i and GPI i share it.
+    const icssmIface = /^PR(\d)_/.test(prefix) ? 'PRU-ICSS' + prefix[2] : null;
+    if (icssmIface && deviceData.interfaces && deviceData.interfaces[icssmIface] && deviceData.interfaces[icssmIface].interfacePins) {
+        const ifacePins = deviceData.interfaces[icssmIface].interfacePins;
+        for (let i = 0; i < 20; i++) {
+            const pin = ifacePins[`${prefix}_GPIO${i}`];
+            if (pin && pin.pinMappings && pin.pinMappings.length) sharedIndices.add(i);
+        }
+        return sharedIndices;
+    }
+
+    // 2. Raw JSON device data structure (ICSSM devices, stubs and test harnesses). ICSSG pads carry a
+    // PRGx_PRUy_GPOn + PRGx_PRUy_GPIn pair; ICSSM pads carry one two-way PRx_PRUy_GPIOn signal.
+    const infos = deviceData.pinCommonInfos || {};
+    for (const info of Object.values(infos)) {
+        if (!info || !info.pinModeInfo) continue;
+        const sigs = new Set(info.pinModeInfo.map(m => m.signalName));
+        for (let i = 0; i < 20; i++) {
+            if ((sigs.has(`${prefix}_GPO${i}`) && sigs.has(`${prefix}_GPI${i}`)) || sigs.has(`${prefix}_GPIO${i}`)) {
+                sharedIndices.add(i);
+            }
+        }
+    }
+    return sharedIndices;
+}
+
+let bcfData = null;
+function isSequentialBlock(blockName, instCfg) {
+    if (!bcfData && typeof system !== 'undefined' && typeof system.getScript === 'function') {
+        try {
+            bcfData = system.getScript("/pru_blocks/common/block_control_flow_data.js");
+        } catch (e) {
+            bcfData = null;
+        }
+    }
+    if (bcfData && bcfData.blockControlFlow && bcfData.blockControlFlow[blockName] !== undefined) {
+        if (bcfData.blockControlFlow[blockName] === 'sequential') return true;
+        // continuous by default, sequential once the block's bound config is > 0 (e.g. a period count).
+        const bound = bcfData.blockControlFlowBound && bcfData.blockControlFlowBound[blockName];
+        return !!(bound && instCfg && Number.isInteger(Number(instCfg[bound])) && Number(instCfg[bound]) > 0);
+    }
+    return false; // Fail closed if undecided or unknown
+}
+
+// The attached devices (Device Model blocks and Simulation Settings GPI device fields) whose
+// PRU-driven input pads another block also drives. The decision is deviceModelTable.findDeviceInputConflicts,
+// shared with the command-line pin-collision check.
+function reportDeviceInputDrivers(inst, gpoBits, report) {
+    const modules = system.modules;
+    const devices = [];
+    const dm = modules["/pru_blocks/utils/device_model_block"];
+    for (const mi of (dm && dm.$instances) || []) {
+        if (!deviceModelTable.KINDS[mi.deviceKind]) continue;
+        const b = deviceModelTable.toBinding(mi);
+        devices.push({
+            name: mi.$name, source: "Device Model block", kind: mi.deviceKind,
+            matched: deviceModelTable.matchedDrivers(mi.deviceKind, b, modules),
+            listens: deviceModelTable.listenedPins(mi.deviceKind, b)
+        });
+    }
+    const slotOfLabel = { "primary pin": "primaryPin", "Clock/B pin": "clockPin", "Index/Z pin": "indexPin" };
+    for (const claim of collectGpiDeviceClaims(inst)) {
+        const b = { params: deviceModelTable.paramsOf(inst[`gpi${claim.pinNum}_deviceParams`]) };
+        for (const p of claim.pins) b[slotOfLabel[p.label]] = p.pin;
+        devices.push({
+            name: `GPI${claim.pinNum} device`, source: "Simulation Settings GPI device", kind: claim.kind,
+            matched: deviceModelTable.matchedDrivers(claim.kind, b, modules),
+            listens: deviceModelTable.listenedPins(claim.kind, b)
+        });
+    }
+    for (const c of deviceModelTable.findDeviceInputConflicts(devices, gpoBits)) {
+        if (c.severity === "warning") report.logWarning(c.message, inst); else report.logError(c.message, inst);
+    }
+}
+
+function validateBidiPinCollisionsGlobal(inst, report) {
+    try {
+        // GUI pin warnings: shared GPO/GPI physical pads, duplicate GPO drivers
+        //, malformed pin-usage results, and unavailable device/core pad data.
+        // The GPO/GPI shared-pad rule needs device pad data; the duplicate-GPO rule and the
+        // 'could not evaluate' diagnostics do not.
+        const padSharing = getDevicePadSharing(system.deviceData, system.getScript("/common").getSelfSysCfgCoreName());
+        const sharedIndices = padSharing || new Set();
+
+        const claims = [];
+        for (const modName in system.modules) {
+            const mod = system.modules[modName];
+            if (!mod || !mod.$instances || mod.$instances.length === 0) continue;
+            for (let idx = 0; idx < mod.$instances.length; idx++) {
+                const bi = mod.$instances[idx];
+                const moduleStatic = (bi.$module && bi.$module.moduleStatic) || mod.moduleStatic;
+                if (!moduleStatic || typeof moduleStatic.getPinUsage !== 'function') continue;
+                const iname = typeof bi.$name === 'string' ? bi.$name : `#${idx}`;
+                let pins = [];
+                try {
+                    pins = moduleStatic.getPinUsage(bi);
+                } catch (e) {
+                    const reason = (e && e.message) ? e.message : String(e);
+                    report.logWarning(
+                        `Pin-sharing check could not evaluate block '${iname}' (${modName}): ${reason}`,
+                        inst
+                    );
+                    continue;
+                }
+                const block = modName.split('/').pop();
+                if (!Array.isArray(pins)) {
+                    // A non-array result cannot be checked; report it rather than skip it silently.
+                    report.logWarning(
+                        `Pin-sharing check could not evaluate block '${iname}' (${modName}): its pin-usage function did not return an array, so its pins are not checked for sharing.`,
+                        inst
+                    );
+                    continue;
+                }
+                for (const p of pins) {
+                    if (!p || (p.dir !== "GPO" && p.dir !== "GPI")) {
+                        report.logWarning(
+                            `Pin-sharing check could not evaluate block '${iname}' (${modName}): its pin-usage function returned an entry without a GPO/GPI dir, so that entry is not checked for sharing.`,
+                            inst
+                        );
+                        continue;
+                    }
+                    const pin = parseInt(p.pin);
+                    if (isNaN(pin)) {
+                        report.logWarning(
+                            `Pin-sharing check could not evaluate block '${iname}' (${modName}): unparseable ${p.dir} pin "${String(p.pin)}", so that pin is not checked for sharing.`,
+                            inst
+                        );
+                        continue;
+                    }
+                    claims.push({
+                        inst: bi,
+                        block: block,
+                        iname: iname,
+                        dir: p.dir,
+                        pin: pin,
+                        bidi: p.bidi === true,
+                        cfg: bi
+                    });
+                }
+            }
+        }
+
+        if (claims.length === 0) return;
+
+        const gpoBits = claims.filter(c => c.dir === "GPO");
+        const gpiBits = claims.filter(c => c.dir === "GPI");
+        const warnedPairs = new Set();
+
+        if (padSharing === null && gpoBits.length && gpiBits.length) {
+            report.logWarning(
+                "GPO/GPI pad sharing could not be checked for this device/core: no pad data is available, so shared GPO/GPI pads are not detected.",
+                inst
+            );
+        }
+
+        if (padSharing !== null) {
+            for (const o of gpoBits) {
+                for (const i of gpiBits) {
+                    if (o.pin !== i.pin || !sharedIndices.has(o.pin)) continue;
+                    if (o.inst === i.inst && o.bidi && i.bidi) continue; // (a) same instance AND both bidi
+                    if (o.inst !== i.inst && o.bidi && i.bidi && o.block === i.block && isSequentialBlock(o.block)) continue; // (b) different instances, both bidi, same block module, module classifies sequential
+
+                    const keyA = (o.inst && o.inst.$name) || o.iname;
+                    const keyB = (i.inst && i.inst.$name) || i.iname;
+                    const pairKey = o.inst === i.inst
+                        ? `self:${keyA}:${o.pin}`
+                        : (keyA < keyB ? `${keyA}:${keyB}:${o.pin}` : `${keyB}:${keyA}:${o.pin}`);
+                    if (warnedPairs.has(pairKey)) continue;
+                    warnedPairs.add(pairKey);
+
+                    report.logWarning(
+                        `Pad ${o.pin} is driven (GPO) by '${o.iname}' (${o.block}) and read (GPI) by '${i.iname}' (${i.block}); the generated firmware will contend on this pad.`,
+                        inst
+                    );
+                }
+            }
+        }
+
+        // two different instances drive one GPO index and at least one block is CONTINUOUS
+        // (fail closed: a block missing from the control-flow table counts as continuous).
+        for (let x = 0; x < gpoBits.length; x++) {
+            for (let y = x + 1; y < gpoBits.length; y++) {
+                const a = gpoBits[x], b = gpoBits[y];
+                if (a.pin !== b.pin || a.inst === b.inst) continue;
+                const cont = [a, b]
+                    .filter((c) => !isSequentialBlock(c.block, c.cfg))
+                    .map((c) => c.block)
+                    .filter((blk, k, arr) => arr.indexOf(blk) === k);
+                if (!cont.length) continue;
+                report.logWarning(
+                    `GPO ${a.pin} is driven by both '${a.iname}' (${a.block}) and '${b.iname}' (${b.block}); continuous: ${cont.join(', ')}; the drivers will overwrite each other on this pin (duplicate GPO drivers).`,
+                    inst
+                );
+            }
+        }
+        // A GPO that feeds an attached device's input may be driven only by that device's reader.
+        reportDeviceInputDrivers(inst, gpoBits, report);
+    } catch (e) {
+        const reason = (e && e.message) ? e.message : String(e);
+        report.logWarning(
+            `Pin-sharing check could not evaluate the design: ${reason}`,
+            inst
+        );
+    }
+}
+
+// device-capability gating for hardware-widget blocks
+// every failure path in this gate fails CLOSED or errors VISIBLY.
+// No degradation (missing caps script, missing SoC, unknown SoC, capability
+// lookup exception) may silently skip validation and leave the build clean.
+function validateDeviceCapabilities(inst, report) {
+    // Only gate when at least one module actually declares widget requirements,
+    // so widget-free designs stay clean.
+    let widgetModules = [];
+    for (let moduleName in system.modules) {
+        let mod = system.modules[moduleName];
+        if (!mod || !mod.requiresWidget) continue;
+        widgetModules.push([moduleName, mod]);
+    }
+    if (widgetModules.length === 0) return;
+
+    // Failure path 1: capability table itself failed to load -> refuse to pass.
+    if (!pruDeviceCaps) {
+        report.logError(
+            "Device capability table (pru_device_caps.js) could not be loaded - cannot verify hardware-widget requirements. Failing closed.",
+            inst
+        );
+        return;
+    }
+
+    // Failure path 2: /common getScript failure -> visible error, not a silent return.
+    let socName = null;
+    let commonFailure = null;
+    try {
+        const common = system.getScript("/common");
+        if (common && typeof common.getSocName === "function") {
+            socName = common.getSocName();
+        }
+    } catch (e) {
+        commonFailure = String(e && e.message || e);
+    }
+    if (commonFailure) {
+        report.logError(
+            `Cannot load common module to determine SoC (${commonFailure}) - cannot verify hardware-widget requirements. Failing closed.`,
+            inst
+        );
+        return;
+    }
+
+    // Failure path 3: SoC missing entirely -> visible error.
+    if (!socName) {
+        report.logError(
+            "SoC name could not be determined - cannot verify hardware-widget requirements. Failing closed.",
+            inst
+        );
+        return;
+    }
+
+    let deviceName = socName;
+    try {
+        if (system.deviceData && system.deviceData.device) {
+            deviceName = system.deviceData.device;
+        }
+    } catch (e) { /* use socName */ }
+
+    // Failure path 4: SoC not in the capability table -> visible error, never a
+    // silent default capability set.
+    let socKnown = false;
+    try {
+        socKnown = (typeof pruDeviceCaps.isKnownSoc === "function")
+            ? !!pruDeviceCaps.isKnownSoc(socName)
+            : Object.keys(pruDeviceCaps.DEVICE_CAPS || {}).some(function (k) { return k === String(socName).toLowerCase(); });
+    } catch (e) { socKnown = false; }
+    if (!socKnown) {
+        report.logError(
+            `SoC '${socName}' (device '${deviceName}') is not in the device capability table - cannot verify hardware-widget requirements. Failing closed.`,
+            inst
+        );
+        return;
+    }
+
+    for (let [moduleName, mod] of widgetModules) {
+        let raw = mod.requiresWidget;
+        let widgets = Array.isArray(raw) ? raw : [raw];
+        for (let w of widgets) {
+            if (!w) continue;
+            let available = false;
+            let widgetFailure = null;
+            try {
+                available = pruDeviceCaps.isWidgetAvailable(w, socName);
+            } catch (e) {
+                // Failure path 5: capability lookup threw -> treat widget as
+                // UNAVAILABLE and say so, instead of assuming available.
+                widgetFailure = String(e && e.message || e);
+            }
+            if (widgetFailure) {
+                let instances = (mod.$instances && mod.$instances.length) ? mod.$instances : [inst];
+                for (let bInst of instances) {
+                    report.logError(
+                        `Widget availability check for '${w}' threw an exception (${widgetFailure}) - treating as unavailable on device '${deviceName}' (SoC '${socName}'). Failing closed.`,
+                        bInst
+                    );
+                }
+            } else if (!available) {
+                let instances = (mod.$instances && mod.$instances.length) ? mod.$instances : [inst];
+                for (let bInst of instances) {
+                    report.logError(
+                        `Block '${mod.displayName || moduleName}' requires widget '${w}' which is not available on device '${deviceName}' (SoC '${socName}')`,
+                        bInst
+                    );
+                }
+            }
+        }
+    }
 }
 
 
@@ -926,6 +2335,9 @@ function validate(inst, report)
 		return;
 	}
 
+	// Device-capability gate (must name both widget and device, ERROR not warning)
+	validateDeviceCapabilities(inst, report);
+
 	// Validate R31 simulation input configuration
 	validateR31SimulationInput(inst, report);
 
@@ -943,6 +2355,8 @@ function validate(inst, report)
 
 	//allocating pru registers for all blocks at system level
 	pruRegisterAllocator.allocatePruRegisters();
+	// GUI warning for cross-module bidirectional pad sharing
+	validateBidiPinCollisionsGlobal(inst, report);
 	//validating register allocation
 	let pruInstructionsWithMacros = pruRegisterAllocator.getPruRegisterAllocationSummary().pruInstructions;
 	let pruInstructionsLabelWithMacros = pruRegisterAllocator.getPruRegisterAllocationSummary().labels;
@@ -951,11 +2365,18 @@ function validate(inst, report)
 		instruction.includes("-1")
 	);
 
+	// named, budgeted errors first; the generic message stays as the fallback for any unrecorded -1
+	const recordedExhaustion = reportRegisterExhaustion(inst, report);
+	// user-typed registers that overlap each other
+	reportPinnedRegisterConflicts(inst, report);
+
 	if (hasRegisterError) {
-		report.logError("Out of PRU registers, reduce number of PRU blocks added", inst);
-	}
-    /*prepare instructions and init dmem0 for simulation*/
-    else {
+		if (recordedExhaustion === 0) report.logError("Out of PRU registers, reduce number of PRU blocks added", inst);
+	} else {
+	    // --- Generate-time validation pass ---
+	    validatePruInstructions(inst, report);
+
+        /*prepare instructions and init dmem0 for simulation*/
 		// If UART blocks are present, skip simulation and return zeros
 		if (hasUartBlock) {
 			const cyclesToSimulate = inst["pruCyclesToSimulate"];
@@ -1028,13 +2449,93 @@ function validate(inst, report)
         // Then replace SMEM symbols
         pruInstructions = pruSMEM.replaceSymbolReferences(pruInstructions);
         const r31HistoryMap = collectR31History();
-        let {pruState, r30ValueHistory, r31ValueHistory} = pruSimulator.simulatePruInstructions(pruInstructions, pruInstructionsLabels, inst["pruCyclesToSimulate"], r31HistoryMap);
+
+        // Attached Device Model mode: close the loop. Timestamp and
+        // Pattern mode play a pre-authored history; a device model ANSWERS
+        // the firmware, and rejects traffic the real part would reject. The
+        // user configures a device and presses Run - the bus, the models and
+        // the margin measurement all happen here, in JavaScript, inside the
+        // tool; no path, no build directory, no external invocation is ever
+        // shown.
+        const { bindings, errors: bindingErrors } = collectDeviceBindings(inst);
+        let deviceBus = null;
+        if (bindings.length > 0) {
+            deviceBus = new deviceBusScript.DeviceBus();
+            for (const binding of bindings) {
+                deviceBus.attach(binding.device);
+            }
+            // Pins a device drives are INPUTS from the PRU's side. Leaving
+            // them in the PRU drive mask would record contention on every
+            // cycle - a false fault on a correct design, which is worse than
+            // no check at all because it teaches the user to ignore faults.
+            let pruDriveMask = deviceBusScript.MASK_20;
+            for (const binding of bindings) {
+                for (const pin of Object.keys(binding.device.nets || {})) {
+                    pruDriveMask &= ~(1 << Number(pin));
+                }
+            }
+            deviceBus.setPruDriveMask(pruDriveMask);
+        }
+        for (const err of bindingErrors) {
+            report.logError(err.message, inst, err.field);
+        }
+
+        let {pruState, r30ValueHistory, r31ValueHistory} = pruSimulator.simulatePruInstructions(pruInstructions, pruInstructionsLabels, inst["pruCyclesToSimulate"], r31HistoryMap, {}, deviceBus);
+
+        if (deviceBus) {
+            const results = buildDeviceRunResults(deviceBus, bindings, r30ValueHistory, pruState);
+            simulationData.deviceResults = results;
+            for (const result of results) {
+                // A FAIL here is a simulation RESULT, not a config error: the
+                // run happened, the device refused the firmware, and the
+                // user must see that verdict. A warning carries it without
+                // blocking code generation; the full decode and faults are
+                // on simulationData.deviceResults.
+                // Labelled as the in-GUI JavaScript preview. The CLI
+                // build prints this same warning, and next to a `gmake sim`
+                // run on TI pru-simulator an unlabelled "FAIL" reads as the
+                // simulator result. Only `gmake sim` runs the real ELF. The preview's own
+                // PASS/FAIL word is dropped from the message for that reason;
+                // the full verdict stays on simulationData.deviceResults.
+                const previewDetail = result.summary.replace(/^(PASS|FAIL) - /, "");
+                // Once a TI pru-simulator run exists for THIS design,
+                // its verdict replaces the preview banner. A stale one never does.
+                const realBanner = tiRunBanner(inst);
+                if (realBanner) {
+                    report.logWarning(realBanner, inst);
+                    continue;
+                }
+                report.logWarning(`GUI JS preview only - gmake sim gives the TI pru-simulator result. ` +
+                    `Preview of attached device "${result.device}" on GPI${result.pins.primary}: ${previewDetail}`, inst);
+            }
+        } else {
+            simulationData.deviceResults = [];
+        }
 
         prepareR30DataForPlotting(r30ValueHistory);
         prepareR31DataForPlotting(r31ValueHistory);
         // return pruState, r30ValueHistory, and r31ValueHistory
         return {pruState, r30ValueHistory, r31ValueHistory}
 	}
+}
+
+/**
+ * The banner for a real TI pru-simulator verdict on the design now
+ * shown, or null (keep the JS preview banner). The result is the JSON the
+ * wrapper wrote to $comFile; see pru_ti_run.js for the fail-closed rules.
+ */
+function tiRunBanner(inst) {
+    if (!inst.tiRunResult) {
+        return null;
+    }
+    return tiRun.bannerLine(tiRun.parseResult(inst.tiRunResult), tiRun.designDigest(system.modules, system));
+}
+
+function tiRunSummary(inst) {
+    if (!inst.tiRunResult) {
+        return "No TI pru-simulator run yet. Save the design, then press Run on TI pru-simulator.";
+    }
+    return tiRun.describe(tiRun.parseResult(inst.tiRunResult), tiRun.designDigest(system.modules, system)).text;
 }
 
 function getAIContext() {
@@ -1160,6 +2661,12 @@ exports  = {
     longDescription: getLongDescription(),
     getAIContext: getAIContext,
 	moduleStatic: {
+        // The GUI may use this direct template. SysConfig 1.28 CLI does not
+        // execute moduleStatic.templates, so its always-run assembly template
+        // embeds the same buildDeviceBindings output for extraction by make.
+        templates: {
+            "/pru_blocks/common/pru_device_bindings.json.xdt": "/pru_device_bindings.json"
+        },
         validate,
         config: [
             {
@@ -1204,6 +2711,63 @@ If the frequencies don't match, timing-sensitive operations (SPI, ADC) may not w
                 default: 2000,
             },
             {
+                name: "tiRunButton",
+                displayName: "Real Simulation",
+                description: "Generate, build with clpru and run this design on TI pru-simulator against the attached device models (the same path as gmake sim). Save the design first: it runs the saved .syscfg.",
+                buttonText: "Run on TI pru-simulator",
+                nonSerializable: true,
+                onLaunch: (inst) => tiRun.launchSpec(system, inst, tiRun.designDigest(system.modules, system)),
+                onComplete: (inst, _ui, result) => {
+                    inst.tiRunResult = (result && typeof result.data === "string") ? result.data : "";
+                }
+            },
+            {
+                name: "tiRunLiveView",
+                displayName: "Open Live Web View After Run",
+                description: "After the run, open TI pru-simulator's dashboard in your browser on the ELF the button just built.",
+                longDescription: "After the run, open TI pru-simulator's dashboard in your browser on the ELF the button just built, with the bound devices attached. It does not change the result, and it is not started when the run was refused or the build failed. The view shows the simulator, not hardware.",
+                default: false,
+                onChange: (inst, ui) => {
+                    ui.tiRunLivePort.hidden = !inst.tiRunLiveView;
+                }
+            },
+            {
+                name: "tiRunLivePort",
+                displayName: "Live Web View Port",
+                description: "Local port for the live web view (127.0.0.1 only). A view from an earlier Run is replaced; a port held by anything else is reported, not taken.",
+                default: 8765,
+                hidden: true
+            },
+            {
+                name: "tiRunSummary",
+                displayName: "TI pru-simulator Result",
+                description: "Verdict from the last Run on TI pru-simulator. Taken from the run's exit code only; NOT CHECKED is never a pass; a result for an earlier design is shown as STALE.",
+                default: "",
+                readOnly: true,
+                multiline: true,
+                nonSerializable: true,
+                getValue: (inst) => tiRunSummary(inst)
+            },
+            {
+                name: "tiRunResult",
+                displayName: "",
+                default: "",
+                hidden: true,
+                nonSerializable: true
+            },
+            {
+                name: "tiRunProject",
+                displayName: "TI Run Project (optional)",
+                description: "Path to the saved example.syscfg (or its folder). Leave empty to use the open file; set it when the GUI does not report the file path.",
+                default: ""
+            },
+            {
+                name: "tiRunRepoRoot",
+                displayName: "TI Run Tool Root (optional)",
+                description: "Folder holding scripts/sim/gui_run.py. Leave empty to find it from the PRU No-Code Tool product.",
+                default: ""
+            },
+            {
                 name: "signalsToDisplay",
                 displayName : "Select Output Signals To Display",
                 description: "Choose which GPO output pins to display in the simulation waveform viewer",
@@ -1245,5 +2809,16 @@ This allows you to test PRU blocks that read from input pins (like SPI Read's SD
     getDataSectionContents,
     getInitSectDirectives,
     getUsectLinkerDirectives,
-    simulationData
+    getConstantTableSetup,
+    getConstantTableSetupCycles,
+    getSpiCsIdleSetupCycles,
+    pruCtrlBase,
+    simulationData,
+    buildDeviceBindings,
+    buildDeviceBindingsWithModels,
+    collectGpiDeviceClaims,
+    resolveDeviceReaders,
+    validateDeviceCapabilities,
+    pruDeviceCaps,
+    validateBidiPinCollisionsGlobal
 };

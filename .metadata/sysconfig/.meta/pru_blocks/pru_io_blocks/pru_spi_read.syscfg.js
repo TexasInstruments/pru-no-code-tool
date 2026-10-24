@@ -18,7 +18,11 @@ function getPruNumberFromContext() {
     return "PRU1";
 }
 const PRU_USED = getPruNumberFromContext();  
+// CS Setup/Hold Time are nanoseconds; the macros take PRU cycles. One shared conversion.
+const spiTiming = system.getScript("/pru_blocks/common/pru_spi_timing.js");
 function validate(inst, report) {
+	spiTiming.validateCsTimes(inst, report);
+	spiTiming.validateIramBudget(inst, report);
 	// Port connection warnings
 	for(let iterator = 1; iterator <= inst["numOfInputPorts"]; iterator++)
 	{
@@ -110,11 +114,24 @@ function getNumOfBytes(value)
 	{
 		return 2;
 	}
-	if(value <= 24)
-	{
-		return 3;
-	}
+	// The macro clears its result with one LDI.  A 17..24-bit result must
+	// therefore own the whole register: allocating three bytes would leave b3
+	// available for a live neighbour that LDI would clobber.
 	return 4;
+}
+
+// A full variant name (not the bare "m_read_packet_spi_" prefix that
+// the block control-flow classifier probes with) must always carry the insert point.
+const READ_VARIANT_NAME = /^m_read_packet_spi_mode[0-3]_(slave_)?(msb|lsb)_/;
+
+function insertReadResultInitialization(macroBody, dataReg, macroName)
+{
+	const insertPoint = /(\n\tldi\s+[^,\n]+,\s+[^\n]+\nREAD_BIT_LOOP\?:)/;
+	const initialized = macroBody.replace(insertPoint, "\n\tldi     " + dataReg + ", 0$1");
+	if (initialized === macroBody && READ_VARIANT_NAME.test(macroName || "")) {
+		throw new Error("pru_spi_read: could not find READ_BIT_LOOP initialization point");
+	}
+	return initialized;
 }
 
 /**
@@ -169,8 +186,8 @@ function getMacro(pruInstructionMacro, opCode) {
 	;   DELAY_COMPEN_1    - High pulse delay compensation (PRU cycles)
 	;   DELAY_COMPEN_2    - Low pulse delay compensation (PRU cycles)
 	;   CS_PIN            - Chip select output pin number (GPO)
-	;   CS_SETUP_TIME     - Setup time after CS assertion (PRU cycles)
-	;   CS_HOLD_TIME      - Hold time before CS deassertion (PRU cycles)
+	;   CS_SETUP_TIME     - Setup time after CS assertion (PRU cycles; the block converts its nanosecond setting, rounding up)
+	;   CS_HOLD_TIME      - Hold time before CS deassertion (PRU cycles; the block converts its nanosecond setting, rounding up)
 	;   DATA_SETUP_TIME   - Data setup time after clock edge (PRU cycles)
 `;
 		}
@@ -211,13 +228,17 @@ SKIP_BIT_ENTRY_0?:
 	set r30, r30,   ${CS_PIN}`
 	}
     if (macroName === "m_read_packet_spi_mode1_lsb_gpo_sclk") {
+        // The bit counter advances in the high half, as in the MSB variant, so both halves
+        // match delay_component1/2. bitId is a byte register (TEMP_REG1.b0): it starts at
+        // 0xFF and wraps to 0 on the first add, and the loop ends after bit PACKETSIZE-1.
         macroBody += `	clr r30, r30,   ${CS_PIN}
 	.loop   ${CS_SETUP_TIME}
 	nop
 	.endloop
-	ldi     ${bitId}, 0
+	ldi     ${bitId}, 0xFF
 READ_BIT_LOOP?:
 	set r30, r30,   ${SCLK_PIN}
+	add     ${bitId}, ${bitId}, 1
 	.loop   ${DATA_SETUP_TIME}
 	nop
 	.endloop
@@ -232,11 +253,10 @@ BIT_ENTRY_0?:
 	clr     ${dataReg}, ${dataReg}, ${bitId}
 	nop
 SKIP_BIT_ENTRY_0?:
-	add     ${bitId}, ${bitId}, 1
 	.loop   ${DELAY_COMPEN_2} ; 0
 	nop
 	.endloop
-	qbne    READ_BIT_LOOP?, ${bitId}, ${PACKETSIZE}
+	qbne    READ_BIT_LOOP?, ${bitId}, ${PACKETSIZE}-1
 	.loop   ${CS_HOLD_TIME}
 	nop
 	.endloop
@@ -344,12 +364,15 @@ SKIP_BIT_ENTRY_0?:
 	set r30, r30, ${CS_PIN}`;
     }
     if (macroName === "m_read_packet_spi_mode3_lsb_gpo_sclk") {
+        // Both sample paths take two instructions, and the bit counter advances in the low half,
+        // as the MSB variant's sub does, so both halves match delay_component1/2. bitId is a
+        // byte register (TEMP_REG1.b0): it starts at 0xFF and wraps to 0 on the first add.
         macroBody += `	set r30, r30, ${SCLK_PIN}
 	clr r30, r30, ${CS_PIN}
 	.loop   ${CS_SETUP_TIME}
 	nop
 	.endloop
-	ldi     ${bitId}, 0
+	ldi     ${bitId}, 0xFF
 READ_BIT_LOOP?:
 	clr r30, r30, ${SCLK_PIN}
 	.loop   ${DATA_SETUP_TIME}
@@ -358,19 +381,19 @@ READ_BIT_LOOP?:
 	.loop   ${DELAY_COMPEN_1}
 	nop
 	.endloop
-	nop
+	add     ${bitId}, ${bitId}, 1
 	set r30, r30, ${SCLK_PIN}
 	qbbc    BIT_ENTRY_0?, r31, ${SDI_PIN}
 	set     ${dataReg}, ${dataReg}, ${bitId}
 	qba     SKIP_BIT_ENTRY_0?
 BIT_ENTRY_0?:
 	clr     ${dataReg}, ${dataReg}, ${bitId}
+	nop
 SKIP_BIT_ENTRY_0?:
-	add     ${bitId}, ${bitId}, 1
 	.loop   ${DELAY_COMPEN_2}
 	nop
 	.endloop
-	qbne    READ_BIT_LOOP?, ${bitId}, ${PACKETSIZE}
+	qbne    READ_BIT_LOOP?, ${bitId}, ${PACKETSIZE}-1
 	.loop   ${CS_HOLD_TIME}
 	nop
 	.endloop
@@ -701,6 +724,13 @@ SKIP_BIT_ENTRY_0?:
 	qbne    READ_BIT_LOOP?, ${bitId}, ${PACKETSIZE}`;
 	}
 
+	// A partial packet must replace the whole destination word.  The bit loop
+	// only writes bits [PACKETSIZE - 1:0], so clear the register once before it
+	// starts instead of leaving the prior value in the high bits.
+	if (macroName.startsWith("m_read_packet_spi_")) {
+		macroBody = insertReadResultInitialization(macroBody, dataReg, macroName);
+	}
+
 	if(pruInstructionMacro == "")
     {
 		macroBody += "\n" + " .endm";
@@ -893,6 +923,7 @@ Cycles per bit: **(2+d1) + (5+d2)**
 ### Technical Details (Additional Information)
 
 **Performance**:
+- **Result initialization:** The destination register is cleared once before sampling, so packets shorter than 32 bits are zero-extended. This adds one cycle to the transaction overhead.
 - Cycles per bit ≈ (high_width + low_width + data_setup_time + overhead)
 - Total cycles ≈ CS_setup + (packet_size × cycles_per_bit) + CS_hold
 
@@ -1419,11 +1450,11 @@ exports = {
 					// Cycles per bit: fixed overhead + DATA_SETUP_TIME + delay_component1 + delay_component2
 					const cyclesPerBit = 7 + dataSetupCycles + inst["delay_component1"] + inst["delay_component2"];
 
-					return 1 + csSetupCycles + 1 +
+					return 2 + csSetupCycles + 1 +
 					       (inst["packetSize"] * cyclesPerBit) +
 					       csHoldCycles + 1;
 				} else {
-					return 4 + inst["delay_component1"] + (inst["packetSize"] - 1) * (6 + inst["delay_component1"] + inst["delay_component2"]);
+					return 5 + inst["delay_component1"] + (inst["packetSize"] - 1) * (6 + inst["delay_component1"] + inst["delay_component2"]);
 				}
 			},
 			default : 1
@@ -1445,6 +1476,16 @@ exports = {
 	},
 	validate,
 	moduleStatic: {
+
+        getPinUsage: function(inst) {
+            const isCtrl = inst["Device Mode"] === "controller";
+            const pins = [];
+            if (inst["SCLK Signal"] !== undefined) pins.push({ pin: parseInt(inst["SCLK Signal"]), dir: isCtrl ? "GPO" : "GPI" });
+            if (inst["SDI Signal"] !== undefined) pins.push({ pin: parseInt(inst["SDI Signal"]), dir: "GPI" });
+            if (inst["CS Signal"] !== undefined) pins.push({ pin: parseInt(inst["CS Signal"]), dir: isCtrl ? "GPO" : "GPI" });
+            return pins;
+        }
+    ,
         modules: function(inst) {
             return [{
                 name: "pru_register_allocator_validator",
@@ -1452,7 +1493,9 @@ exports = {
             }]
         },
     },
-	getMacro
+	getMacro,
+	// Exposed for this module's tests; production callers use getMacro.
+	_testInsertReadResultInitialization: insertReadResultInitialization
 }
 
 /*

@@ -18,7 +18,11 @@ function getPruNumberFromContext() {
     return "PRU1";
 }
 const PRU_USED = getPruNumberFromContext();
+// CS Setup/Hold Time are nanoseconds; the macros take PRU cycles. One shared conversion.
+const spiTiming = system.getScript("/pru_blocks/common/pru_spi_timing.js");
 function validate(inst, report) {
+	spiTiming.validateCsTimes(inst, report);
+	spiTiming.validateIramBudget(inst, report);
 	// Port connection warnings
 	for(let iterator = 1; iterator <= inst["numOfInputPorts"]; iterator++)
 	{
@@ -136,11 +140,22 @@ function getNumOfBytes(value)
 	{
 		return 2;
 	}
-	if(value <= 24)
-	{
-		return 3;
-	}
+	// r_dataReg is initialized by a whole-register LDI for packets wider than
+	// 16 bits, so reserve all four bytes rather than clobbering a live b3.
 	return 4;
+}
+
+function insertTransferResultInitialization(macroBody, r_dataReg, headerLength)
+{
+	// The clear goes INSIDE the macro: after the ".macro" header and parameter
+	// comments when the header form is requested, at the very start of the body
+	// for the inline form.  headerLength is the number of characters that belong
+	// to the header (0 for the inline form).
+	// It cannot destroy the transmit word: the register allocator never gives a
+	// macro the register of an input it has not finished reading (macros are not
+	// in IN_PLACE_SAFE_OPCODES), so r_dataReg and s_dataReg are disjoint.
+	return macroBody.slice(0, headerLength) + "\tldi     " + r_dataReg + ", 0\n" +
+		macroBody.slice(headerLength);
 }
 
 /**
@@ -201,12 +216,14 @@ function getMacro(pruInstructionMacro, opCode) {
 	;   DELAY_COMPEN_1    - High pulse delay compensation (PRU cycles)
 	;   DELAY_COMPEN_2    - Low pulse delay compensation (PRU cycles)
 	;   CS_PIN            - Chip select output pin number (GPO)
-	;   CS_SETUP_TIME     - Setup time after CS assertion (PRU cycles)
-	;   CS_HOLD_TIME      - Hold time before CS deassertion (PRU cycles)
+	;   CS_SETUP_TIME     - Setup time after CS assertion (PRU cycles; the block converts its nanosecond setting, rounding up)
+	;   CS_HOLD_TIME      - Hold time before CS deassertion (PRU cycles; the block converts its nanosecond setting, rounding up)
 	;   DATA_SETUP_TIME   - Data setup time after clock edge (PRU cycles)
 `;
 		}
 	}
+
+	const headerLength = macroBody.length;
 
 	// Controller MODE0 MSB (CPOL=0, CPHA=0) - Clock idles LOW, sample on rising, shift on falling
 	if (macroName === "m_transfer_packet_spi_mode0_msb_gpo_sclk") {
@@ -985,6 +1002,11 @@ wait_for_low_transition_loop2?:
 SEND_BIT_LOOP_END?:`;
 	}
 
+	if (macroName.startsWith("m_transfer_packet_spi_") && macroBody.length > headerLength)
+	{
+		macroBody = insertTransferResultInitialization(macroBody, r_dataReg, headerLength);
+	}
+
 	if(pruInstructionMacro == "")
     {
 		macroBody += "\n" + " .endm";
@@ -1675,12 +1697,12 @@ exports = {
 					// Based on m_transfer_packet_spi_master_gpo_sclk: ~ (4+d1) + (6+d2) cycles per bit
 					const cyclesPerBit = 10 + dataSetupCycles + inst["delay_component1"] + inst["delay_component2"];
 
-					return 1 + csSetupCycles + 1 +
+					return 2 + csSetupCycles + 1 +
 					       (inst["packetSize"] * cyclesPerBit) +
 					       csHoldCycles + 1;
 				} else {
 					// Peripheral mode: 13 cycles per bit (6 shifting + 7 sampling)
-					return 6 + inst["CS Filter Cycles"] + (inst["packetSize"] * 13);
+					return 7 + inst["CS Filter Cycles"] + (inst["packetSize"] * 13);
 				}
 			},
 			default : 1
@@ -1702,6 +1724,17 @@ exports = {
 	},
 	validate,
 	moduleStatic: {
+
+        getPinUsage: function(inst) {
+            const isCtrl = inst["Device Mode"] === "controller";
+            const pins = [];
+            if (inst["SCLK Signal"] !== undefined) pins.push({ pin: parseInt(inst["SCLK Signal"]), dir: isCtrl ? "GPO" : "GPI" });
+            if (inst["SDI Signal"] !== undefined) pins.push({ pin: parseInt(inst["SDI Signal"]), dir: "GPI" });
+            if (inst["SDO Signal"] !== undefined) pins.push({ pin: parseInt(inst["SDO Signal"]), dir: "GPO" });
+            if (inst["CS Signal"] !== undefined) pins.push({ pin: parseInt(inst["CS Signal"]), dir: isCtrl ? "GPO" : "GPI" });
+            return pins;
+        }
+    ,
         modules: function(inst) {
             return [{
                 name: "pru_register_allocator_validator",
