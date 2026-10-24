@@ -44,7 +44,7 @@ function parseRegister(regStr) {
             type: 'word', 
             wordNum: parseInt(match[4]),
             mask: 0xFFFF,
-            shift: parseInt(match[4]) * 16
+            shift: parseInt(match[4]) * 8
         };
     } else {
         // Full register
@@ -135,11 +135,14 @@ function setRegisterValue(pruState, regInfo, value) {
         const clearMask = ~(regInfo.mask << regInfo.shift);
         pruState.registers[regInfo.reg] &= clearMask;
         pruState.registers[regInfo.reg] |= ((value & regInfo.mask) << regInfo.shift);
+        // JS bitwise operators yield signed 32-bit results; registers hold unsigned values.
+        pruState.registers[regInfo.reg] >>>= 0;
     } else if (regInfo.type === 'word') {
         // Clear the word position and set the new value
         const clearMask = ~(regInfo.mask << regInfo.shift);
         pruState.registers[regInfo.reg] &= clearMask;
         pruState.registers[regInfo.reg] |= ((value & regInfo.mask) << regInfo.shift);
+        pruState.registers[regInfo.reg] >>>= 0;
     }
 }
 
@@ -174,6 +177,15 @@ function executeSbbo(pruState, src, baseAddr, byteOffset, byteCount) {
             baseValue = pruState.registers[baseRegInfo.regNum];
         } else {
             return 0;
+        }
+    } else if (baseAddr.toLowerCase().startsWith('c')) {
+        const cNum = parseInt(baseAddr.substring(1), 10);
+        if (cNum === 26) {
+            baseValue = 0x0002E000; // IEP base address
+        } else if (cNum === 28) {
+            baseValue = 0x00000000; // DMEM0 base address
+        } else {
+            baseValue = 0;
         }
     } else {
         return 0;
@@ -256,6 +268,40 @@ function executeSbbo(pruState, src, baseAddr, byteOffset, byteCount) {
     if (memAddress >= 0x00010000 && memAddress < 0x00020000) {
         // SMEM range: 0x00010000 - 0x0001FFFF
         writeResult = pruSMEM.writeSMEM(memAddress, dataBuffer);
+    } else if (memAddress >= 0x0002E000 && memAddress < 0x0002E100) {
+        // IEP registers. Offsets per AM243x TRM SPRUIM2J Table 14-10902 (p6902):
+        // 0x00 GLOBAL_CFG, 0x10/0x14 COUNT_REG0/1, 0x18/0x1C CAP_CFG/CAP_STATUS,
+        // 0x20.. CAPRn, 0x70 CMP_CFG, 0x74 CMP_STATUS, 0x78+8j CMPj_REG0/1.
+        // This is not the AM335x-era layout (count at 0x0C, compare block at
+        // 0x40): here 0x0C is SLOW_COMPEN and 0x40-0x6C are capture registers.
+        const iepOffset = memAddress - 0x0002E000;
+        let regVal = 0;
+        for (let i = 0; i < count; i++) {
+            regVal |= dataBuffer[i] << (i * 8);
+        }
+        if (iepOffset === 0x00) {
+            pruState.iepGlobalCfg = regVal;      // [0] CNT_ENABLE, [7:4] DEFAULT_INC
+        } else if (iepOffset === 0x10) {
+            pruState.iepCount = regVal;
+        } else if (iepOffset === 0x70) {
+            pruState.iepCmpCfg = regVal;         // [0] CMP0_RST_CNT_EN, [16:1] CMP_EN
+        } else if (iepOffset === 0x74) {
+            pruState.iepCmpStatus &= ~regVal; // Clear status bits written as 1 (W1C behavior)
+        } else if (iepOffset === 0x14) {
+            pruState.iepCountHi = regVal >>> 0;   // IEP_COUNT_REG1, upper 32 bits
+        } else if (iepOffset >= 0x78 && iepOffset < 0x78 + 16 * 8) {
+            // TRM SPRUIM2J 6.4.13: compares are 64-bit PAIRS, IEP_CMPj_REG0/REG1.
+            // 0x4C is CMP0's upper half, NOT CMP1 - CMP1_REG0 is at 0x50. Both
+            // halves are stored: dropping REG1 writes on the floor would make any
+            // compare above 2^32 unreachable and silently mismatch firmware.
+            const j = Math.floor((iepOffset - 0x78) / 8);
+            if (((iepOffset - 0x78) % 8) === 0) {
+                pruState.iepCmp[j] = regVal >>> 0;
+            } else {
+                pruState.iepCmpHi[j] = regVal >>> 0;
+            }
+        }
+        writeResult = true;
     } else {
         // DMEM range: 0x00000000 - 0x00001FFF
         writeResult = pruDMEM0.writeDMEM0(memAddress, dataBuffer);
@@ -298,6 +344,15 @@ function executeLBBO(pruState, dest, baseAddr, byteOffset, byteCount) {
         } else {
             return 0;
         }
+    } else if (baseAddr.toLowerCase().startsWith('c')) {
+        const cNum = parseInt(baseAddr.substring(1), 10);
+        if (cNum === 26) {
+            baseValue = 0x0002E000; // IEP base address
+        } else if (cNum === 28) {
+            baseValue = 0x00000000; // DMEM0 base address
+        } else {
+            baseValue = 0;
+        }
     } else {
         return 0;
     }
@@ -330,6 +385,51 @@ function executeLBBO(pruState, dest, baseAddr, byteOffset, byteCount) {
     if (memAddress >= 0x00010000 && memAddress < 0x00020000) {
         // SMEM range: 0x00010000 - 0x0001FFFF
         memoryData = pruSMEM.readSMEM(memAddress, count);
+    } else if (memAddress >= 0x0C000000 && memAddress < 0x0C0FFFFF) {
+        // MMIO mock (e.g. SDFM 0x0C080000 base)
+        if (pruState.mmioMap && pruState.mmioMap[memAddress]) {
+            const history = pruState.mmioMap[memAddress];
+            let activeValue = 0;
+            for (let i = 0; i < history.length; i++) {
+                if (pruState.cycles >= history[i].cycle) {
+                    activeValue = history[i].value;
+                } else {
+                    break;
+                }
+            }
+            memoryData = new Uint8Array(count);
+            for (let i = 0; i < count; i++) {
+                memoryData[i] = (activeValue >>> (i * 8)) & 0xFF;
+            }
+        } else {
+            memoryData = new Uint8Array(count); // Default 0
+        }
+    } else if (memAddress >= 0x0002E000 && memAddress < 0x0002E100) {
+        // IEP registers. Offsets per AM243x TRM SPRUIM2J Table 14-10902 (p6902):
+        // 0x00 GLOBAL_CFG, 0x10/0x14 COUNT_REG0/1, 0x18/0x1C CAP_CFG/CAP_STATUS,
+        // 0x20.. CAPRn, 0x70 CMP_CFG, 0x74 CMP_STATUS, 0x78+8j CMPj_REG0/1.
+        // This is not the AM335x-era layout (count at 0x0C, compare block at
+        // 0x40): here 0x0C is SLOW_COMPEN and 0x40-0x6C are capture registers.
+        const iepOffset = memAddress - 0x0002E000;
+        let regVal = 0;
+        if (iepOffset === 0x00) {
+            regVal = pruState.iepGlobalCfg;
+        } else if (iepOffset === 0x10) {
+            regVal = pruState.iepCount;
+        } else if (iepOffset === 0x70) {
+            regVal = pruState.iepCmpCfg;
+        } else if (iepOffset === 0x74) {
+            regVal = pruState.iepCmpStatus;
+        } else if (iepOffset === 0x14) {
+            regVal = pruState.iepCountHi;
+        } else if (iepOffset >= 0x78 && iepOffset < 0x78 + 16 * 8) {
+            const j = Math.floor((iepOffset - 0x78) / 8);
+            regVal = (((iepOffset - 0x78) % 8) === 0) ? pruState.iepCmp[j] : pruState.iepCmpHi[j];
+        }
+        memoryData = new Uint8Array(count);
+        for (let i = 0; i < count; i++) {
+            memoryData[i] = (regVal >>> (i * 8)) & 0xFF;
+        }
     } else {
         // DMEM range: 0x00000000 - 0x00001FFF
         memoryData = pruDMEM0.readDMEM0(memAddress, count);
@@ -378,7 +478,7 @@ function executeLBBO(pruState, dest, baseAddr, byteOffset, byteCount) {
         }
         
         // Update the register
-        pruState.registers[currentReg] = value;
+        pruState.registers[currentReg] = value >>> 0;
         
         // Update counters for next iteration
         memOffset += bytesInThisReg;
@@ -1482,9 +1582,10 @@ function executeInstruction(pruState, pruInstructions, labelMap, r30ValueHistory
             break;
         }
         
+        case 'LBCO':
         case 'LBBO': {
             // Extract operands
-            // LBBO &dest, baseAddr, byteOffset, byteCount
+            // LBBO/LBCO &dest, baseAddr, byteOffset, byteCount
             // Remove the '&' from the destination
             const lbboDest = operands[0].replace(/&|,/g, '');
             const lbboBaseAddr = operands[1].replace(/,/g, '');
@@ -1500,6 +1601,7 @@ function executeInstruction(pruState, pruInstructions, labelMap, r30ValueHistory
             break;
         }
             
+        case 'SBCO':
         case 'SBBO': {
             // Extract operands
             // SBBO &src, baseAddr, byteOffset, byteCount
@@ -1519,6 +1621,7 @@ function executeInstruction(pruState, pruInstructions, labelMap, r30ValueHistory
         }
 
         case 'LOOP': {
+            console.log(`Executing PC ${pruState.pc}: LOOP ${operands.join(' ')}`);
             // LOOP label, count
             const label = operands[0].replace(/,/g, '');
             // Parse the count operand which can be a register or immediate
@@ -1575,16 +1678,186 @@ function executeInstruction(pruState, pruInstructions, labelMap, r30ValueHistory
             break;
         }
 
+        case 'ZERO': {
+            const op1Info = parseRegisterReference(operands[0].replace(/&|,/g, ''));
+            const byteCountStr = operands[1] ? operands[1].replace(/,/g, '') : "4";
+            const byteCount = parseImmediate(byteCountStr);
+            if (op1Info) {
+                const startReg = (op1Info.regNum !== undefined) ? op1Info.regNum : op1Info.reg;
+                const numRegs = Math.ceil(byteCount / 4);
+                for (let i = 0; i < numRegs && (startReg + i) < 32; i++) {
+                    pruState.registers[startReg + i] = 0;
+                }
+            }
+            pruState.pc++;
+            break;
+        }
+
+        case 'FILL': {
+            const op1Info = parseRegisterReference(operands[0].replace(/&|,/g, ''));
+            const byteCountStr = operands[1] ? operands[1].replace(/,/g, '') : "4";
+            const byteCount = parseImmediate(byteCountStr);
+            if (op1Info) {
+                const startReg = (op1Info.regNum !== undefined) ? op1Info.regNum : op1Info.reg;
+                const numRegs = Math.ceil(byteCount / 4);
+                for (let i = 0; i < numRegs && (startReg + i) < 32; i++) {
+                    pruState.registers[startReg + i] = 0xFFFFFFFF;
+                }
+            }
+            pruState.pc++;
+            break;
+        }
+
+        case 'MULL': {
+            // MULL rX[.bx/.wx], rY[.bx/.wx], rZ[.bx/.wx]
+            throw new Error("Simulator Error: PRU instruction 'MULL' does not exist in this PRU core. Use XOUT/XIN with MAC instead.");
+            break;
+        }
+
+        case 'XOUT': {
+            const deviceIdStr = operands[0].replace(/,/g, '');
+            const deviceId = parseImmediate(deviceIdStr);
+            if (handleParsingError(pruState, deviceId)) {
+                pruState.pc++;
+                break;
+            }
+
+            const op2Info = parseRegisterReference(operands[1].replace(/&|,/g, ''));
+            const byteCountStr = operands[2] ? operands[2].replace(/,/g, '') : "4";
+            const byteCount = parseImmediate(byteCountStr);
+
+            if (deviceId === 0) {
+                // MAC config
+                if (!pruState.mac) pruState.mac = { enabled: false, mode: 0, result: 0n };
+                pruState.mac.enabled = true;
+                if (op2Info) {
+                    pruState.mac.mode = getRegisterValue(pruState, op2Info);
+                }
+            } else if (deviceId >= 10 && deviceId <= 12) {
+                // SPAD write
+                const bank = deviceId - 10;
+                if (byteCount > 120) {
+                    throw new Error(`Simulator Error: SPAD transfer out of bounds (max 120 bytes). Attempted to transfer ${byteCount} bytes.`);
+                }
+                if (!pruState.spad) pruState.spad = { banks: [[], [], []] };
+                if (op2Info) {
+                    const startReg = op2Info.regNum;
+                    const words = Math.ceil(byteCount / 4);
+                    for(let i=0; i<words; i++) {
+                        pruState.spad.banks[bank][i] = pruState.registers[(startReg + i) % 32];
+                    }
+                }
+            }
+            pruState.pc++;
+            break;
+        }
+
+        case 'XIN': {
+            const deviceIdStr = operands[0].replace(/,/g, '');
+            const deviceId = parseImmediate(deviceIdStr);
+            if (handleParsingError(pruState, deviceId)) {
+                pruState.pc++;
+                break;
+            }
+
+            const op2Info = parseRegisterReference(operands[1].replace(/&|,/g, ''));
+            const byteCountStr = operands[2] ? operands[2].replace(/,/g, '') : "4";
+            const byteCount = parseImmediate(byteCountStr);
+
+            if (deviceId === 0) {
+                // MAC read
+                if (!pruState.mac) pruState.mac = { enabled: false, mode: 0, result: 0n };
+
+                // Compute result on XIN
+                if (pruState.mac.enabled) {
+                    // Standard 32x32 -> 64 signed multiply
+                    const op1 = pruState.registers[28];
+                    const op2 = pruState.registers[29];
+                    // Convert to JS signed 32-bit integer, then to BigInt
+                    const val1 = BigInt(op1 | 0);
+                    const val2 = BigInt(op2 | 0);
+                    pruState.mac.result = val1 * val2;
+                }
+
+                if (op2Info) {
+                    if (op2Info.regNum === 25) {
+                        pruState.registers[op2Info.regNum] = pruState.mac.mode;
+                    } else if (op2Info.regNum === 27) {
+                        // Return upper 32 bits
+                        pruState.registers[op2Info.regNum] = Number((pruState.mac.result >> 32n) & 0xFFFFFFFFn) >>> 0;
+                    } else {
+                        // Return lower 32 bits
+                        pruState.registers[op2Info.regNum] = Number(pruState.mac.result & 0xFFFFFFFFn) >>> 0;
+                        if (byteCount > 4) {
+                            // Return upper 32 bits in next register
+                            pruState.registers[(op2Info.regNum + 1) % 32] = Number((pruState.mac.result >> 32n) & 0xFFFFFFFFn) >>> 0;
+                        }
+                    }
+                }
+            } else if (deviceId >= 10 && deviceId <= 12) {
+                // SPAD read
+                const bank = deviceId - 10;
+                if (byteCount > 120) {
+                    throw new Error(`Simulator Error: SPAD transfer out of bounds (max 120 bytes). Attempted to transfer ${byteCount} bytes.`);
+                }
+                if (!pruState.spad) pruState.spad = { banks: [[], [], []] };
+                if (op2Info) {
+                    const startReg = op2Info.regNum;
+                    const words = Math.ceil(byteCount / 4);
+                    for(let i=0; i<words; i++) {
+                        pruState.registers[(startReg + i) % 32] = pruState.spad.banks[bank][i] || 0;
+                    }
+                }
+            }
+            pruState.pc++;
+            break;
+        }
+
         case 'HALT': {
-            // End simulation
-            pruState.cycles = cycleCount;
+            // End simulation. With devices attached, the DEVICE keeps living
+            // after the firmware stops: jumping the cycle counter to the end
+            // would hand it one giant tick, and a monoflop that should
+            // quietly expire mid-idle instead reads as a stalled transfer.
+            // Mark halted and let the main loop idle the bus out to
+            // cycleCount, one cycle at a time.
+            if (pruState.deviceBus) {
+                pruState.halted = true;
+                pruState.pc++;
+            } else {
+                pruState.cycles = cycleCount;
+            }
             break;
         }
 
         default: {
-            // Unknown instruction, skip
-            cyclesToAdd = 0;
-            pruState.unknownInstruction = opcode;
+            // Fail loudly on real PRU instructions that are not modelled, so
+            // block-level tests cannot silently "pass" on them.
+            // The static validator simulates the FULL generated firmware, which
+            // contains macro invocations (m_*) and assembler directives (.*) that are
+            // NOT base instructions and must not be executed here. Throwing on those
+            // would break validation/build of every real example. So: throw only for
+            // the explicit set of recognised-but-unimplemented base instructions, and
+            // skip everything else (macro calls and directives are not executed here).
+            const UNIMPLEMENTED_BASE_INSTRUCTIONS = ["MAC", "MACU", "WBC"];
+            if (UNIMPLEMENTED_BASE_INSTRUCTIONS.indexOf(opcode) !== -1) {
+                throw new Error("Simulator Error: PRU instruction '" + opcode + "' is recognised but not yet implemented in pru_core.js (PC " + pruState.pc + "). Please add support before simulating blocks that use it.");
+            }
+            // Macro calls (m_*), directives (.*), and other non-base tokens: skip.
+            // Track skipped macro calls (m_*) so the preview message can
+            // explain why a macro-based design produced no protocol activity instead
+            // of falsely reporting that the attached device was silent.
+            const rawToken = instructionMatch[1];
+            if (/^m_/i.test(rawToken)) {
+                pruState.skippedMacroCount = (pruState.skippedMacroCount || 0) + 1;
+                if (!pruState.skippedMacros) {
+                    pruState.skippedMacros = [];
+                }
+                const macroName = rawToken.toLowerCase();
+                if (pruState.skippedMacros.indexOf(macroName) === -1) {
+                    pruState.skippedMacros.push(macroName);
+                }
+            }
+            pruState.unknownInstruction++;
             pruState.pc++;
             break;
         }
@@ -1616,6 +1889,52 @@ function executeInstruction(pruState, pruInstructions, labelMap, r30ValueHistory
             pruState.registers[31] = pruState.r31HistoryMap[pruState.cycles];
         }
 
+        // Attached device models (Simulation Settings "Attached Device Model"
+        // mode) close the loop: the bus resolves this cycle's R30 against the
+        // devices' drives and the result is what R31 samples. This runs AFTER
+        // the fixed history so a pin under device control is owned by the
+        // device - a pre-authored history bit on the same pin would be two
+        // drivers for one wire, and the bus is the only arbiter.
+        if (pruState.deviceBus) {
+            pruState.registers[31] = pruState.deviceBus.settle(pruState.cycles, pruState.registers[30]);
+        }
+
+        // Update IEP timer state, per TRM SPRUIM2J 6.4.13.
+        // The counter only runs when enabled, compares fire only when CMP_EN
+        // is set, and auto-reset needs CMP0_RST_CNT_EN, so firmware that never
+        // configures the IEP cannot appear to work here and then hang on silicon.
+        if (pruState.iepGlobalCfg & 0x1) {                       // [0] CNT_ENABLE
+            const inc = (pruState.iepGlobalCfg >> 4) & 0xF;      // [7:4] DEFAULT_INC
+            // The counter is 64-bit across COUNT_REG0/REG1. Carrying into the
+            // high word matters: truncating at 32 bits wraps after 2^32 updates
+            // (~21s at 200MHz) and makes any compare above 2^32 unreachable.
+            const sum = pruState.iepCount + inc;
+            pruState.iepCount = sum >>> 0;
+            if (sum > 0xFFFFFFFF) {
+                pruState.iepCountHi = (pruState.iepCountHi + 1) >>> 0;
+            }
+            let hit0 = false;
+            for (let j = 0; j < 16; j++) {
+                // [16:1] CMP_EN, bit 1 maps to CMP0.
+                // EQUALITY, not >=. The IEP compare is a match on the counter
+                // value, so with DEFAULT_INC > 1 a compare value that is not on
+                // an increment boundary is stepped over and never fires - that is
+                // hardware behaviour, not a modelling shortcut, and firmware must
+                // program compares consistent with its increment. Using >= would
+                // instead re-assert the event on every cycle past the threshold.
+                if ((pruState.iepCmpCfg & (1 << (j + 1)))
+                    && pruState.iepCount === pruState.iepCmp[j]
+                    && pruState.iepCountHi === pruState.iepCmpHi[j]) {
+                    pruState.iepCmpStatus |= (1 << j);
+                    if (j === 0) hit0 = true;
+                }
+            }
+            if (hit0 && (pruState.iepCmpCfg & 0x1)) {            // [0] CMP0_RST_CNT_EN
+                pruState.iepCount = 0;
+                pruState.iepCountHi = 0;
+            }
+        }
+
         r30ValueHistory.push(pruState.registers[30]);
         r31ValueHistory.push(pruState.registers[31]);
     }
@@ -1629,9 +1948,15 @@ function executeInstruction(pruState, pruInstructions, labelMap, r30ValueHistory
  * @param {Array} pruInstructionsLabels - Array of labels corresponding to the instructions
  * @param {number} cycleCount - Number of pruState.cycles to simulate
  * @param {Object} r31HistoryMap - Optional map of cycle numbers to R31 values for simulation input (default: {})
+ * @param {Object} mmioMap - Optional MMIO stub map
+ * @param {Object} deviceBus - Optional DeviceBus (device_bus.js) with attached
+ *        device models. When given, the bus is settled every cycle and its
+ *        resolved level replaces R31 - this is the closed loop that Timestamp
+ *        and Pattern mode cannot express, because a pre-authored history
+ *        cannot react to what the firmware does.
  * @return {Object} The pruState and r30ValueHistory after simulation
  */
-function simulatePruInstructions(pruInstructions, pruInstructionsLabels, cycleCount, r31HistoryMap = {}) {
+function simulatePruInstructions(pruInstructions, pruInstructionsLabels, cycleCount, r31HistoryMap = {}, mmioMap = {}, deviceBus = null) {
     // Initialize pruState.registers (r0-r31)
     const pruState = {
         registers : new Array(32).fill(0),
@@ -1641,10 +1966,30 @@ function simulatePruInstructions(pruInstructions, pruInstructionsLabels, cycleCo
         loopStack : [],
         unknownInstruction : 0,
         errorParsing : 0,
-        r31HistoryMap: r31HistoryMap
+        skippedMacroCount: 0,
+        skippedMacros: [],
+        r31HistoryMap: r31HistoryMap,
+        mmioMap: mmioMap,
+        deviceBus: deviceBus,
+        halted: false,
+        iepCount: 0,
+        iepGlobalCfg: 0,
+        iepCmpCfg: 0,
+        iepCountHi: 0,
+        iepCmp: new Array(16).fill(0),
+        iepCmpHi: new Array(16).fill(0),
+        iepCmpStatus: 0
     };
 
-    const r30ValueHistory = [0];
+    // With devices attached, R30 starts at the bus idle (driven pins high),
+    // not at zero: the bus contract is pull-up idle, and a cold 0 would
+    // present every clocked device with a falling edge the firmware never
+    // generated. Open-loop runs (no bus) keep the historical zero start.
+    if (deviceBus) {
+        pruState.registers[30] = deviceBus.idlePruWord();
+    }
+
+    const r30ValueHistory = [deviceBus ? deviceBus.idlePruWord() : 0];
     const r31ValueHistory = [0];
 
     // Create label map for jumps
@@ -1657,6 +2002,14 @@ function simulatePruInstructions(pruInstructions, pruInstructionsLabels, cycleCo
 
     // Execute instructions until cycle count is reached or PC is out of bounds
     while (pruState.cycles < cycleCount && pruState.pc < pruInstructions.length) {
+        if (pruState.halted) {
+            // Firmware halted with devices attached: the devices keep living.
+            pruState.cycles++;
+            pruState.registers[31] = pruState.deviceBus.settle(pruState.cycles, pruState.registers[30]);
+            r30ValueHistory.push(pruState.registers[30]);
+            r31ValueHistory.push(pruState.registers[31]);
+            continue;
+        }
         executeInstruction(pruState, pruInstructions, labelMap, r30ValueHistory, r31ValueHistory, cycleCount);
     }
 

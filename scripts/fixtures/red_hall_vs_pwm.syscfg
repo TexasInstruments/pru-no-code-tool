@@ -1,0 +1,7 @@
+/**
+ * @cliArgs --device "AM243x_ALV_beta" --package "ALV" --part "ALV" --context "icss_g0_pru0" --product "PRU_NO_CODE_TOOL@01.00.01" --product "MCU_PLUS_SDK_AM243x@11.01.00"
+ */
+const A=(n)=>scripting.addModule("/pru_blocks/pru_io_blocks/"+n).addInstance();
+// Red arm: hall A input (R31 bit 9) vs a PWM output on pad 9.
+const h=A("hall_block"); h.$name="HALL"; h.aBit="9"; h.bBit="10"; h.cBit="11";
+const w=A("pwm_block"); w.$name="PWM"; w.pin="9";

@@ -1,0 +1,7 @@
+/**
+ * @cliArgs --device "AM243x_ALV_beta" --package "ALV" --part "ALV" --context "icss_g0_pru0" --product "PRU_NO_CODE_TOOL@01.00.01"
+ */
+// A continuous block (pwm_block never hands control back) and a gpo block on one GPO index.
+const A=(n)=>scripting.addModule("/pru_blocks/pru_io_blocks/"+n).addInstance();
+const g=A("pru_gpo_block"); g.$name="G"; g.constant1="R30, 9";
+const h=A("pwm_block"); h.$name="H"; h.pin="9";

@@ -1,0 +1,15 @@
+/**
+ * @cliArgs --device "AM243x_ALV_beta" --package "ALV" --part "ALV" --context "icss_g0_pru0" --product "PRU_NO_CODE_TOOL@01.00.01"
+ */
+const spin = scripting.addModule("/pru_blocks/pru_io_blocks/xfr2spin_block", {}, false);
+const rel = spin.addInstance();
+const lcM = scripting.addModule("/pru_blocks/data_handling/load_constant_block", {}, false);
+const lc  = lcM.addInstance();
+const ipcM = scripting.addModule("/pru_blocks/application_specific/ipc_shared_mem_block", {}, false);
+const ipc = ipcM.addInstance();
+rel.$name = "lock_release"; rel.operation = "release"; rel.lockId = 7; rel.protectsVariable = "encoder_data";
+lc.$name = "payload"; lc.constant1 = 5;
+ipc.$name = "shared_write"; ipc.variableName = "encoder_data"; ipc.crossCoreWriters = true;
+scripting.connect(lc, "output1", ipc, "input1");
+scripting.connect(lc, "next", ipc, "prev");
+scripting.connect(ipc, "next", rel, "prev");

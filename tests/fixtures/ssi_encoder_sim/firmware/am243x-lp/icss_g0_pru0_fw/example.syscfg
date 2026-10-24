@@ -1,0 +1,29 @@
+/**
+ * @cliArgs --device "AM243x_ALX_beta" --package "ALX" --part "ALX" --context "icss_g0_pru0" --product "PRU_NO_CODE_TOOL@01.00.01"
+ * @exampleMaturity simulator-tested
+ */
+
+const sim = scripting.addModule("/pru_blocks/common/pru_blocks_static_module");
+const ssiModule = scripting.addModule("/pru_blocks/application_specific/ssi_initiator_block", {}, false);
+const ssi = ssiModule.addInstance();
+ssi.$name = "Read_SSI_Position";
+ssi.clkPin = 0;
+ssi.dataPin = 1;
+
+const flowModule = scripting.addModule("/pru_blocks/program_control/flow_control_block", {}, false);
+const halt = flowModule.addInstance();
+halt.$name = "Halt_After_Read";
+halt.opCode = "HALT";
+
+sim.signalsToDisplay = ["0"];
+sim.signalsToDisplayR31 = ["1"];
+sim.gpi1_inputMode = "device";
+sim.gpi1_deviceKind = "ssi";
+sim.gpi1_deviceClockPin = 0;
+sim.gpi1_deviceParams = '{"bits":25,"position":4321,"gray":true}';
+
+// Connections between modules: one 25-bit read, then stop with its result register intact.
+scripting.connect(ssi, "next", halt, "prev");
+
+ssi.$position = [-100, 0];
+halt.$position = [100, 0];

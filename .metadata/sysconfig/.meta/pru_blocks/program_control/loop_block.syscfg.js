@@ -1,3 +1,30 @@
+// normalize loop_block.accumulators to {pairs, error}. Accepts an
+// array of {preInit, update} (or a JSON string of one); anything else is a
+// validation error. Malformed entries are ignored by the register allocator;
+// validate() below rejects them so a typo can never silently disable the
+// accumulator.
+function parseLoopAccumulators(value) {
+	let list = value;
+	if (list === undefined || list === null) return { pairs: [], error: null };
+	if (typeof list === "string") {
+		if (list.trim() === "") return { pairs: [], error: null };
+		try {
+			list = JSON.parse(list);
+		} catch (e) {
+			return { pairs: [], error: "is not valid JSON (" + e.message + ")" };
+		}
+	}
+	if (!Array.isArray(list)) return { pairs: [], error: "must be an array of {preInit, update} objects" };
+	const pairs = [];
+	for (const entry of list) {
+		if (!entry || typeof entry.preInit !== "string" || typeof entry.update !== "string") {
+			return { pairs: [], error: "every entry must be a {preInit: \"<block>\", update: \"<block>\"} object" };
+		}
+		pairs.push({ preInit: entry.preInit, update: entry.update });
+	}
+	return { pairs: pairs, error: null };
+}
+
 function validate(inst, report) {
 	for(let iterator = 1; iterator <= inst["numOfInputPorts"]; iterator++)
 	{
@@ -10,7 +37,66 @@ function validate(inst, report) {
 	// Validate loop count - PRU LOOP instruction supports up to 16-bit counters (max 65535)
 	if(inst["infiniteLoop"] === false && inst["loopCount"] > 65535)
 	{
-		report.logError("Loop count cannot exceed 65,535. Use nested Loop blocks for higher iteration counts.", inst, "loopCount");
+		report.logError("Loop count cannot exceed 65,535. Split the work into sequential finite loops; PRU hardware LOOP instructions cannot nest.", inst, "loopCount");
+	}
+
+	/*
+	 * The PRU has one hardware LOOP context.  A LOOP emitted by a child
+	 * overwrites its enclosing Loop's end address/counter, so the enclosing
+	 * body falls out after its first pass.  Walk through Group containers as
+	 * well: a Delay hidden in a Group is still emitted physically in this
+	 * Loop's body.
+	 *
+	 * Only a finite Loop emits LOOP (an infinite one emits QBA), and children
+	 * listed in preInitBlocks are hoisted ahead of the LOOP, so both are exempt.
+	 *
+	 * Keep this capability-based rather than a name/path check.  Delay marks
+	 * itself below, and any future block that emits the hardware instruction
+	 * can opt in with the same hidden configurable.
+	 */
+	function findNestedHardwareLoop(contents, seen, skipNames) {
+		for (const child of (contents || [])) {
+			if (!child || seen.indexOf(child) !== -1) continue;
+			if (skipNames && skipNames.has(child.$name)) continue;
+			seen.push(child);
+			if (child.emitsHardwareLoop === true) return child;
+			const nested = findNestedHardwareLoop(child.$groupContents, seen, skipNames);
+			if (nested) return nested;
+		}
+		return null;
+	}
+	// An infinite Loop emits QBA, not LOOP, and preInitBlocks are hoisted out
+	// of the body ahead of the LOOP, so neither can clobber the context.
+	const nestedHardwareLoop = inst["infiniteLoop"] === false
+		? findNestedHardwareLoop(inst.$groupContents, [], new Set(inst["preInitBlocks"] || []))
+		: null;
+	if (nestedHardwareLoop) {
+		report.logError(
+			`PRU hardware LOOP instructions cannot nest: ${nestedHardwareLoop.$name || "a block"} emits LOOP inside ${inst.$name || "this Loop"}. Move it outside the Loop or unroll the body.`,
+			inst,
+			"$groupContents");
+	}
+
+	// explicit accumulator bindings and exported result blocks.
+	const memberNames = new Set(((inst.$groupContents) || []).map((b) => (b && b.$name)));
+	for (const name of (inst.exportedBlocks || [])) {
+		if (!memberNames.has(name)) {
+			report.logError("Exported block '" + name + "' is not inside this loop. exportedBlocks must name blocks from this loop's contents.", inst, "exportedBlocks");
+		}
+	}
+	const accumulators = parseLoopAccumulators(inst.accumulators);
+	if (accumulators.error) {
+		report.logError("Invalid accumulator bindings: " + accumulators.error + " Expected [{preInit: \"<block>\", update: \"<block>\"}].", inst, "accumulators");
+	}
+	for (const pair of accumulators.pairs) {
+		if (!memberNames.has(pair.preInit)) {
+			report.logError("Accumulator preInit block '" + pair.preInit + "' is not inside this loop.", inst, "accumulators");
+		} else if (!((inst.preInitBlocks) || []).includes(pair.preInit)) {
+			report.logError("Accumulator preInit block '" + pair.preInit + "' must also be listed in Pre-Initialization Blocks so its value is set once before the loop instead of on every iteration.", inst, "accumulators");
+		}
+		if (!memberNames.has(pair.update)) {
+			report.logError("Accumulator update block '" + pair.update + "' is not inside this loop.", inst, "accumulators");
+		}
 	}
 }
 
@@ -53,6 +139,8 @@ const loop_block1 = loop_block.addInstance();
 | infiniteLoop | Boolean | true, false | false | Enable infinite loop mode |
 | loopCount | Integer | 1-65535 (0x1-0xFFFF) | 1 | Number of iterations (hidden if infiniteLoop=true) |
 | preInitBlocks | Array | Block $name values inside loop | [] | Blocks to execute once before loop starts |
+| exportedBlocks | Array | Block $name values inside loop | [] | Blocks whose final-iteration output may be read outside the loop |
+| accumulators | String (JSON) | [{"preInit": "k", "update": "a"}] | "" | Accumulator bindings coalescing each update block with its preInit register |
 | $size | Array | [width, height] | [500, 250] | Size of the loop container in pixels |
 
 ### Example Configurations
@@ -78,6 +166,20 @@ loop_block1.infiniteLoop = true;
 loop_block1.$name = "Loop_0";
 loop_block1.loopCount = 10;
 loop_block1.preInitBlocks = ["If_Else_0", "Load_Constant_1", "PRU_GPI_0"];
+\\\`\\\`\\\`
+
+|**Loop-carried accumulator (repeat-add):**
+\\\`\\\`\\\`javascript
+// k_acc is set once before the loop; acc adds x into the SAME register each pass
+loop_block1.$name = "Loop_0";
+loop_block1.loopCount = 10;
+loop_block1.$groupContents = [k_acc, acc];
+loop_block1.preInitBlocks = ["k_acc"];
+loop_block1.accumulators = "[{\\"preInit\\": \\"k_acc\\", \\"update\\": \\"acc\\"}]";
+// The store sits AFTER the loop and reads the final sum
+loop_block1.exportedBlocks = ["acc"];
+scripting.connect(wr, "input1", acc, "output1");
+scripting.connect(lp, "next", wr, "prev");
 \\\`\\\`\\\`
 
 ### Adding Blocks Inside the Loop
@@ -156,7 +258,7 @@ scripting.connect(loop_block1, "next", next_block, "prev");
 
 1. **Container Block**: Loop is a container - use $groupContents to add blocks inside.
 
-2. **Max Iterations**: Maximum loop count is 65,535 (16-bit limit). Use nested loops for more.
+2. **Max Iterations**: Maximum loop count is 65,535 (16-bit limit). For more work, use sequential finite loops or host scheduling; PRU hardware loops cannot nest.
 
 3. **Infinite Loop**: When infiniteLoop=true, the next port is hidden and loop never exits.
 
@@ -164,7 +266,7 @@ scripting.connect(loop_block1, "next", next_block, "prev");
 
 5. **Loop Overhead**: Fixed loops add 2-3 cycles overhead plus 2 cycles per iteration.
 
-6. **Nested Loops**: Place a Loop block inside another Loop for nested iteration.
+6. **No hardware-loop nesting**: A Loop body must not contain another hardware Loop or a Delay whose count is greater than one. SysConfig rejects this because the PRU has only one hardware LOOP context.
 `;
 }
 
@@ -198,6 +300,9 @@ Repeats a sequence of blocks multiple times. This is a container block that exec
 - Select blocks whose instructions should execute ONCE before the loop starts, not on every iteration
 - Useful for initializing accumulators, counters, or one-time setup operations
 - Selected blocks are still inside the loop visually, but their code is moved outside
+- A pre-initialized value keeps its value on every iteration. It changes only in the accumulator pattern: the value is updated in place only when it has exactly ONE data reader, that reader is a single-instruction Arithmetic or Bitwise block, and the allocator places that block's result starting at the value's own register byte, so the result is stored back there and counts up each pass. In every other case (more than one reader, a different kind of reader, or a result placed anywhere else) the pre-initialized value stays constant for the whole loop.
+- Declare that pattern explicitly with Accumulator Bindings (\`accumulators = "[{\\"preInit\\": \\"k_acc\\", \\"update\\": \\"acc\\"}]"\`): this is a declared, checked contract that requires the update to reuse the preInit register, so the update reads and writes the same register on every pass (for example \`ADD R0.w2, R0.w2, R0.w0\`) with zero extra cycles per iteration. The underlying single-reader coalescing is the same one used for pre-initialized values; the explicit binding additionally rejects invalid shapes loudly. The preInit block must also be listed in Pre-Initialization Blocks, both blocks must sit inside this loop, and the preInit value must have exactly one data reader (the update block); anything else is a build error, never a silent recompute.
+- Let blocks after the loop read a final-iteration result with Exported Result Blocks (\`exportedBlocks = ["acc"]\`): a consumer downstream of the loop may read an exported block (for example a memory write storing the accumulated sum once, after the loop). A consumer outside the loop reading a block inside it that is NOT exported, or reading an export before the loop, is a validation error.
 
 **Common Use Cases for Pre-Initialization**:
 1. **Accumulator Pattern**: Initialize a variable to 0 before accumulating values across iterations
@@ -279,7 +384,7 @@ Blocks execute in the order they are connected via prev/next ports within the lo
 - Infinite loops are useful for continuous monitoring or periodic tasks
 - Be careful with infinite loops - they never exit
 - Loop counter uses a register - this register is reserved during loop execution
-- Nested loops are possible (place a LOOP block inside another LOOP block)
+- PRU hardware loops cannot nest. Do not place a fixed-count Loop or a Delay (count > 1) in a fixed-count Loop body; unroll the body or split it into sequential loops. An infinite Loop compiles to a branch rather than LOOP, so it may contain either, and blocks listed in preInitBlocks run once before the LOOP and are exempt.
 - Loop overhead is minimal (2-3 cycles setup, 2 cycles per iteration)
 
 ### Performance Calculation
@@ -305,7 +410,7 @@ Where:
 - **Loop body**: The code/blocks executed each iteration
 - **Infinite loop**: Loop that never terminates (runs forever)
 - **Container block**: Block that contains other blocks (like a group)
-- **Nested loop**: Loop inside another loop
+- **Hardware-loop context**: PRU state used by the fixed-count \`LOOP\` instruction; only one is available, so fixed loops cannot nest
 - **Loop overhead**: Extra cycles required for loop management
 
 ---`;
@@ -358,6 +463,14 @@ exports = {
 			default: "loop",
             hidden : true
 		},
+		{
+			// Consumed by an enclosing Loop.validate(). Infinite loops use QBA,
+			// while finite loops consume the PRU's sole hardware LOOP context.
+			name: "emitsHardwareLoop",
+			default: true,
+			hidden: true,
+			getValue: (inst) => inst["infiniteLoop"] === false
+		},
         {
             name : "loopCount",
 			displayName: "Loop Count",
@@ -378,6 +491,29 @@ exports = {
 					displayName: blockInstance.$name
 				}));
 			}
+		},
+		{
+			name: "exportedBlocks",
+			displayName: "Exported Result Blocks",
+			description: "Blocks inside this loop whose final-iteration output may be read by blocks outside the loop.",
+			longDescription: "Blocks inside this loop whose final-iteration output may be read by blocks outside the loop (for example a memory write storing the accumulated sum once, after the loop). Without an entry here, a consumer outside the loop reading a block inside it is a container-boundary error.",
+			default: [],
+			minSelections: 0,
+			options: (inst) => {
+				// Return blocks that are inside this loop's $groupContents
+				const groupContents = inst.$groupContents || [];
+				return groupContents.map(blockInstance => ({
+					name: blockInstance.$name,
+					displayName: blockInstance.$name
+				}));
+			}
+		},
+		{
+			name: "accumulators",
+			displayName: "Accumulator Bindings",
+			description: "Loop-carried accumulator bindings (JSON): the update block reads and writes its preInit block's register on every pass.",
+			longDescription: "Loop-carried accumulator bindings as a JSON string '[{\\\"preInit\\\": \\\"BLOCK_NAME\\\", \\\"update\\\": \\\"BLOCK_NAME\\\"}]': the update (Arithmetic/Bitwise) block's destination register is coalesced with its preInit block's register, so the update reads and writes the same register on every pass with zero extra cycles per iteration. The preInit block must also be listed in Pre-Initialization Blocks, both blocks must sit inside this loop, and the preInit value must have exactly one data reader (the update block).",
+			default: "",
 		},
         {
 			name : "loopCountRegSize",
