@@ -342,7 +342,8 @@ ${txIsLSB
 }
 
 function getLongDescription() {
-    return `
+    return `NOTE: Before making any assumptions about this block's parameters, behavior, or configuration, always read the docs file at: docs_ai/pru_io_blocks/uart_config.md 
+
 ## UART Config (Combined TX + RX Hardware Configuration)
 
 ### Purpose

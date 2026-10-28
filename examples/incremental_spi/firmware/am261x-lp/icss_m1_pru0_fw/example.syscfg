@@ -34,7 +34,8 @@ load_constant_block1.$name = "Load_Constant_0";
 load_constant_block2.$name     = "Load_Constant_1";
 load_constant_block2.constant1 = 1;
 
-flow_control_block1.$name = "Flow_Control_0";
+flow_control_block1.jumpTarget = "Loop_0_start";
+flow_control_block1.$name      = "continue";
 
 loop_block1.$name         = "Loop_0";
 loop_block1.loopCount     = 10;
@@ -47,7 +48,7 @@ pru_spi_write1["CS Signal"] = "7";
 /**
  * References between modules.
  */
-loop_block1.$groupContents = [load_constant_block1, load_constant_block2, arithmetic_block1, pru_spi_write1];
+loop_block1.$groupContents = [load_constant_block1, load_constant_block2, arithmetic_block1, pru_spi_write1, flow_control_block1];
 
 /**
  * Connections between modules.
@@ -55,7 +56,7 @@ loop_block1.$groupContents = [load_constant_block1, load_constant_block2, arithm
 scripting.connect(arithmetic_block1, "input1", load_constant_block1, "output1");
 scripting.connect(arithmetic_block1, "input2", load_constant_block2, "output1");
 scripting.connect(arithmetic_block1, "output1", pru_spi_write1, "input1");
-scripting.connect(flow_control_block1, "prev", loop_block1, "next");
+scripting.connect(flow_control_block1, "prev", pru_spi_write1, "next");
 
 /**
  * (x,y) coordinates for modules that are displayed in a graph.
@@ -63,6 +64,6 @@ scripting.connect(flow_control_block1, "prev", loop_block1, "next");
 arithmetic_block1.$position    = [185,75];
 load_constant_block1.$position = [60,45];
 load_constant_block2.$position = [60,130];
-flow_control_block1.$position  = [145,15];
+flow_control_block1.$position  = [420,165];
 loop_block1.$position          = [0,0];
-pru_spi_write1.$position       = [330,75];
+pru_spi_write1.$position       = [305,85];

@@ -46,119 +46,11 @@ function getNumOfBytes(value)
 	return 4;
 }
 
-function getAIContext() {
-    return getLongDescription() + `
-## How to Configure (For AI/Scripting)
 
-This section describes how to programmatically configure the PRU GPO block in a .syscfg file.
-
-### Adding a PRU GPO Instance
-
-\\\`\\\`\\\`javascript
-const pru_gpo_block = scripting.addModule("/pru_blocks/pru_io_blocks/pru_gpo_block", {}, false);
-const gpo1 = pru_gpo_block.addInstance();
-\\\`\\\`\\\`
-
-### Configuration Parameters
-
-| Parameter | Type | Valid Values | Default | Description |
-|-----------|------|--------------|---------|-------------|
-| constant1 | String | "R30, 0" to "R30, 19" | "R30, 0" | PRU GPO pin selection |
-| opCode | String | "SET", "CLR" | "SET" | Output operation (SET=HIGH, CLR=LOW) |
-
-### Valid Values for constant1
-
-| Value | Display Name | Description |
-|-------|--------------|-------------|
-| "R30, 0" | PRU_GPO_0 | Control output pin 0 |
-| "R30, 1" | PRU_GPO_1 | Control output pin 1 |
-| "R30, 2" | PRU_GPO_2 | Control output pin 2 |
-| ... | ... | ... |
-| "R30, 19" | PRU_GPO_19 | Control output pin 19 |
-
-### Valid Values for opCode
-
-| Value | Display Name | Description |
-|-------|--------------|-------------|
-| "SET" | SET SIGNAL | Sets the pin HIGH (logic 1) |
-| "CLR" | CLEAR SIGNAL | Sets the pin LOW (logic 0) |
-
-### Example Configurations
-
-**Set PRU_GPO_0 HIGH:**
-\\\`\\\`\\\`javascript
-gpo1.$name = "PRU_GPO_0_Set";
-gpo1.constant1 = "R30, 0";
-gpo1.opCode = "SET";
-\\\`\\\`\\\`
-
-**Clear PRU_GPO_5 (turn LED OFF):**
-\\\`\\\`\\\`javascript
-gpo1.$name = "LED_Off";
-gpo1.constant1 = "R30, 5";
-gpo1.opCode = "CLR";
-\\\`\\\`\\\`
-
-**Assert chip select (active low):**
-\\\`\\\`\\\`javascript
-gpo1.$name = "CS_Assert";
-gpo1.constant1 = "R30, 10";
-gpo1.opCode = "CLR";
-\\\`\\\`\\\`
-
-**Deassert chip select:**
-\\\`\\\`\\\`javascript
-gpo1.$name = "CS_Deassert";
-gpo1.constant1 = "R30, 10";
-gpo1.opCode = "SET";
-\\\`\\\`\\\`
-
-### Connecting to Other Blocks
-
-\\\`\\\`\\\`javascript
-// GPO is a terminating block - no output connection
-// Connect control flow only
-scripting.connect(prev_block, "next", gpo1, "prev");
-scripting.connect(gpo1, "next", next_block, "prev");
-\\\`\\\`\\\`
-
-### Creating a Pulse
-
-\\\`\\\`\\\`javascript
-// Create SET and CLR blocks for pulse generation
-const pru_gpo_block = scripting.addModule("/pru_blocks/pru_io_blocks/pru_gpo_block", {}, false);
-const gpo_set = pru_gpo_block.addInstance();
-const gpo_clr = pru_gpo_block.addInstance();
-
-gpo_set.$name = "Pulse_High";
-gpo_set.constant1 = "R30, 3";
-gpo_set.opCode = "SET";
-
-gpo_clr.$name = "Pulse_Low";
-gpo_clr.constant1 = "R30, 3";
-gpo_clr.opCode = "CLR";
-
-// Connect in sequence: SET -> delay -> CLR
-scripting.connect(gpo_set, "next", delay_block, "prev");
-scripting.connect(delay_block, "next", gpo_clr, "prev");
-\\\`\\\`\\\`
-
-### Important Notes
-
-1. **Terminating Block**: GPO has no output port - it only controls physical pins.
-
-2. **Pin Mux**: Physical pin must be configured as PRU GPO in pin mux settings.
-
-3. **Single Cycle**: SET/CLR operations take only 1 PRU cycle.
-
-4. **Persistence**: Pin state persists until explicitly changed by another GPO block.
-
-5. **Multiple Pins**: Use separate GPO instances to control different pins.
-`;
-}
 
 function getLongDescription(){
-	return `
+	return `NOTE: Before making any assumptions about this block's parameters, behavior, or configuration, always read the docs file at: docs_ai/pru_io_blocks/pru_gpo_block.md 
+
 ## PRU GPO Block (General Purpose Output)
 
 ### Purpose
@@ -279,7 +171,6 @@ exports = {
 	displayName: "PRU GPO",
 	defaultInstanceName: `${PRU_USED}_GPO_INSTANCE_`,
 	longDescription: getLongDescription(),
-	getAIContext: getAIContext,
 	uiView: "graph",
 	templates: {
 		//need to check what can be passed as argument to template file, right now no argument is required

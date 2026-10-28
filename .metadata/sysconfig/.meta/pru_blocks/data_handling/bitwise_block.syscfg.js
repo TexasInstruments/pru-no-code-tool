@@ -8,116 +8,11 @@ function validate(inst, report) {
 	}
 }
 
-function getAIContext(){
-	return getLongDescription() + `
 
-## How to Configure (For AI/Scripting)
-
-This section describes how to programmatically configure the Bitwise block in a .syscfg file.
-
-### Adding a Bitwise Instance
-
-\\\`\\\`\\\`javascript
-const bitwise_block = scripting.addModule("/pru_blocks/data_handling/bitwise_block", {}, false);
-const bitwise1 = bitwise_block.addInstance();
-\\\`\\\`\\\`
-
-### Configuration Parameters
-
-| Parameter | Type | Valid Values | Default | Description |
-|-----------|------|--------------|---------|-------------|
-| opCode | String | "AND", "OR", "XOR", "NOT", "LSL", "LSR" | "AND" | Bitwise operation to perform |
-| output1Size | String | "maxOfInputs", "1", "2", "4" | "maxOfInputs" | Output size in bytes |
-
-### Valid Values for opCode
-
-| Value | Inputs | Description |
-|-------|--------|-------------|
-| "AND" | 2 | Bitwise AND: result = input1 & input2 |
-| "OR" | 2 | Bitwise OR: result = input1 \| input2 |
-| "XOR" | 2 | Bitwise XOR: result = input1 ^ input2 |
-| "NOT" | 1 | Bitwise NOT: result = ~input1 |
-| "LSL" | 2 | Logical Shift Left: result = input1 << input2 |
-| "LSR" | 2 | Logical Shift Right: result = input1 >> input2 |
-
-### Valid Values for output1Size
-
-| Value | Display Name | Description |
-|-------|--------------|-------------|
-| "maxOfInputs" | Maximum of Inputs | Auto-size based on largest input |
-| "1" | One byte | Force 8-bit result |
-| "2" | two bytes | Force 16-bit result |
-| "4" | four bytes | Force 32-bit result |
-
-### Example Configurations
-
-**Bitwise AND (masking):**
-\\\`\\\`\\\`javascript
-bitwise1.$name = "Mask_Bits";
-bitwise1.opCode = "AND";
-bitwise1.output1Size = "maxOfInputs";
-\\\`\\\`\\\`
-
-**Bitwise OR (setting flags):**
-\\\`\\\`\\\`javascript
-bitwise1.$name = "Set_Flags";
-bitwise1.opCode = "OR";
-bitwise1.output1Size = "4";
-\\\`\\\`\\\`
-
-**Bitwise NOT (invert):**
-\\\`\\\`\\\`javascript
-bitwise1.$name = "Invert_Bits";
-bitwise1.opCode = "NOT";
-bitwise1.output1Size = "maxOfInputs";
-\\\`\\\`\\\`
-
-**Left Shift:**
-\\\`\\\`\\\`javascript
-bitwise1.$name = "Shift_Left";
-bitwise1.opCode = "LSL";
-bitwise1.output1Size = "4";
-\\\`\\\`\\\`
-
-**Right Shift:**
-\\\`\\\`\\\`javascript
-bitwise1.$name = "Shift_Right";
-bitwise1.opCode = "LSR";
-bitwise1.output1Size = "maxOfInputs";
-\\\`\\\`\\\`
-
-### Connecting to Other Blocks
-
-\\\`\\\`\\\`javascript
-// For two-input operations (AND, OR, XOR, LSL, LSR)
-scripting.connect(data_source, "output1", bitwise1, "input1");
-scripting.connect(mask_or_shift_amount, "output1", bitwise1, "input2");
-
-// For single-input operation (NOT)
-scripting.connect(data_source, "output1", bitwise1, "input1");
-
-// Connect output to downstream block
-scripting.connect(bitwise1, "output1", next_block, "input1");
-
-// Connect control flow
-scripting.connect(prev_block, "next", bitwise1, "prev");
-scripting.connect(bitwise1, "next", next_block, "prev");
-\\\`\\\`\\\`
-
-### Important Notes
-
-1. **Input Count**: NOT requires 1 input; all other operations require 2 inputs.
-
-2. **Single Cycle**: All bitwise operations complete in 1 PRU cycle.
-
-3. **Shift Amount**: For LSL/LSR, input2 specifies the number of bit positions to shift.
-
-4. **Logical Shift**: LSL and LSR fill vacated bits with zeros (no sign extension).
-`;
-}
 
 function getLongDescription() {
-	return `
+	return `NOTE: Before making any assumptions about this block's parameters, behavior, or configuration, always read the docs file at: docs_ai/data_handling/bitwise_block.md 
+
 ## Bitwise Block
 
 ### Purpose
@@ -326,5 +221,4 @@ exports = {
             }]
         },
     },
-	getAIContext
 }

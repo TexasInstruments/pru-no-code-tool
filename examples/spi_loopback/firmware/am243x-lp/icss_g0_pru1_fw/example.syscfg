@@ -18,7 +18,7 @@ const pru_spi_read1       = pru_spi_read.addInstance();
  * Write custom configuration values to the imported modules.
  */
 flow_control_block1.$name  = "Flow_Control_0";
-flow_control_block1.opCode = "HALT";
+
 
 pru_spi_read1.$name                                    = "PRU_SPI_Read_0";
 pru_spi_read1.packetSize                               = 32;

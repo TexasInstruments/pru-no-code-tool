@@ -24,7 +24,8 @@ function getMacro(pruInstructionMacro, opCode) {
 }
 
 function getLongDescription() {
-    return `
+    return `NOTE: Before making any assumptions about this block's parameters, behavior, or configuration, always read the docs file at: docs_ai/utils/data_splitter.md 
+
 ## Data Splitter Block
 
 ### Purpose
